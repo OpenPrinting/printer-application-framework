@@ -277,10 +277,10 @@ main(int  argc,				/* I - Number of command-line args */
   if (getenv("SOFTWARE"))
     puts("Content-Type: application/ipp\n");
 
-  cupsdSendIPPHeader(IPP_OK, request_id);
-  cupsdSendIPPGroup(IPP_TAG_OPERATION);
-  cupsdSendIPPString(IPP_TAG_CHARSET, "attributes-charset", "utf-8");
-  cupsdSendIPPString(IPP_TAG_LANGUAGE, "attributes-natural-language", "en-US");
+  // cupsdSendIPPHeader(IPP_OK, request_id);
+  // cupsdSendIPPGroup(IPP_TAG_OPERATION);
+  // cupsdSendIPPString(IPP_TAG_CHARSET, "attributes-charset", "utf-8");
+  // cupsdSendIPPString(IPP_TAG_LANGUAGE, "attributes-natural-language", "en-US");
 
   end_time = get_current_time() + timeout;
 
@@ -353,9 +353,10 @@ add_device(
 {
   cupsd_device_t	*device;	/* New device */
 
-  fprintf(stdout,"\nMake: %s\n",device_make_and_model);
-  fprintf(stdout,"\nURI: %s\n",device_uri);
-  fprintf(stdout,"\nInfo: %s\n",device_info);
+  // fprintf(stdout,"\nMake: %s\n",device_make_and_model);
+  // fprintf(stdout,"\nURI: %s\n",device_uri);
+  // fprintf(stdout,"\nInfo: %s\n",device_info);
+  //fprintf(stdout,"\"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n",device_class,device_make_and_model,device_uri,device_info,device_id,device_location);
  /*
   * Allocate memory for the device record...
   */
@@ -397,26 +398,26 @@ add_device(
       * Send device info...
       */
 
-      cupsdSendIPPGroup(IPP_TAG_PRINTER);
-      if (send_class)
-	cupsdSendIPPString(IPP_TAG_KEYWORD, "device-class",
-	                   device_class);
-      if (send_info)
-	cupsdSendIPPString(IPP_TAG_TEXT, "device-info", device_info);
-      if (send_make_and_model)
-	cupsdSendIPPString(IPP_TAG_TEXT, "device-make-and-model",
-			   device_make_and_model);
-      if (send_uri)
-	cupsdSendIPPString(IPP_TAG_URI, "device-uri", device_uri);
-      if (send_id)
-	cupsdSendIPPString(IPP_TAG_TEXT, "device-id",
-	                   device_id ? device_id : "");
-      if (send_location)
-	cupsdSendIPPString(IPP_TAG_TEXT, "device-location",
-	                   device_location ? device_location : "");
+  //     cupsdSendIPPGroup(IPP_TAG_PRINTER);
+  //     if (send_class)
+	// cupsdSendIPPString(IPP_TAG_KEYWORD, "device-class",
+	//                    device_class);
+  //     if (send_info)
+	// cupsdSendIPPString(IPP_TAG_TEXT, "device-info", device_info);
+  //     if (send_make_and_model)
+	// cupsdSendIPPString(IPP_TAG_TEXT, "device-make-and-model",
+	// 		   device_make_and_model);
+  //     if (send_uri)
+	// cupsdSendIPPString(IPP_TAG_URI, "device-uri", device_uri);
+  //     if (send_id)
+	// cupsdSendIPPString(IPP_TAG_TEXT, "device-id",
+	//                    device_id ? device_id : "");
+  //     if (send_location)
+	// cupsdSendIPPString(IPP_TAG_TEXT, "device-location",
+	//                    device_location ? device_location : "");
 
-      fflush(stdout);
-      fputs("DEBUG: Flushed attributes...\n", stderr);
+  //     fflush(stdout);
+  //     fputs("DEBUG: Flushed attributes...\n", stderr);
     }
   }
 
@@ -491,7 +492,7 @@ get_device(cupsd_backend_t *backend)	/* I - Backend to read from */
     */
 
     strlcpy(temp, line, sizeof(temp));
-
+    fprintf(stdout,"%s\n",line);
    /*
     * device-class
     */

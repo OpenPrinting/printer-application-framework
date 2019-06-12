@@ -10,8 +10,8 @@ LIBPAPER	=
 LIBUSB		=	-lusb-1.0
 LIBWRAP		=	
 LIBZ		=	-lz
-LD_CC		= 	gcc
-LD_CXX		= 	g++
+LD_CC		= 	gcc -g
+LD_CXX		= 	g++ -g
 #
 # Install static libraries?
 #
@@ -102,3 +102,10 @@ cups-driverd:	cups-driverd.o util.o /home/dj/cupsi/lib/$(LIBCUPS) ../ppdc/libcup
 
 util.o: util.c
 	$(LD_CXX) -I.. -c util.c
+
+server.o:	server.c
+	$(LD_CC) -I.. -c server.c 
+
+server:		server.o util.o
+	$(LD_CC) $(ALL_LDFLAGS) -o server server.o util.o $(LIBS)
+	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
