@@ -941,7 +941,7 @@ get_file(const char *name,		/* I - Name */
 #endif /* __APPLE__ */
   {
   //  if ((datadir = getenv("CUPS_DATADIR")) == NULL)
-      datadir = CUPS_DATADIR;
+      datadir = DATADIR;
 
     snprintf(buffer, bufsize, "%s/%s/%s", datadir, subdir, name);
   }
@@ -1066,13 +1066,13 @@ list_ppds(int        request_id,	/* I - Request ID */
   //if ((cups_datadir = getenv("CUPS_DATADIR")) == NULL)
   //  cups_datadir = CUPS_DATADIR;
   datadir = DATADIR;
-
+  fprintf(stderr, "%s\n",datadir );
   Inodes = cupsArrayNew((cups_array_func_t)compare_inodes, NULL);
 
-  snprintf(model, sizeof(model), "%s/model", cups_datadir);
+  snprintf(model, sizeof(model), "%s/model", datadir);
   load_ppds(model, "", 1);
 
-  snprintf(model, sizeof(model), "%s/drv", cups_datadir);
+  snprintf(model, sizeof(model), "%s/drv", datadir);
   load_ppds(model, "", 1);
 
 #ifdef __APPLE__
