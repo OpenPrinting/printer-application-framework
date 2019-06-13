@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <poll.h>
-
+#include "framework-config.h"
 
 /*
  * Constants...
@@ -218,8 +218,8 @@ main(int  argc,				/* I - Number of command-line args */
   * Try opening the backend directory...
   */
 
-  if ((server_bin = getenv("CUPS_SERVERBIN")) == NULL)
-    server_bin = CUPS_SERVERBIN;
+  //if ((server_bin = getenv("CUPS_SERVERBIN")) == NULL)
+    server_bin = INSTALLDIR;
 
   snprintf(filename, sizeof(filename), "%s/backend", server_bin);
 
@@ -747,8 +747,8 @@ start_backend(const char *name,		/* I - Backend to run */
     return (-1);
   }
 
-  if ((server_bin = getenv("CUPS_SERVERBIN")) == NULL)
-    server_bin = CUPS_SERVERBIN;
+//  if ((server_bin = getenv("CUPS_SERVERBIN")) == NULL)
+    server_bin = INSTALLDIR;
 
   snprintf(program, sizeof(program), "%s/backend/%s", server_bin, name);
 

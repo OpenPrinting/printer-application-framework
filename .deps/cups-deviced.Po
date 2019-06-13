@@ -141,7 +141,7 @@ cups-deviced.o: server/cups-deviced.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/sys/wait.h /usr/include/poll.h \
  /usr/include/x86_64-linux-gnu/sys/poll.h \
  /usr/include/x86_64-linux-gnu/bits/poll.h \
- /usr/include/x86_64-linux-gnu/bits/poll2.h
+ /usr/include/x86_64-linux-gnu/bits/poll2.h server/framework-config.h
 
 /usr/include/stdc-predef.h:
 
@@ -528,3 +528,5 @@ cups/dir.h:
 /usr/include/x86_64-linux-gnu/bits/poll.h:
 
 /usr/include/x86_64-linux-gnu/bits/poll2.h:
+
+server/framework-config.h:

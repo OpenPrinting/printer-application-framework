@@ -311,3 +311,10 @@ add_device(const char *device_class,
   
   return 0;
 }
+
+// static char*
+// get_ppd(char *make_and_model)
+// {
+//   ;
+
+// }
