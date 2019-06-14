@@ -22,10 +22,25 @@ static int		add_device(const char *device_class,
 				   const char *device_id,
 				   const char *device_location);
 
+static int get_ppd(char* ppd,char *make_and_model);
+int get_ppd_uri(char* ppd_uri,process_t* process);
+int print_ppd(process_t* backend,cups_file_t* tempPPD);
+
 static void DEBUG(char* x)
 {
     static int counter =0;
     fprintf(stderr,"DEBUG[%d]: %s\n",counter++,x);
+}
+
+static void escape_string(char* out,char* in,int len)
+{
+  for(int i=0;i<len&&in[i];i++)
+  {
+    if(!isalnum(in[i]))
+      out[i]='-';
+    else
+      out[i]=in[i];
+  }
 }
 
 int main(int argc,char* argv[])
@@ -61,14 +76,18 @@ get_devices()
     process_t   *process;
     int         process_pid,status;
 
-    process = calloc(1,sizeof(process_t));
+    if((process = calloc(1,sizeof(process_t)))==NULL)
+    {
+      fprintf(stderr,"Ran Out of Memory!\n");
+      return (-1);
+    }
 
     _cups_strcpy(name,"cups-deviced");
-    _cups_strcpy(reques_id,"1");
-    _cups_strcpy(limit,"1");
-    _cups_strcpy(timeout,"100");
-    _cups_strcpy(user_id,"1");
-    _cups_strcpy(options,"\"\"");
+    _cups_strcpy(reques_id,DEVICED_REQ);
+    _cups_strcpy(limit,DEVICED_LIM);
+    _cups_strcpy(timeout,DEVICED_TIM);
+    _cups_strcpy(user_id,DEVICED_USE);
+    _cups_strcpy(options,DEVICED_OPT);
 
     if((serverbin = getenv("SERVERBIN"))==NULL)
         serverbin = SERVERBIN;
@@ -89,10 +108,9 @@ get_devices()
 
     DEBUG(program);
     if((process->pipe = cupsdPipeCommand(&(process->pid),program,argv,
-                            10))==NULL)
+                            0))==NULL)
     {
         fprintf(stderr,"ERROR: Unable to execute!\n");
-        delay(1000);
         return (-1);
     }
     if((process_pid = wait(&status))>0)
@@ -291,30 +309,153 @@ add_device(const char *device_class,
     const char *device_location)
 {
   device_t *device;
+  char ppd[128];
   if((device = calloc(1,sizeof(device_t)))==NULL)
   {
     fprintf(stderr,"Ran out of memory!\n");
     return -1;
   }
 
-  strlcpy(device->device_uri,device_uri,sizeof(device->device_uri));
-  strlcpy(device->device_class,device->device_class,sizeof(device->device_class));
-  strlcpy(device->device_make_and_model,device->device_make_and_model,sizeof(device->device_make_and_model));
-  strlcpy(device->device_info,device->device_info,sizeof(device->device_info));
-  strlcpy(device->device_id,device->device_id,sizeof(device->device_id));
-  strlcpy(device->device_location,device->device_location,sizeof(device->device_location));
+  fprintf(stderr, "DEBUG: TTTT Found device \"%s\"   %s...\n", device_uri,device_make_and_model);
+  if(device_uri)
+    strlcpy(device->device_uri,device_uri,sizeof(device->device_uri));
+  if(device_class)
+    strlcpy(device->device_class,device_class,sizeof(device->device_class));
+  if(device_make_and_model)
+    strlcpy(device->device_make_and_model,device_make_and_model,sizeof(device->device_make_and_model));
+  if(device_info)
+    strlcpy(device->device_info,device_info,sizeof(device->device_info));
+  if(device_id)
+    strlcpy(device->device_id,device_id,sizeof(device->device_id));
+  if(device_location)
+    strlcpy(device->device_location,device_location,sizeof(device->device_location));
 
+  fprintf(stdout,"%s:::%s:::%s:::%s:::%s:::%s\n",device->device_class,device->device_id,
+                        device->device_make_and_model,device->device_uri,
+                        device->device_location,device->device_info);
+  
   if(cupsArrayFind(con_devices,device))
     free(device);
-  else
+  else{
+    get_ppd(ppd,device->device_make_and_model);
+    strlcpy(device->ppd,ppd,sizeof(device->ppd));
     cupsArrayAdd(con_devices,device); // Do we need device limit????
+  }
+  return 0;
+}
+/*
+ * Use language to filter???
+ */
+
+static int
+get_ppd(char* ppd,            /* O- */ 
+        char *make_and_model) /* I- */
+{
+  const char *serverbin;
+  char program[2048];
+  char *argv[6];
+  char name[16],operation[8],request_id[4],limit[5],options[128];
+  char ppd_uri[128];
+  char ppd_name[1024];  //full ppd path
+  char escp_model[256];
+
+  process_t *process;
+  int        process_pid,status;
+  if((process = calloc(1,sizeof(process_t)))==NULL)
+  {
+    fprintf(stderr,"Ran Out of Memory!\n");
+    return (-1);
+  }
+  _cups_strcpy(name,"cups-driverd");
+  _cups_strcpy(operation,"list");
+  _cups_strcpy(request_id,"0");
+  _cups_strcpy(limit,"1");
+  //snprintf(options,sizeof(options),"ppd-make-and-model=\'%s\'",make_and_model);
+  snprintf(options,sizeof(options),"ppd-make-and-model=\'HP\'");
+  fprintf(stdout,"%s\n",options);
+
+  if((serverbin = getenv("SERVERBIN"))==NULL)
+    serverbin = SERVERBIN;
+  snprintf(program,sizeof(program),"%s/%s",serverbin,name);
+
+  argv[0] = (char*) name;
+  argv[1] = (char*) operation;
+  argv[2] = (char*) request_id;
+  argv[3] = (char*) limit;
+  argv[4] = (char*) options;
+  argv[5] = NULL;
+
+  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+                        argv,0))==NULL)
+  {
+    fprintf(stderr,"ERROR: Unable to execute!\n");
+    return (-1);
+  }
+  if((process_pid = wait(&status))>0)
+  {
+      if(WIFEXITED(status))
+      {
+          // do{          
+          if(get_ppd_uri(ppd_uri,process)) //All we need is a single line!
+            return (-1);
+          fprintf(stdout,"PPD-URI: %s\n",ppd_uri);
+          // }
+          // while(_cupsFilePeekAhead(process->pipe,'\n'));
+      }
+  }
   
+  _cups_strcpy(operation,"cat");
+  argv[2] = (char*) ppd_uri;
+  argv[3] = NULL;
+  argv[4] = NULL;
+  
+  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+                        argv,0))==NULL)
+  {
+    fprintf(stderr,"ERROR: Unable to execute!\n");
+    return (-1);
+  }
+  
+  escape_string(escp_model,make_and_model,sizeof(make_and_model));
+  snprintf(ppd_name,sizeof(ppd_name),"%s/%s.ppd",PPDDIR,escp_model);
+  cups_file_t* tempPPD;
+  if((tempPPD = cupsFileOpen(ppd_name,"w"))==NULL)
+  {
+    fprintf(stderr,"ERROR: Cannot create temporary PPD!\n");
+    return (-1);
+  }
+
+  if((process_pid = wait(&status))>0)
+  {
+      if(WIFEXITED(status))
+      {
+        int st =0,counter=0;
+        while((st=print_ppd(process,tempPPD))>0) counter++;
+      }
+  }
+  cupsFileClose(tempPPD);
+  free(process);
   return 0;
 }
 
-// static char*
-// get_ppd(char *make_and_model)
-// {
-//   ;
+int get_ppd_uri(char* ppd_uri, process_t* backend)
+{
+  char line[2048];
+  if (cupsFileGets(backend->pipe, line, sizeof(line)))
+  {
+    sscanf(line,"%s",ppd_uri);
+    return 0;  
+  }
+  return 1;
+}
 
-// }
+int print_ppd(process_t* backend,cups_file_t *temp)
+{
+  char line[2048];
+  if (cupsFileGets(backend->pipe,line,sizeof(line)))
+  {
+    cupsFilePrintf(temp,"%s\n",line);
+    return 1;
+  }
+  return 0;
+}
