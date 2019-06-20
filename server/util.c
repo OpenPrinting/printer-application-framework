@@ -139,14 +139,14 @@ cupsdCompareNames(const char *s,	/* I - First string */
  * 'cupsdCreateStringsArray()' - Create a CUPS array of strings.
  */
 
-cups_array_t *				/* O - CUPS array */
-cupsdCreateStringsArray(const char *s)	/* I - Comma-delimited strings */
-{
-  if (!s || !*s)
-    return (NULL);
-  else
-    return (_cupsArrayNewStrings(s, ','));
-}
+// cups_array_t *				/* O - CUPS array */
+// cupsdCreateStringsArray(const char *s)	/* I - Comma-delimited strings */
+// {
+//   if (!s || !*s)
+//     return (NULL);
+//   else
+//     return (_cupsArrayNewStrings(s, ','));
+// }
 
 
 /*
@@ -445,4 +445,220 @@ cupsdSendIPPTrailer(void)
 {
   putchar(IPP_TAG_END);
   fflush(stdout);
+}
+
+/*
+ * 'cupsdExec()' - Run a program with the correct environment.
+ *
+ * On macOS, we need to update the CFProcessPath environment variable that
+ * is passed in the environment so the child can access its bundled resources.
+ */
+
+int					/* O - exec() status */
+cupsdExec2(const char *command,		/* I - Full path to program */
+          char       **argv,
+          char       **env)		/* I - Command-line arguments */
+{
+#ifdef __APPLE__
+  int	i, j;				/* Looping vars */
+  char	*envp[500],			/* Array of environment variables */
+	cfprocesspath[1024],		/* CFProcessPath environment variable */
+	linkpath[1024];			/* Link path for symlinks... */
+  int	linkbytes;			/* Bytes for link path */
+
+
+ /*
+  * Some macOS programs are bundled and need the CFProcessPath environment
+  * variable defined.  If the command is a symlink, resolve the link and point
+  * to the resolved location, otherwise, use the command path itself.
+  */
+
+  if ((linkbytes = readlink(command, linkpath, sizeof(linkpath) - 1)) > 0)
+  {
+   /*
+    * Yes, this is a symlink to the actual program, nul-terminate and
+    * use it...
+    */
+
+    linkpath[linkbytes] = '\0';
+
+    if (linkpath[0] == '/')
+      snprintf(cfprocesspath, sizeof(cfprocesspath), "CFProcessPath=%s",
+	       linkpath);
+    else
+      snprintf(cfprocesspath, sizeof(cfprocesspath), "CFProcessPath=%s/%s",
+	       dirname((char *)command), linkpath);
+  }
+  else
+    snprintf(cfprocesspath, sizeof(cfprocesspath), "CFProcessPath=%s", command);
+
+  envp[0] = cfprocesspath;
+
+ /*
+  * Copy the rest of the environment except for any CFProcessPath that may
+  * already be there...
+  */
+
+  for (i = 1, j = 0;
+       environ[j] && i < (int)(sizeof(envp) / sizeof(envp[0]) - 1);
+       j ++)
+    if (strncmp(environ[j], "CFProcessPath=", 14))
+      envp[i ++] = environ[j];
+
+  envp[i] = NULL;
+
+ /*
+  * Use execve() to run the program...
+  */
+
+  return (execve(command, argv, envp));
+
+#else
+ /*
+  * On other operating systems, just call execv() to use the same environment
+  * variables as the parent...
+  */
+
+  return (execve(command, argv,env));
+#endif /* __APPLE__ */
+}
+
+
+/*
+ * 'cupsdPipeCommand()' - Read output from a command.
+ */
+
+cups_file_t *				/* O - CUPS file or NULL on error */
+cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
+                 const char *command,	/* I - Command to run */
+                 char       **argv,	/* I - Arguments to pass to command */
+                 char       **env,
+		 uid_t      user)	/* I - User to run as or 0 for current */
+{
+  int	fd,				/* Temporary file descriptor */
+	fds[2];				/* Pipe file descriptors */
+
+
+ /*
+  * First create the pipe...
+  */
+
+  if (pipe(fds))
+  {
+    *pid = 0;
+    return (NULL);
+  }
+
+ /*
+  * Set the "close on exec" flag on each end of the pipe...
+  */
+
+  if (fcntl(fds[0], F_SETFD, fcntl(fds[0], F_GETFD) | FD_CLOEXEC))
+  {
+    close(fds[0]);
+    close(fds[1]);
+
+    *pid = 0;
+
+    return (NULL);
+  }
+
+  if (fcntl(fds[1], F_SETFD, fcntl(fds[1], F_GETFD) | FD_CLOEXEC))
+  {
+    close(fds[0]);
+    close(fds[1]);
+
+    *pid = 0;
+
+    return (NULL);
+  }
+
+ /*
+  * Then run the command...
+  */
+
+  if ((*pid = fork()) < 0)
+  {
+   /*
+    * Unable to fork!
+    */
+
+    *pid = 0;
+    close(fds[0]);
+    close(fds[1]);
+
+    return (NULL);
+  }
+  else if (!*pid)
+  {
+   /*
+    * Child comes here...
+    */
+
+    if (!getuid() && user)
+      setuid(user);			/* Run as restricted user */
+
+    if ((fd = open("/dev/null", O_RDONLY)) > 0)
+    {
+      dup2(fd, 0);			/* </dev/null */
+      close(fd);
+    }
+
+    dup2(fds[1], 1);			/* >pipe */
+    close(fds[1]);
+
+    cupsdExec2(command, argv,env);
+    exit(errno);
+  }
+
+ /*
+  * Parent comes here, open the input side of the pipe...
+  */
+
+  close(fds[1]);
+
+  return (cupsFileOpenFd(fds[0], "r"));
+}
+
+size_t					/* O - Length of string */
+strlcpy(char       *dst,		/* O - Destination string */
+              const char *src,		/* I - Source string */
+	      size_t      size)		/* I - Size of destination string buffer */
+{
+  size_t	srclen;			/* Length of source string */
+
+
+ /*
+  * Figure out how much room is needed...
+  */
+
+  size --;
+
+  srclen = strlen(src);
+
+ /*
+  * Copy the appropriate amount...
+  */
+
+  if (srclen > size)
+    srclen = size;
+
+  memmove(dst, src, srclen);
+  dst[srclen] = '\0';
+
+  return (srclen);
+}
+
+/*
+ * '_cups_strcpy()' - Copy a string allowing for overlapping strings.
+ */
+
+void
+_cups_strcpy(char       *dst,		/* I - Destination string */
+             const char *src)		/* I - Source string */
+{
+  while (*src)
+    *dst++ = *src++;
+
+  *dst = '\0';
 }

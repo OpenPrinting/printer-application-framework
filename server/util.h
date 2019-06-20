@@ -14,10 +14,14 @@
  * Include necessary headers...
  */
 
-#  include <cups/array-private.h>
-#  include <cups/file-private.h>
+#  include <cups/array.h>
+#  include <cups/file.h>
 #  include <signal.h>
-
+# include<ctype.h>
+#include<errno.h>
+#include<cups/cups.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*
  * C++ magic...
@@ -40,7 +44,7 @@ typedef int (*cupsd_compare_func_t)(const void *, const void *);
  */
 
 extern int		cupsdCompareNames(const char *s, const char *t);
-extern cups_array_t	*cupsdCreateStringsArray(const char *s);
+// extern cups_array_t	*cupsdCreateStringsArray(const char *s);
 extern int		cupsdExec(const char *command, char **argv);
 extern cups_file_t	*cupsdPipeCommand(int *pid, const char *command,
 			                  char **argv, uid_t user);
@@ -53,6 +57,13 @@ extern void		cupsdSendIPPString(ipp_tag_t value_tag,
 			                   const char *name, const char *value);
 extern void		cupsdSendIPPTrailer(void);
 
+extern cups_file_t *cupsdPipeCommand2(int *pid, const char *command,
+								char **argv, char **env, uid_t user);
+
+extern int		cupsdExec2(const char* command, char **argv, char **env);
+
+extern size_t strlcpy(char *dst,const char *src,size_t size);
+void _cups_strcpy(char *dst,const char *src);
 
 #  ifdef __cplusplus
 }

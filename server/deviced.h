@@ -1,0 +1,2 @@
+#define DEFAULT_TIMEOUT_LIMIT 1000
+#define DEFAULT_SERVERBIN "/usr/lib/cups/"

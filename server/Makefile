@@ -43,15 +43,15 @@ CODE_SIGN_IDENTITY = -
 # OPTIONS       Defines other compile-time options (currently only -DDEBUG
 #               for extra debug info)
 #
-
-ALL_CFLAGS	=	-I.. -D_CUPS_SOURCE $(CFLAGS) \
+exec_prefix = /usr
+ALL_CFLAGS	=	 -D_CUPS_SOURCE $(CFLAGS) \
 			$(SSLFLAGS) -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_THREAD_SAFE -D_REENTRANT \
 			$(ONDEMANDFLAGS) $(OPTIONS)
-ALL_CXXFLAGS	=	-I.. -D_CUPS_SOURCE $(CXXFLAGS) \
+ALL_CXXFLAGS	=	 -D_CUPS_SOURCE $(CXXFLAGS) \
 			$(SSLFLAGS) -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_THREAD_SAFE -D_REENTRANT \
 			$(ONDEMANDFLAGS) $(OPTIONS)
-ALL_DSOFLAGS	=	-L/home/dj/cupsi/lib   $(DSOFLAGS) $(OPTIM)
-ALL_LDFLAGS	=	-L/home/dj/cupsi/lib   $(LDFLAGS)  \
+ALL_DSOFLAGS	=   $(DSOFLAGS) $(OPTIM)
+ALL_LDFLAGS	=	  $(LDFLAGS)  \
 			-fPIE -pie $(OPTIM)
 ARCHFLAGS	=	
 ARFLAGS		=	crvs
@@ -69,7 +69,7 @@ DSOLIBS		=	$(LIBZ) $(COMMONLIBS)
 DNSSDLIBS	=	-lavahi-common -lavahi-client
 IPPFIND_BIN	=	ippfind
 IPPFIND_MAN	=	ippfind.$(MAN1EXT)
-LDFLAGS		=	
+LDFLAGS		=	-Wl,-rpath,${exec_prefix}/lib
 LINKCUPS	=	-lcups $(LIBGSSAPI) $(DNSSDLIBS) $(SSLLIBS) $(LIBZ)
 LINKCUPSIMAGE	=	-lcupsimage
 LIBS		=	$(LINKCUPS) $(COMMONLIBS)
@@ -83,29 +83,58 @@ SSLFLAGS	=	-I/usr/include/p11-kit-1
 SSLLIBS		=	-lgnutls
 UNITTESTS	=	
 
-cups-deviced.o: cups-deviced.c
-	$(LD_CC) -I.. -c cups-deviced.c
+# cups-deviced.o: cups-deviced.c
+# 	$(LD_CC) -I.. -c cups-deviced.c
 	
-cups-deviced:	cups-deviced.o util.o /home/dj/cupsi/lib/$(LIBCUPS)
-	echo Linking $@...
-	$(LD_CC) $(ALL_LDFLAGS) -o cups-deviced cups-deviced.o util.o $(LIBS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+# cups-deviced:	cups-deviced.o util.o $(exec_prefix)/lib/$(LIBCUPS)
+# 	echo Linking $@...
+# 	$(LD_CC) $(ALL_LDFLAGS) -o cups-deviced cups-deviced.o util.o $(LIBS)
+# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
 
-cups-driverd.o: cups-driverd.cxx
-	$(LD_CXX) -I.. -c cups-driverd.cxx
+# cups-driverd.o: cups-driverd.cxx
+# 	$(LD_CXX) -I.. -c cups-driverd.cxx
 
-cups-driverd:	cups-driverd.o util.o /home/dj/cupsi/lib/$(LIBCUPS) ../ppdc/libcupsppdc.a
-	echo Linking $@...
-	$(LD_CXX) $(ALL_LDFLAGS) -o cups-driverd cups-driverd.o util.o \
-		../ppdc/libcupsppdc.a $(LIBS)
-	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+# cups-driverd:	cups-driverd.o util.o $(exec_prefix)/lib/$(LIBCUPS) ../ppdc/libcupsppdc.a
+# 	echo Linking $@...
+# 	$(LD_CXX) $(ALL_LDFLAGS) -o cups-driverd cups-driverd.o util.o \
+# 		../ppdc/libcupsppdc.a $(LIBS)
+# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
 
 util.o: util.c
-	$(LD_CXX) -I.. -c util.c
+	$(LD_CXX) -c util.c
 
-server.o:	server.c
-	$(LD_CC) -I.. -c server.c 
+server.o:	server.c framework-config.h
+	$(LD_CC) -c server.c 
 
-server:		server.o util.o
-	$(LD_CC) $(ALL_LDFLAGS) -o server server.o util.o $(LIBS)
+server:		server.o util.o 
+	$(LD_CC) $(ALL_LDFLAGS) -o server server.o util.o $(LIBS) -ludev
 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+
+deviced.o: deviced.c 
+	$(LD_CC) -c deviced.c 
+
+deviced:	deviced.o util.o
+	$(LD_CC) $(ALL_LDFLAGS) -o deviced deviced.o util.o $(LIBS)
+	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+
+# usb.o:	usb.c
+# 	$(LD_CC) -c usb.c
+
+# usb: usb.o 
+# 	$(LD_CC) $(ALL_LDFLAGS) -o usb usb.o -ludev
+# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+
+# avahi.o: avahi.c
+# 	$(LD_CC) -c avahi.c
+
+# avahi: avahi.o
+# 	$(LD_CC) $(ALL_LDFLAGS) -o avahi avahi.o $(LIBS)
+# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+
+# ippeveprinter.o: ippeveprinter.c
+# 	$(LD_CC) -I.. -c ippeveprinter.c
+
+# ippeveprinter:	ippeveprinter.o 
+# 	echo Linking $@...
+# 	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveprinter.o $(DNSSDLIBS) $(LINKCUPS)
+# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
