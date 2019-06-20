@@ -56,6 +56,10 @@ int main(int argc,
   cups_dir_t *dir;    // FD
   cups_dentry_t *dent;
   double end_time,current_time;
+  if(argc<3||argc>3){
+    fprintf(stderr,"Usage: %s limit timeout\n",argv[0]);
+    return 0;
+  }
 
   device_limit = atoi(argv[1]);
   timeout = atoi(argv[2]);
