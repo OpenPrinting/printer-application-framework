@@ -10,11 +10,7 @@
 
 # CONFIGURE Command: 
 ```
-export CPPFLAGS='-I/home/dj/cups/'
-
-export LDFLAGS="-L/home/dj/cupsi/lib"
-
-./configure --with-drvdir=$pre/share/drv/hp/ --with-mimedir=$pre/share/mime/ --with-hpppddir=$pre/share/ppd/hp/ --with-cupsfilterdir=$pre/filter/ --with-cupsbackenddir=$pre/backend/
+ ./configure --with-drvdir=$pre/share/cups/drv/hp/ --with-mimedir=$pre/share/cups/mime/ --with-hpppddir=$pre/share/cups/ppd/hp/ --with-cupsfilterdir=$pre/lib/cups/filter/ --with-cupsbackenddir=$pre/lib/cups/backend/ --prefix=$pre/
 ```
 
 # Set user-id when calling cups-deviced and cups-driverd
