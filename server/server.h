@@ -21,7 +21,7 @@
 #define MAX_DEVICES 1000
 #define DEVICED_REQ "1"
 #define DEVICED_LIM "100"
-#define DEVICED_TIM "500"
+#define DEVICED_TIM "5"
 #define DEVICED_USE "1"
 #define DEVICED_OPT "\"\""
 
@@ -52,10 +52,31 @@ enum child_signal{
     USB_ADD,
     USB_REMOVE
 };
+static device_t devices[MAX_DEVICES];
+static cups_array_t *con_devices;
+static cups_array_t *temp_devices;
+static int compare_devices(device_t *d0,device_t *d1);
+
+static int get_devices();
+static int parse_line(process_t*);
+static int		process_device(const char *device_class,
+				   const char *device_make_and_model,
+				   const char *device_info,
+				   const char *device_uri,
+				   const char *device_id,
+				   const char *device_location);
+
+static int get_ppd(char* ppd,int ppd_len,char *make_and_model,int make_len,
+                    char *device_id, int dev_len);
+int get_ppd_uri(char* ppd_uri,process_t* process);
+int print_ppd(process_t* backend,cups_file_t* tempPPD);
+
+int monitor_usb_devices(pid_t ppid);
 
 void add_devices(cups_array_t *con, cups_array_t *temp);
 void remove_devices(cups_array_t *con,cups_array_t *temp);
 int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev,int port);
-int getport(int arr_size);
+int getport();
+static int kill_ippeveprinter(pid_t pid);
 #include "detection.c"
