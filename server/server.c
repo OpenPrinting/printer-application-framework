@@ -647,37 +647,45 @@ int start_ippeveprinter(device_t *dev,int port)
     if(getppid() != ppid)
       exit(0);      /*Parent as exited already!*/
     
-    char *argv[10];
-    char name[16],device_uri[2048],ppd[1024],make_and_model[512],command[1024];
+    char *argv[11];
+    char name[16],device_uri[2048],ppd[1024],make_and_model[512],command[1024],pport[8];
     char *envp[2];
     char LD_PATH[512];
     strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
-    fprintf(stdout,"%s\n",LD_PATH);
+
     envp[0]=(char*)LD_PATH;
     envp[1]=NULL;
-     strncpy(name,"ippeveprinter",sizeof(name));
+    
+    strncpy(name,"ippeveprinter",sizeof(name));
     if(dev==NULL)
       exit(1);
     if(dev->device_uri)
       snprintf(device_uri,sizeof(device_uri),"\"%s\"",dev->device_uri);
     if(dev->ppd)
       snprintf(ppd,sizeof(ppd),"%s",dev->ppd);
+    if(port)
+      snprintf(pport,sizeof(pport),"%d",port);
+    
     snprintf(command,sizeof(command),"%s/bin/ippprint",INSTALLDIR);
+
     escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
-    argv[0]= (char*)name;
+    argv[0] = (char*)name;
     argv[1] = "-D";
-    argv[2]= (char*)device_uri;
+    argv[2] = (char*)device_uri;
     argv[3] = "-P";
-    argv[4]= (char*)ppd;
+    argv[4] = (char*)ppd;
     argv[5] = "-c";
-    argv[6]= (char*)command;
-    argv[7]= (char*)make_and_model;
+    argv[6] = (char*)command;
+    argv[7] = "-p";
+    argv[8] = (char*) pport;
+    argv[9]= (char*)make_and_model;
+    argv[10] = NULL;
+  
     dup2(1,2);
-    argv[8] = NULL;
     fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
                      argv[4],argv[5],argv[6],argv[7]);
     
-    execvp(argv[0],argv);
+    execvpe(argv[0],argv,envp);
 
     exit(0);
   }

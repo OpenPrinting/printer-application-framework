@@ -83,48 +83,21 @@ SSLFLAGS	=	-I/usr/include/p11-kit-1
 SSLLIBS		=	-lgnutls
 UNITTESTS	=	
 
-# ALL_CFLAGS = $(CFLAGS)
+
+# LD_FLAGS = `cups-config --ldflags`
 # CFLAGS = `cups-config --cflags`
-# ALL_LDFLAGS = $(LDFLAGS)
-# LDFLAGS = `cups-config --ldflags`
-# ALL_LIBS = $(LIBS)
-# LIBS = `cups-config --libs`
+# CUPS_SERVERROOT = `cups-config --serverroot`
+# LIBS = `cups-config --ldflags`
+# LD_CC = gcc
 
-util.o: util.c
-	$(LD_CXX) $(ALL_CFLAGS) -c util.c
+ippprint.o: ippprint.c
+	$(LD_CC) $(CFLAGS) -c ippprint.c
 
-server.o:	server.c framework-config.h
-	$(LD_CC) $(ALL_CFLAGS) -c server.c 
+ippprint:	ippprint.o
+	$(LD_CC) $(ALL_LDFLAGS)  -o ippprint ippprint.o  $(LIBS)
 
-server:		server.o util.o 
-	$(LD_CC) $(ALL_LDFLAGS) -o server server.o util.o $(LIBS) -ludev
-#	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+mime_type.o: mime_type.c
+	$(LD_CC) $(CFLAGS) -c mime_type.c
 
-deviced.o: deviced.c 
-	$(LD_CC) $(ALL_CFLAGS) -c deviced.c 
-
-deviced:	deviced.o util.o
-	$(LD_CC) $(ALL_LDFLAGS) -o deviced deviced.o util.o $(LIBS)
-#	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-# usb.o:	usb.c
-# 	$(LD_CC) -c usb.c
-
-# usb: usb.o 
-# 	$(LD_CC) $(ALL_LDFLAGS) -o usb usb.o -ludev
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-# avahi.o: avahi.c
-# 	$(LD_CC) -c avahi.c
-
-# avahi: avahi.o
-# 	$(LD_CC) $(ALL_LDFLAGS) -o avahi avahi.o $(LIBS)
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-# ippeveprinter.o: ippeveprinter.c
-# 	$(LD_CC) -I.. -c ippeveprinter.c
-
-# ippeveprinter:	ippeveprinter.o 
-# 	echo Linking $@...
-# 	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveprinter.o $(DNSSDLIBS) $(LINKCUPS)
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+mime_type: mime_type.o
+	$(LD_CC) $(ALL_LDFLAGS) -o mime_type mime_type.o ../server/util.o $(LIBS)
