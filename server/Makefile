@@ -107,24 +107,14 @@ deviced:	deviced.o util.o
 	$(LD_CC) $(ALL_LDFLAGS) -o deviced deviced.o util.o $(LIBS)
 #	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
 
-# usb.o:	usb.c
-# 	$(LD_CC) -c usb.c
+ippprint.o: ippprint.c
+	$(LD_CC) $(CFLAGS) -c ippprint.c
 
-# usb: usb.o 
-# 	$(LD_CC) $(ALL_LDFLAGS) -o usb usb.o -ludev
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+ippprint:	ippprint.o
+	$(LD_CC) $(ALL_LDFLAGS)  -o ippprint ippprint.o  $(LIBS)
 
-# avahi.o: avahi.c
-# 	$(LD_CC) -c avahi.c
+mime_type.o: mime_type.c
+	$(LD_CC) $(CFLAGS) -c mime_type.c
 
-# avahi: avahi.o
-# 	$(LD_CC) $(ALL_LDFLAGS) -o avahi avahi.o $(LIBS)
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
-
-# ippeveprinter.o: ippeveprinter.c
-# 	$(LD_CC) -I.. -c ippeveprinter.c
-
-# ippeveprinter:	ippeveprinter.o 
-# 	echo Linking $@...
-# 	$(LD_CC) $(ALL_LDFLAGS) -o $@ ippeveprinter.o $(DNSSDLIBS) $(LINKCUPS)
-# 	$(CODE_SIGN) -s "$(CODE_SIGN_IDENTITY)" $@
+mime_type: mime_type.o
+	$(LD_CC) $(ALL_LDFLAGS) -o mime_type mime_type.o util.o $(LIBS)

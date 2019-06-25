@@ -3,7 +3,7 @@
 #include <cups/dir.h>
 #include <cups/file.h>
 #include <ctype.h>
-#include "../server/util.h"
+#include "util.h"
 
 typedef struct{
   char *typename;
