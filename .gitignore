@@ -8,3 +8,7 @@ configure.scan
 Makefile
 stamp-h1
 compile
+config.status
+depcomp
+missing
+config.h
