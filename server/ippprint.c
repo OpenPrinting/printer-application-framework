@@ -9,7 +9,7 @@ FILE *sout,*serr;
 void ini()
 {
   char logs[2048];
-  snprintf(logs,sizeof(logs),"%s/var/temp/logs.txt",INSTALLDIR);
+  snprintf(logs,sizeof(logs),"%s/logs.txt",TMPDIR);
   sout = fopen(logs,"a");
   fprintf(sout,"*****************************************************\n");
 }

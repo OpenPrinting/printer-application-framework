@@ -138,7 +138,6 @@ static void client_callback(AvahiClient *c,
 }
 int monitor_avahi_devices(pid_t parent_pid)
 {
-  fprintf(stdout,"YO!\n");
   ppid = parent_pid;
   AvahiClient *client = NULL;
   AvahiServiceBrowser *sb = NULL;

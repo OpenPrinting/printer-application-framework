@@ -500,7 +500,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   const char *serverbin;
   char program[2048];
   char *argv[6];
-  char name[16],operation[8],request_id[4],limit[5],options[128];
+  char name[16],operation[8],request_id[4],limit[5],options[1024];
   char ppd_uri[128];
   char ppd_name[1024];  //full ppd path
   char escp_model[256];
@@ -574,7 +574,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   }
   
   escape_string(escp_model,make_and_model,make_len);
-  snprintf(ppd_name,sizeof(ppd_name),"%s/%s.ppd",PPDDIR,escp_model);
+  snprintf(ppd_name,sizeof(ppd_name),"%s/ppd/%s.ppd",TMPDIR,escp_model);
   cups_file_t* tempPPD;
   if((tempPPD = cupsFileOpen(ppd_name,"w"))==NULL)
   {
@@ -639,7 +639,6 @@ int start_ippeveprinter(device_t *dev,int port)
   }
   else if(pid==0){
     int status = 0;
-    printf("YO!!!\n");
     if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
       perror(0);    /*Unable to set prctl*/
       exit(1);
@@ -652,7 +651,7 @@ int start_ippeveprinter(device_t *dev,int port)
     char *envp[2];
     char LD_PATH[512];
     strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
-
+    setenv("LD_LIBRARY_PATH","/usr/lib",1);
     envp[0]=(char*)LD_PATH;
     envp[1]=NULL;
     
@@ -666,7 +665,7 @@ int start_ippeveprinter(device_t *dev,int port)
     if(port)
       snprintf(pport,sizeof(pport),"%d",port);
     
-    snprintf(command,sizeof(command),"%s/bin/ippprint",INSTALLDIR);
+    snprintf(command,sizeof(command),"%s/ippprint",BINDIR);
 
     escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
     argv[0] = (char*)name;
@@ -685,7 +684,7 @@ int start_ippeveprinter(device_t *dev,int port)
     fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
                      argv[4],argv[5],argv[6],argv[7]);
     
-    execvpe(argv[0],argv,envp);
+    execvp(argv[0],argv);
 
     exit(0);
   }

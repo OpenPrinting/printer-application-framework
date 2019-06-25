@@ -1,0 +1,185 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* bindir */
+#undef BINDIR
+
+/* cachedir */
+#undef CACHEDIR
+
+/* Cups serverbin directory */
+#undef CUPS_SERVERBIN
+
+/* datadir */
+#undef DATADIR
+
+/* exec prefix */
+#undef EXEC_PREFIX
+
+/* Do we have Avahi? */
+#undef HAVE_AVAHI
+
+/* Define to 1 if you have the <avahi-client/client.h> header file. */
+#undef HAVE_AVAHI_CLIENT_CLIENT_H
+
+/* Define to 1 if you have the <avahi-client/lookup.h> header file. */
+#undef HAVE_AVAHI_CLIENT_LOOKUP_H
+
+/* Define to 1 if you have the <avahi-common/error.h> header file. */
+#undef HAVE_AVAHI_COMMON_ERROR_H
+
+/* Define to 1 if you have the <avahi-common/malloc.h> header file. */
+#undef HAVE_AVAHI_COMMON_MALLOC_H
+
+/* Define to 1 if you have the <avahi-common/simple-watch.h> header file. */
+#undef HAVE_AVAHI_COMMON_SIMPLE_WATCH_H
+
+/* Define to 1 if you have the <cups/array.h> header file. */
+#undef HAVE_CUPS_ARRAY_H
+
+/* Define to 1 if you have the <cups/cups.h> header file. */
+#undef HAVE_CUPS_CUPS_H
+
+/* Define to 1 if you have the <cups/dir.h> header file. */
+#undef HAVE_CUPS_DIR_H
+
+/* Define to 1 if you have the <cups/file.h> header file. */
+#undef HAVE_CUPS_FILE_H
+
+/* Define to 1 if you have the <cups/ppd.h> header file. */
+#undef HAVE_CUPS_PPD_H
+
+/* Define to 1 if you have the `dup2' function. */
+#undef HAVE_DUP2
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
+/* Define to 1 if you have the `fork' function. */
+#undef HAVE_FORK
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `cups' library (-lcups). */
+#undef HAVE_LIBCUPS
+
+/* Define to 1 if you have the `memmove' function. */
+#undef HAVE_MEMMOVE
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `memset' function. */
+#undef HAVE_MEMSET
+
+/* Define to 1 if you have the `socket' function. */
+#undef HAVE_SOCKET
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strcasecmp' function. */
+#undef HAVE_STRCASECMP
+
+/* Define to 1 if you have the `strdup' function. */
+#undef HAVE_STRDUP
+
+/* Define to 1 if you have the `strerror' function. */
+#undef HAVE_STRERROR
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strncasecmp' function. */
+#undef HAVE_STRNCASECMP
+
+/* Define to 1 if you have the `strstr' function. */
+#undef HAVE_STRSTR
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vfork' function. */
+#undef HAVE_VFORK
+
+/* Define to 1 if you have the <vfork.h> header file. */
+#undef HAVE_VFORK_H
+
+/* Define to 1 if `fork' works. */
+#undef HAVE_WORKING_FORK
+
+/* Define to 1 if `vfork' works. */
+#undef HAVE_WORKING_VFORK
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* prefix */
+#undef PREFIX
+
+/* serverbin */
+#undef SERVERBIN
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* temp dir */
+#undef TMPDIR
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to `int' if <sys/types.h> doesn't define. */
+#undef gid_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef pid_t
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t
+
+/* Define to `int' if <sys/types.h> doesn't define. */
+#undef uid_t
+
+/* Define to the type of an unsigned integer type of width exactly 16 bits if
+   such a type exists and the standard includes do not define it. */
+#undef uint16_t
+
+/* Define as `fork' if `vfork' does not work. */
+#undef vfork

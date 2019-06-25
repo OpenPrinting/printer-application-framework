@@ -8,7 +8,7 @@
  *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
  *  information.
  */
-#include "framework-config.h"
+#include <config.h>
 #include <cups/file.h>
 #include <cups/array.h>
 #include "util.h"
