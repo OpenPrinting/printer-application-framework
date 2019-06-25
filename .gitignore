@@ -1,3 +1,10 @@
 .vscode/
 *.o
 /var/cache/ppds.dat
+autom4te.cache/
+autoscan.log
+config.log
+configure.scan
+Makefile
+stamp-h1
+compile
