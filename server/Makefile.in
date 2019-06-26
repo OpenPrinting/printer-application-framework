@@ -188,6 +188,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUPSCONFIG = @CUPSCONFIG@
+CUPS_DATADIR = @CUPS_DATADIR@
+CUPS_DRIVERD = @CUPS_DRIVERD@
 CUPS_SERVERBIN = @CUPS_SERVERBIN@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -203,9 +205,13 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+IPPEVEPRINTER = @IPPEVEPRINTER@
 LDFLAGS = @LDFLAGS@
+LDFLAGS_CUPS = @LDFLAGS_CUPS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_CUPS = @LIB_CUPS@
+LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
@@ -272,7 +278,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 LIB_AVAHI = -lavahi-common -lavahi-client
-LIB_CUPS = -lcups
+#LIB_CUPS = -lcups
 LIB_UDEV = -ludev
 AM_CFLAGS = -I..
 deviced_SOURCES = deviced.c util.c util.h
@@ -284,7 +290,7 @@ mime_type_LDADD = $(LIB_CUPS)
 server_SOURCES = server.c util.c server.h
 server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
 DIRECTORIES = $(prefix)/var/cache $(prefix)/var/tmp/ppd \
-	$(datadir)/drv $(datadir)/mime $(datadir)/model $(datadir)/ppd $(datadir)/ppdc
+	$(datadir)/drv $(datadir)/mime $(datadir)/model
 
 DIR2 = $(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter \
 	$(ppddir) $(bindir)
@@ -682,6 +688,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 install-data-local:
 	echo "Serverbin: " $(serverbin)
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
+	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

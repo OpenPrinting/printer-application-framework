@@ -23,12 +23,12 @@ if test "$exec_prefix" = "NONE";then
     fi
 fi
 
-echo $datarootdir
-echo "x\${datarootdir}"
+# echo $datarootdir
+# echo "x\${datarootdir}"
 
 #if test "x$datarootdir" = "x";then
     datarootdir="$exec_prefix/share"
-    echo "${datarootdir}"
+    # echo "${datarootdir}"
 #fi
 
 if test "x$datadir" = "x\${datarootdir}";then
@@ -48,6 +48,7 @@ if test "x$tmpdir" = "x";then
 fi
 
 bindir="$exec_prefix/bin"
+# sbindir="$exec_prefix"
 # AC_DEFINE([EXEC_PREFIX],[],[EXEC prefix])
 # AC_DEFINE([PREFIX],[],[prefix])
 # AC_DEFINE([DATADIR],[],[datadir])
@@ -64,7 +65,7 @@ AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
 AC_DEFINE_UNQUOTED([BINDIR],["$bindir"],[bindir])
 AC_DEFINE_UNQUOTED([TMPDIR],["$tmpdir"],[temp dir])
 
-echo "$serverbin"
+# echo "$serverbin"
 AC_SUBST([serverbin])
 
 ######################################################################
@@ -83,14 +84,29 @@ AS_IF([test "x$with_cups_config" != "xsystem"], [
 		AC_MSG_ERROR([Required cups-config is missing. Please install CUPS developer packages.])
 	])
 ])
-CUPS_SERVERBIN="`$CUPSCONFIG --serverbin`"
+cups_serverbin=`$CUPSCONFIG --serverbin`
+CUPS_DATADIR="`$CUPSCONFIG --datadir`"
+LIB_CUPS=`$CUPSCONFIG --libs`
+LDFLAGS_CUPS=`$CUPSCONFIG --ldflags`
+CUPS_SERVERBIN="$cups_serverbin"
 AC_SUBST(CUPS_SERVERBIN)
+AC_SUBST(CUPS_DATADIR)
+AC_SUBST(LIB_CUPS)
+AC_SUBST(LDFLAGS_CUPS)
 AC_DEFINE_UNQUOTED([CUPS_SERVERBIN],["$CUPS_SERVERBIN"],[Cups serverbin directory])
 ######################################################################
 
 # Checks for programs.
 AC_PROG_CC
-
+AC_PROG_LN_S
+AC_CHECK_PROG(IPPEVEPRINTER,ippeveprinter,yes,no)
+if test x"$IPPEVEPRINTER" != x"yes";then
+    AC_MSG_ERROR([Please install ippeveprinter from cups package and try again.])
+fi
+AC_CHECK_PROG(CUPS_DRIVERD,cups-driverd,yes,no,[$cups_serverbin/daemon/])
+if test x"$CUPS_DRIVERD" != x"yes";then
+    AC_MSG_ERROR([Please install cups-driverd from cups package and try again.])
+fi
 # Checks for libraries.
 AC_CHECK_LIB([cups],[cupsAddDest])
 # Checks for header files.
@@ -99,8 +115,8 @@ AC_CHECK_HEADERS([cups/cups.h cups/array.h cups/dir.h cups/file.h cups/ppd.h])
 ######################################################################
 # Check for avahi
 PKG_CHECK_MODULES([libavahi],[avahi-client],[have_avahi=1],[have_avahi=0])
-echo "HAVE_AVAHI="$have_avahi
-if test "$have_avahi" = "1"; then
+# echo "HAVE_AVAHI="$have_avahi
+if test x"$have_avahi" = x"1"; then
     AC_CHECK_HEADERS([avahi-client/client.h avahi-client/lookup.h avahi-common/simple-watch.h\
     avahi-common/malloc.h avahi-common/error.h],[],[have_avahi=0])
 fi

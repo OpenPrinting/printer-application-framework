@@ -171,7 +171,7 @@ get_devices(int insert)
     strcpy(options,DEVICED_OPT);
 
     snprintf(program,sizeof(program),"%s",name);
-    snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
+    // snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
     //     return (-1);

@@ -1,8 +1,8 @@
-bin_PROGRAMS = server
-sbin_PROGRAMS = ippprint mime_type deviced
+bin_PROGRAMS = server deviced ippprint mime_type
+sbin_PROGRAMS = 
 
 LIB_AVAHI = -lavahi-common -lavahi-client
-LIB_CUPS = -lcups
+#LIB_CUPS = -lcups
 LIB_UDEV = -ludev
 
 AM_CFLAGS = -I..
@@ -20,7 +20,7 @@ server_SOURCES = server.c util.c server.h
 server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
 
 DIRECTORIES = $(prefix)/var/cache $(prefix)/var/tmp/ppd \
-	$(datadir)/drv $(datadir)/mime $(datadir)/model $(datadir)/ppd $(datadir)/ppdc
+	$(datadir)/drv $(datadir)/mime $(datadir)/model
 	
 DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter \
 	$(ppddir) $(bindir)
@@ -30,3 +30,4 @@ DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter 
 install-data-local:
 	echo "Serverbin: " $(serverbin)
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
+	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc

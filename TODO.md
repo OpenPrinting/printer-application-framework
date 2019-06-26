@@ -22,4 +22,6 @@
 # Do we need to handle driverless???? I don't think so!!!!
 # Whatever we are doing here is for printer drivers!
 
+### Add ippeveprinter to configure.ac and update readme.md
 
+# Test entire code with hplip
