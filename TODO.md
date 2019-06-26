@@ -1,27 +1,16 @@
-# Get PPD 
-- Use limit = 1 and first of all test by installing hplip.
 
-# Child Process
+### Child Process
 - For Child Process: https://stackoverflow.com/a/36945270 [Done]
 
-# For listening on udev and avahi - Look into it. [libudev is done.]
-
-# ...
-
-# CONFIGURE Command: 
+### CONFIGURE Command: 
 ```
  ./configure --with-drvdir=$pre/share/cups/drv/hp/ --with-mimedir=$pre/share/cups/mime/ --with-hpppddir=$pre/share/cups/ppd/hp/ --with-cupsfilterdir=$pre/lib/cups/filter/ --with-cupsbackenddir=$pre/lib/cups/backend/ --prefix=$pre/
 ```
 
-# Set spool directory
+### Set spool directory
 
-# Set user-id when calling cups-deviced and cups-driverd
+### Set user-id when calling cups-driverd.
 
-# We need to add support for different URI(backends) in ippeveprinter.
+### Work on mime_type.c
 
-# Do we need to handle driverless???? I don't think so!!!!
-# Whatever we are doing here is for printer drivers!
-
-### Add ippeveprinter to configure.ac and update readme.md
-
-# Test entire code with hplip
+### Manage signals. [Add ignore policy]
