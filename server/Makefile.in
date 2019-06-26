@@ -86,8 +86,9 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = server$(EXEEXT)
-sbin_PROGRAMS = ippprint$(EXEEXT) mime_type$(EXEEXT) deviced$(EXEEXT)
+bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT) \
+	mime_type$(EXEEXT)
+sbin_PROGRAMS =
 subdir = server
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -688,7 +689,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 install-data-local:
 	echo "Serverbin: " $(serverbin)
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
+	$(RM) $(datadir)/ppdc
 	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
+	chown -R root:root $(datadir)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

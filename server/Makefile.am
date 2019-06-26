@@ -30,4 +30,6 @@ DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter 
 install-data-local:
 	echo "Serverbin: " $(serverbin)
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
+	$(RM) $(datadir)/ppdc
 	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
+	chown -R root:root $(datadir)

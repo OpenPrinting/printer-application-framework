@@ -2950,6 +2950,7 @@ if test "x$tmpdir" = "x";then
 fi
 
 bindir="$exec_prefix/bin"
+# sbindir="$exec_prefix"
 # AC_DEFINE([EXEC_PREFIX],[],[EXEC prefix])
 # AC_DEFINE([PREFIX],[],[prefix])
 # AC_DEFINE([DATADIR],[],[datadir])

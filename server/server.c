@@ -171,7 +171,7 @@ get_devices(int insert)
     strcpy(options,DEVICED_OPT);
 
     snprintf(program,sizeof(program),"%s",name);
-    // snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
+    snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
     //     return (-1);
@@ -695,37 +695,21 @@ int start_ippeveprinter(device_t *dev,int port)
 
 int getport()
 {
-  int port;
-  int sock = socket(AF_INET,SOCK_STREAM,0);
-  if(sock<0) {
-    fprintf(stderr,"SOCKET ERROR!\n");
-    return -1;
-  }
-  struct sockaddr_in serv_addr;
-  memset(&serv_addr,sizeof(serv_addr),0);
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = 0;
-  if (bind(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-    if(errno == EADDRINUSE) {
-        printf("No Port is available!\n");
-        return -1;
-    } else {
-        printf("could not bind to process (%d) %s\n", errno, strerror(errno));
-        return -1;
+  int port = 8000;
+  for(;port<9000;port++)
+  {
+    int sd=0;
+    struct sockaddr_in server;
+    memset(&server,0,sizeof(server));
+    server.sin_family=AF_INET;
+    server.sin_addr.s_addr=htonl(INADDR_ANY);
+    server.sin_port=htons(port);
+    if(bind(sd,(struct sockaddr*)&server,sizeof(struct sockaddr))>=0)
+    {
+      break;
     }
   }
-
-  socklen_t len = sizeof(serv_addr);
-  if (getsockname(sock, (struct sockaddr *)&serv_addr, &len) == -1) {
-      perror("getsockname");
-      return -1;
-  }
-
-  port = ntohs(serv_addr.sin_port);
-  close(sock);
   return port;
-
 }
 
 static int kill_ippeveprinter(pid_t pid)
