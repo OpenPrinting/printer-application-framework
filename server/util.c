@@ -603,7 +603,9 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     }
     char logs[1024];
     snprintf(logs,sizeof(logs),"%s/logs.txt",TMPDIR);
-    if ((fd = open(logs,O_WRONLY))>0)
+    int logfd = open(logs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    close(logfd);
+    if ((fd = open(logs,O_WRONLY|O_APPEND))>0)
     {
       dup2(fd,2);
       close(fd);

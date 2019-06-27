@@ -684,7 +684,9 @@ int start_ippeveprinter(device_t *dev,int port)
     //dup2(1,2);
     char printerlogs[1024];
     snprintf(printerlogs,sizeof(printerlogs),"%s/printer.logs",TMPDIR);
-    int logfd = open(printerlogs,O_WRONLY|O_APPEND);
+    int logfd = open(printerlogs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    close(logfd);
+    logfd = open(printerlogs,O_WRONLY|O_APPEND);
     if(logfd>0)
     {
       close(2);
