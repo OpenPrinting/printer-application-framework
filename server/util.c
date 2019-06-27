@@ -12,9 +12,7 @@
  */
 
 #include "util.h"
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+
 #ifdef __APPLE__
 #  include <libgen.h>
 extern char **environ;
@@ -603,6 +601,13 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
       dup2(fd, 0);			/* </dev/null */
       close(fd);
     }
+    char logs[1024];
+    snprintf(logs,sizeof(logs),"%s/logs.txt",TMPDIR);
+    if ((fd = open(logs,O_WRONLY))>0)
+    {
+      dup2(fd,2);
+      close(fd);
+    }
 
     dup2(fds[1], 1);			/* >pipe */
     close(fds[1]);
@@ -661,4 +666,19 @@ _cups_strcpy(char       *dst,		/* I - Destination string */
     *dst++ = *src++;
 
   *dst = '\0';
+}
+
+char *strrev(char *str)
+{
+      char *p1, *p2;
+
+      if (! str || ! *str)
+            return str;
+      for (p1 = str, p2 = str + strlen(str) - 1; p2 > p1; ++p1, --p2)
+      {
+            *p1 ^= *p2;
+            *p2 ^= *p1;
+            *p1 ^= *p2;
+      }
+      return str;
 }

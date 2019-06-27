@@ -1,45 +1,24 @@
 #include "ippprint.h"
-#include <cups/array.h>
-#include <cups/dir.h>
-#include <cups/file.h>
-#include <ctype.h>
 #include "util.h"
 
-typedef struct{
-  char *typename;
-  int index;
-}type_t;
+static database_t *mime_database;
+static cups_array_t* aval_convs;
+static cups_array_t* aval_types;
+static cups_array_t* aval_types_name;
 
-typedef struct{
-  type_t *src,
-    *dest;
-  char *filter;
-  int cost;
-}filter_t;
-
-typedef struct{
-  int num_types;
-  cups_array_t **filter_graph;
-}database_t;
-
-database_t *mime_database;
-cups_array_t* aval_convs;
-cups_array_t* aval_types;
-cups_array_t* aval_types_name;
-
-filter_t* filterNew()
+static filter_t* filterNew()
 {
   filter_t *filter=calloc(1,sizeof(filter_t));  
   return filter;
 }
 
-type_t* typeNew()
+static type_t* typeNew()
 {
   type_t *type = calloc(1,sizeof(type_t));
   return type;
 }
 
-type_t* typeCopy(type_t* t)
+static type_t* typeCopy(type_t* t)
 {
   type_t* ret = typeNew();
   ret->index = t->index;
@@ -47,7 +26,7 @@ type_t* typeCopy(type_t* t)
   return ret;
 }
 
-filter_t* filterCopy(filter_t *t)
+static filter_t* filterCopy(filter_t *t)
 {
   filter_t* ret = filterNew();
   ret->filter = strdup(t->filter);
@@ -57,7 +36,7 @@ filter_t* filterCopy(filter_t *t)
 }
 
 
-int getIndex(type_t* type)
+static int getIndex(type_t* type)
 {
   // fprintf(stdout,"Searching: %s %d\n",type->typename,strlen(type->typename));
   type_t* poi = cupsArrayFind(aval_types_name,type);
@@ -91,35 +70,39 @@ static int compare_filters( filter_t *f1,
   else return strcasecmp(f1->filter,f2->filter);
 }
 
-void getfilter(char *line,int len)
+static void addFilter(char* temp0,char*temp1,char*temp2, int cost)
 {
   filter_t* filter = filterNew();
-  char temp[3][128];
-  sscanf(line,"%s\t%s\t%d\t%s",temp[0],temp[1],
-              &(filter->cost),temp[2]);
-  // fprintf(stdout,"%s %s %d %s\n",temp[0],temp[1],
-  //             (filter->cost),temp[2]);
+  filter->cost = cost;
   type_t* src = typeNew();
-  src->typename = strdup(temp[0]);
+  src->typename = strdup(temp0);
   src->index = getIndex(src);
   // fprintf(stdout,"Done src\n");
   type_t* dest = typeNew();
-  dest->typename = strdup(temp[1]);
+  dest->typename = strdup(temp1);
   dest->index = getIndex(dest);
   // fprintf(stdout,"Done dest\n");
   filter->src = src;
   filter->dest = dest;
-  filter->filter = strdup(temp[2]);
+  filter->filter = strdup(temp2);
   // fprintf(stdout,"Done ALL-1! %d %d\n",src->index,dest->index);
   if(src->index<0||dest->index<0)
     return;
   cups_array_t** temp_arr = mime_database->filter_graph;
   temp_arr+=src->index;
   cupsArrayAdd(*temp_arr,filter);
-  // fprintf(stdout,"Done ALL!\n");
 }
 
-void gettype(char* line,int len)
+static void getfilter(char *line,int len)
+{
+  int cost;
+  char temp[3][128];
+  sscanf(line,"%s\t%s\t%d\t%s",temp[0],temp[1],
+              &(cost),temp[2]);
+  addFilter(temp[0],temp[1],temp[2],cost);
+}
+
+static void addType(char *temp)
 {
   type_t* type = calloc(1,sizeof(type));
   type_t* type1 = calloc(1,sizeof(type));
@@ -128,9 +111,6 @@ void gettype(char* line,int len)
     fprintf(stderr,"Unable to allocate memory!\n");
     exit(1);
   }
-  char temp[128];
-  sscanf(line,"%s",temp);
-  // fprintf(stdout,"TYPE: %s\n",temp);
   type->typename = strdup(temp);
   type1->typename = strdup(temp);
   if(cupsArrayFind(aval_types_name,type)==NULL)
@@ -148,11 +128,16 @@ void gettype(char* line,int len)
   }
 }
 
-void read_file(char* fname,int conv)
+static void gettype(char* line,int len)
 {
-  char fullname[2048];
-  snprintf(fullname,sizeof(fullname),"%s/mime/%s",DATADIR,fname);
-  cups_file_t* in_file = cupsFileOpen(fullname,"r");
+  char temp[128];
+  sscanf(line,"%s",temp);
+  addType(temp);
+}
+
+static void read_file(char* fname,int conv)
+{
+  cups_file_t* in_file = cupsFileOpen(fname,"r");
 
   if(in_file==NULL){
       fprintf(stderr,"Unable to read!\n");
@@ -175,35 +160,47 @@ void read_file(char* fname,int conv)
   }
   cupsFileClose(in_file);
 }
-
-void load_convs(int read_convo)
+static void readDir(char* dirname,int read_convo)
+{
+  cups_dir_t *dir = cupsDirOpen(dirname);
+  cups_dentry_t* dentry;
+  // fprintf(stderr,"Dir name: %s\n",dirname);
+  while((dentry=cupsDirRead(dir)))
+  {
+      char *fname = strdup(dentry->filename);
+      
+      char desname[2048];
+      snprintf(desname,sizeof(desname),"%s/%s",
+                dirname,fname);
+      fname = strrev(fname);
+      int p;
+      if(S_ISDIR(dentry->fileinfo.st_mode))
+      {
+        readDir(desname,read_convo);
+        continue;
+      }
+      if((p=strncmp(fname,"svnoc.",6))==0)
+      {
+        if(read_convo)
+          read_file(desname,1);
+      }
+      else if((p=strncmp(fname,"sepyt.",6))==0)
+      {
+        if(!read_convo)
+          read_file(desname,0);
+      }
+      free(fname);
+  }
+  cupsDirClose(dir);
+}
+static void load_convs(int read_convo)
 {
     char mime_dir[1024];
     snprintf(mime_dir,sizeof(mime_dir),"%s/mime/",DATADIR);
-    cups_dir_t *dir = cupsDirOpen(mime_dir);
-    cups_dentry_t* dentry;
-    while((dentry=cupsDirRead(dir)))
-    {
-        char *fname = strdup(dentry->filename);
-        char *p;
-        // fprintf(stdout,"%s\n",fname);
-
-        if(p=strstr(fname,".convs"))
-        {
-          if(read_convo)
-            read_file(fname,1);
-        }
-        else if(p=strstr(fname,".types"))
-        {
-          if(!read_convo)
-            read_file(fname,0);
-        }
-        free(fname);
-    }
-    cupsDirClose(dir);
+    readDir(mime_dir,read_convo);
 }
 
-void createDatabase()
+static void createDatabase()
 {
   int num_types = cupsArrayCount(aval_types);
   mime_database = calloc(1,sizeof(database_t));
@@ -223,15 +220,11 @@ void createDatabase()
   }
 }
 
-int initialize_filter_chain()
+static int initialize_filter_chain()
 {
   aval_convs = cupsArrayNew((cups_array_func_t)compare_filters,NULL);
   aval_types_name = cupsArrayNew((cups_array_func_t)compare_types_name,NULL);
   aval_types = cupsArrayNew((cups_array_func_t)compare_types,NULL);
-  load_convs(0);
-  createDatabase();
-  // fprintf(stdout,"Size: %d\n",mime_database->num_types);
-  load_convs(1);
   int num_types = mime_database->num_types;
   // for(type_t* t=cupsArrayFirst(aval_types);t;t= cupsArrayNext(aval_types))
   // {
@@ -239,7 +232,7 @@ int initialize_filter_chain()
   // }
 }
 
-int minDistanceVertex(int *distance,int *inTree)
+static int minDistanceVertex(int *distance,int *inTree)
 {
   int min = INFINITY, min_index;
   int v = 0;
@@ -256,7 +249,7 @@ int minDistanceVertex(int *distance,int *inTree)
   return min_index;
 }
 
-filter_t* getFilter(int src_index,int dest_index)
+static filter_t* getFilter(int src_index,int dest_index)
 {
   cups_array_t* arr = *(mime_database->filter_graph+src_index);
   for(filter_t* t=cupsArrayFirst(arr);t;t=cupsArrayNext(arr))
@@ -268,7 +261,7 @@ filter_t* getFilter(int src_index,int dest_index)
   }
 }
 
-int dijkstra(int src_index,int dest_index,cups_array_t *arr)
+static int dijkstra(int src_index,int dest_index,cups_array_t *arr)
 {
   fprintf(stdout,"Starting Dijkstra: %d -> %d\n",src_index,dest_index);
   if(src_index==dest_index)
@@ -327,11 +320,9 @@ int dijkstra(int src_index,int dest_index,cups_array_t *arr)
   }
   return 0;
 }
-int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
+static int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
 {
   cups_array_t *temp;
-  initialize_filter_chain();
-
   type_t *src,*dest;
   src = typeNew();
   dest = typeNew();
@@ -352,20 +343,87 @@ int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
   temp = cupsArrayNew(NULL,NULL);
   
   dijkstra(src_index,dest_index,temp);
-  for(filter_t* t=cupsArrayFirst(temp);t;t=cupsArrayNext(temp))
+  int num_fil = cupsArrayCount(temp);
+  for(int i =num_fil-1;i>=0;i--)
   {
-    filter_t *s = filterCopy(t);
+    filter_t *s = filterCopy(cupsArrayIndex(temp,i));
     cupsArrayAdd(*arr,s);
   }
   cupsArrayDelete(temp);
 }
-int main()
+
+int get_ppd_filter_chain(char* user_src,char *user_dest,char *ppdname,cups_array_t **arr)
 {
-  cups_array_t* filter_chain;
-  int res = get_filter_chain("image/jpeg","application/vnd.cups-pdf",&filter_chain);
-  fprintf(stdout,"RES:%d\n",res);
-  for(filter_t* f = cupsArrayFirst(filter_chain);f;f=cupsArrayNext(filter_chain))
+  char ventorType[128];
+  strcpy(ventorType,"application/vnd.custom.paf");
+  initialize_filter_chain();
+  load_convs(0);            //Load Types
+  ppd_file_t* ppd = ppdOpenFile(ppdname);
+  if(ppd==NULL)
   {
-    fprintf(stdout,"FILTER: %s(%s->%s)\n",f->filter,f->src->typename,f->dest->typename);
+    fprintf(stderr,"Unable to open PPD!\n");
+    // return -1;
   }
+  char **filters;
+  if(ppd){
+    filters = ppd->filters;
+    for(int i=0;i<ppd->num_filters;i++)
+    {
+      char src[128],filter[128];
+      int cost;
+      sscanf(*filters,"%s %d %s",src,&cost,filter);
+      addType(src);
+    }
+    addType(ventorType);
+  }
+  createDatabase();
+  load_convs(1);
+  if(ppd){
+    filters = ppd->filters;
+    for(int i=0;i<ppd->num_filters;i++)
+    {
+      char src[128],filter[128];
+      int cost;
+      sscanf(*filters,"%s %d %s",src,&cost,filter);
+      addFilter(src,ventorType,filter,cost);
+    }
+  }
+  if(ppd){
+    if(ppd->num_filters==0)
+      return get_filter_chain(user_src,user_dest,arr);
+    else
+      return get_filter_chain(user_src,ventorType,arr);
+  }
+  else if(user_dest){
+    return get_filter_chain(user_src,user_dest,arr);
+  }
+
+  return -1;
+  // if(user_dest)
+  //   get_filter_chain(user_src,user_dest,arr);
+  // else if(ppd) 
+  //   get_filter_chain(user_src,ventorType,arr);
+  // else return -1;
+  return 0;
 }
+
+// void setup()
+// {
+//   initialize_filter_chain();
+//   load_convs(0);
+//   createDatabase();
+//   load_convs(1);
+// }
+
+// int main()
+// {
+//   cups_array_t* filter_chain;
+//   //setup();
+//   //int res = get_filter_chain("image/jpeg","application/vnd.cups-pdf",&filter_chain);
+//   int res = get_ppd_filter_chain("application/pdf","/home/dj/Desktop/HP-OfficeJet-Pro-6960.ppd",&filter_chain);
+//   fprintf(stdout,"RES:%d\n",res);
+//   for(filter_t* f = cupsArrayFirst(filter_chain);f;f=cupsArrayNext(filter_chain))
+//   {
+//     fprintf(stdout,"FILTER: %s(%s->%s)\n",f->filter,f->src->typename,f->dest->typename);
+//   }
+// }

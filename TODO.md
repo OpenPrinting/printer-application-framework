@@ -14,3 +14,5 @@
 ### Work on mime_type.c
 
 ### Manage signals. [Add ignore policy]
+
+### Make sure ippeveprinter is running as normal user.

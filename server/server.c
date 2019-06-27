@@ -170,7 +170,7 @@ get_devices(int insert)
     strcpy(user_id,DEVICED_USE);
     strcpy(options,DEVICED_OPT);
 
-    snprintf(program,sizeof(program),"%s",name);
+    snprintf(program,sizeof(program),"%s/%s",BINDIR,name);
     snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
@@ -191,6 +191,7 @@ get_devices(int insert)
     env[1]  = NULL;
 
     DEBUG(program);
+    // fprintf(stdout,"Running deviced!\n");
     if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,env,
                             0))==NULL)
     {
@@ -520,7 +521,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   _cups_strcpy(limit,"1");
   snprintf(options,sizeof(options),"ppd-make-and-model=\'%s\' ppd-device-id=\'%s\'",make_and_model,device_id);
   //snprintf(options,sizeof(options),"ppd-make-and-model=\'HP\'");
-  fprintf(stdout,"%s\n",options);
+  // fprintf(stdout,"%s\n",options);
 
   snprintf(datadir,sizeof(datadir),"CUPS_DATADIR=%s",DATADIR);
   snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
@@ -680,9 +681,25 @@ int start_ippeveprinter(device_t *dev,int port)
     argv[9]= (char*)make_and_model;
     argv[10] = NULL;
   
-    dup2(1,2);
-    fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
-                     argv[4],argv[5],argv[6],argv[7]);
+    //dup2(1,2);
+    char printerlogs[1024];
+    snprintf(printerlogs,sizeof(printerlogs),"%s/printer.logs",TMPDIR);
+    int logfd = open(printerlogs,O_WRONLY|O_APPEND);
+    if(logfd>0)
+    {
+      close(2);
+      dup2(logfd,2);
+      close(logfd);
+    }
+    logfd = open(printerlogs,O_WRONLY|O_APPEND);
+    if(logfd>0)
+    {
+      close(1);
+      dup2(logfd,1);
+      close(logfd);
+    }
+    // fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
+    //                  argv[4],argv[5],argv[6],argv[7]);
     
     execvp(argv[0],argv);
 

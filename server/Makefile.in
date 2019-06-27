@@ -86,8 +86,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT) \
-	mime_type$(EXEEXT)
+bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT)
 sbin_PROGRAMS =
 subdir = server
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -105,12 +104,10 @@ am_deviced_OBJECTS = deviced.$(OBJEXT) util.$(OBJEXT)
 deviced_OBJECTS = $(am_deviced_OBJECTS)
 am__DEPENDENCIES_1 =
 deviced_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_ippprint_OBJECTS = ippprint.$(OBJEXT)
+am_ippprint_OBJECTS = ippprint.$(OBJEXT) mime_type.$(OBJEXT) \
+	util.$(OBJEXT)
 ippprint_OBJECTS = $(am_ippprint_OBJECTS)
 ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_mime_type_OBJECTS = mime_type.$(OBJEXT) util.$(OBJEXT)
-mime_type_OBJECTS = $(am_mime_type_OBJECTS)
-mime_type_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -146,10 +143,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(mime_type_SOURCES) \
-	$(server_SOURCES)
+SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(server_SOURCES)
 DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
-	$(mime_type_SOURCES) $(server_SOURCES)
+	$(server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -284,14 +280,15 @@ LIB_UDEV = -ludev
 AM_CFLAGS = -I..
 deviced_SOURCES = deviced.c util.c util.h
 deviced_LDADD = $(LIB_CUPS)
-ippprint_SOURCES = ippprint.c ippprint.h
+ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
 ippprint_LDADD = $(LIB_CUPS)
-mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
-mime_type_LDADD = $(LIB_CUPS)
-server_SOURCES = server.c util.c server.h
+
+# mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
+# mime_type_LDADD = $(LIB_CUPS)
+server_SOURCES = server.c util.c server.h util.h
 server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
 DIRECTORIES = $(prefix)/var/cache $(prefix)/var/tmp/ppd \
-	$(datadir)/drv $(datadir)/mime $(datadir)/model
+	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
 DIR2 = $(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter \
 	$(ppddir) $(bindir)
@@ -421,10 +418,6 @@ deviced$(EXEEXT): $(deviced_OBJECTS) $(deviced_DEPENDENCIES) $(EXTRA_deviced_DEP
 ippprint$(EXEEXT): $(ippprint_OBJECTS) $(ippprint_DEPENDENCIES) $(EXTRA_ippprint_DEPENDENCIES) 
 	@rm -f ippprint$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ippprint_OBJECTS) $(ippprint_LDADD) $(LIBS)
-
-mime_type$(EXEEXT): $(mime_type_OBJECTS) $(mime_type_DEPENDENCIES) $(EXTRA_mime_type_DEPENDENCIES) 
-	@rm -f mime_type$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(mime_type_OBJECTS) $(mime_type_LDADD) $(LIBS)
 
 server$(EXEEXT): $(server_OBJECTS) $(server_DEPENDENCIES) $(EXTRA_server_DEPENDENCIES) 
 	@rm -f server$(EXEEXT)
@@ -691,6 +684,10 @@ install-data-local:
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
 	$(RM) $(datadir)/ppdc
 	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
+	$(RM) $(datadir)/mime/cups-mime
+	$(LN_S) $(CUPS_DATADIR)/mime $(datadir)/mime/cups-mime
+	$(RM) $(serverbin)/filter/cups-filter
+	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
 	chown -R root:root $(datadir)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
