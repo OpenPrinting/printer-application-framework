@@ -23,6 +23,5 @@ Make sure to set the ```pre``` environment variable.
 ## How to use
 
 1. cd $pre/bin
-2. sudo ./server 2>/dev/null
+2. sudo ./server 
 
-Redirection is required otherwise too many debug messages are printed.
