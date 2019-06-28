@@ -26,7 +26,7 @@ static type_t* typeCopy(type_t* t)
   return ret;
 }
 
-static filter_t* filterCopy(filter_t *t)
+filter_t* filterCopy(filter_t *t)
 {
   filter_t* ret = filterNew();
   ret->filter = strdup(t->filter);

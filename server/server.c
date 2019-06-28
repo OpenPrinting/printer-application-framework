@@ -737,7 +737,7 @@ static int kill_ippeveprinter(pid_t pid)
   if(pid>0){
     fprintf(stdout,"Killing: %d\n",pid);
     kill(pid,SIGINT);
-    if(waitpid(pid,&status,0)<-1)
+    if(waitpid(pid,&status,0)<0)
     {
       fprintf(stderr,"WAITPID Error!\n");
       return -1;
