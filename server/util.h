@@ -14,12 +14,12 @@
  * Include necessary headers...
  */
 
-#  include <cups/array.h>
-#  include <cups/file.h>
-#  include <signal.h>
-# include<ctype.h>
-#include<errno.h>
-#include<cups/cups.h>
+#include <cups/array.h>
+#include <cups/file.h>
+#include <signal.h>
+#include <ctype.h>
+#include <errno.h>
+#include <cups/cups.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

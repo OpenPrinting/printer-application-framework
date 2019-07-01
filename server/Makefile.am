@@ -19,11 +19,10 @@ ippprint_LDADD = $(LIB_CUPS)
 server_SOURCES = server.c util.c server.h util.h
 server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
 
-DIRECTORIES = $(prefix)/var/cache $(prefix)/var/tmp/ppd \
+DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 	
-DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter \
-	$(ppddir) $(bindir)
+DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter $(bindir)
 
 # install: $(install) installdirss
 
@@ -37,3 +36,5 @@ install-data-local:
 	$(RM) $(serverbin)/filter/cups-filter
 	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
 	chown -R root:root $(datadir)
+	chmod -R 777 $(tmpdir)
+	chmod 711 $(serverbin)/backend/*

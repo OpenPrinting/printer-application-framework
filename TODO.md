@@ -13,6 +13,12 @@
 
 ### Work on mime_type.c
 
-### Manage signals. [Add ignore policy]
+### Manage signals. [Add ignore policy] [siginfo->st_mtime]
 
 ### Make sure ippeveprinter is running as normal user.
+
+### Clean memory and look for zombies!
+
+### getport()
+
+### Switch ippprint.

@@ -70,55 +70,81 @@ static int compare_filters( filter_t *f1,
   else return strcasecmp(f1->filter,f2->filter);
 }
 
-static void addFilter(char* temp0,char*temp1,char*temp2, int cost)
+/*
+ * addFilter() - Add a filter with given specifications to the conversion table.
+ * 
+ * Returns:
+ *  0 - Success
+ *  !0 - Error
+ */
+static int addFilter(char* src_typename,char *dest_typename,char *filter_name, int cost)
 {
+  int res;
   filter_t* filter = filterNew();
+
   filter->cost = cost;
+  
   type_t* src = typeNew();
-  src->typename = strdup(temp0);
+  src->typename = strdup(src_typename);
   src->index = getIndex(src);
-  // fprintf(stdout,"Done src\n");
+  
   type_t* dest = typeNew();
-  dest->typename = strdup(temp1);
+  dest->typename = strdup(dest_typename);
   dest->index = getIndex(dest);
-  // fprintf(stdout,"Done dest\n");
+  
   filter->src = src;
   filter->dest = dest;
-  filter->filter = strdup(temp2);
+  filter->filter = strdup(filter_name);
   // fprintf(stdout,"Done ALL-1! %d %d\n",src->index,dest->index);
-  if(src->index<0||dest->index<0)
-    return;
+  if(src->index<0||dest->index<0)       /* Invalid Typename */
+    return -1;
+  
   cups_array_t** temp_arr = mime_database->filter_graph;
   temp_arr+=src->index;
+
   cupsArrayAdd(*temp_arr,filter);
+
+  return 0;
 }
 
-static void getfilter(char *line,int len)
+/*
+ * getFilter() - Parse the filter line and call addFilter.
+ * 
+ * Returns-
+ * 0 - Success
+ * !0 - Error
+ */
+static int getfilter(char *line,int len)
 {
   int cost;
   char temp[3][128];
-  sscanf(line,"%s\t%s\t%d\t%s",temp[0],temp[1],
+  int res = 0;
+  res = sscanf(line,"%s\t%s\t%d\t%s",temp[0],temp[1],
               &(cost),temp[2]);
-  addFilter(temp[0],temp[1],temp[2],cost);
+  if(res!=4)
+    return -1;
+  res = addFilter(temp[0],temp[1],temp[2],cost);
+  return res;
 }
 
-static void addType(char *temp)
+/*
+ * addType() - Create and add typename
+ */
+static int addType(char *typename)
 {
   type_t* type = calloc(1,sizeof(type));
   type_t* type1 = calloc(1,sizeof(type));
-  if(type==NULL)
+  if(type1==NULL||type==NULL)
   {
     fprintf(stderr,"Unable to allocate memory!\n");
-    exit(1);
+    return -1;
   }
-  type->typename = strdup(temp);
-  type1->typename = strdup(temp);
+  type->typename = strdup(typename);
+  type1->typename = strdup(typename);
   if(cupsArrayFind(aval_types_name,type)==NULL)
   {
     type1->index = cupsArrayCount(aval_types);
     type->index = type1->index;
-    // fprintf(stdout,"Adding %s %d %d\n",type->typename,type->index,strlen(type->typename));
-    //fprintf(stdout,"Adding %s %d\n",type1->typename,type1->index);
     cupsArrayAdd(aval_types_name,type);
     cupsArrayAdd(aval_types,type1);
   }
@@ -259,6 +285,7 @@ static filter_t* getFilter(int src_index,int dest_index)
       return ret;
     }
   }
+  return NULL;
 }
 
 static int dijkstra(int src_index,int dest_index,cups_array_t *arr)
@@ -314,6 +341,10 @@ static int dijkstra(int src_index,int dest_index,cups_array_t *arr)
   while(curr>=0&&par>=0)
   {
     filter_t* filter = getFilter(par,curr);
+    if(filter==NULL)
+    {
+      return -1;
+    }
     cupsArrayAdd(arr,filter);
     curr = par;
     par = parent[curr];
@@ -335,14 +366,19 @@ static int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
   if(src_index<0||dest_index<0)
   {
     *arr = NULL;
-    fprintf(stdout,"Not found in types! %d %d\n",src_index,dest_index);
+    fprintf(stdout,"ERROR: Not found in types! %d %d\n",src_index,dest_index);
     return -1;
   }
 
   *arr = cupsArrayNew(NULL,NULL);
   temp = cupsArrayNew(NULL,NULL);
   
-  dijkstra(src_index,dest_index,temp);
+  int ret = dijkstra(src_index,dest_index,temp);
+  if(ret<0)
+  {
+    fprintf(stderr,"ERROR: Unable to find a filter chain!\n");
+    return -1;
+  }
   int num_fil = cupsArrayCount(temp);
   for(int i =num_fil-1;i>=0;i--)
   {
@@ -350,12 +386,13 @@ static int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
     cupsArrayAdd(*arr,s);
   }
   cupsArrayDelete(temp);
+  return 0;
 }
 
 int get_ppd_filter_chain(char* user_src,char *user_dest,char *ppdname,cups_array_t **arr)
 {
   char ventorType[128];
-  strcpy(ventorType,"application/vnd.custom.paf");
+  strcpy(ventorType,"printer/");
   initialize_filter_chain();
   load_convs(0);            //Load Types
   ppd_file_t* ppd = ppdOpenFile(ppdname);
@@ -404,7 +441,6 @@ int get_ppd_filter_chain(char* user_src,char *user_dest,char *ppdname,cups_array
   // else if(ppd) 
   //   get_filter_chain(user_src,ventorType,arr);
   // else return -1;
-  return 0;
 }
 
 // void setup()

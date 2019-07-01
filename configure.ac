@@ -67,7 +67,7 @@ AC_DEFINE_UNQUOTED([TMPDIR],["$tmpdir"],[temp dir])
 
 # echo "$serverbin"
 AC_SUBST([serverbin])
-
+AC_SUBST([tmpdir])
 ######################################################################
 # cups-config
 AC_ARG_WITH([cups-config],

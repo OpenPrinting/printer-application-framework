@@ -271,6 +271,7 @@ sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+tmpdir = @tmpdir@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
@@ -287,12 +288,10 @@ ippprint_LDADD = $(LIB_CUPS)
 # mime_type_LDADD = $(LIB_CUPS)
 server_SOURCES = server.c util.c server.h util.h
 server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
-DIRECTORIES = $(prefix)/var/cache $(prefix)/var/tmp/ppd \
+DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
-DIR2 = $(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter \
-	$(ppddir) $(bindir)
-
+DIR2 = $(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter $(bindir)
 all: all-am
 
 .SUFFIXES:
@@ -689,6 +688,8 @@ install-data-local:
 	$(RM) $(serverbin)/filter/cups-filter
 	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
 	chown -R root:root $(datadir)
+	chmod -R 777 $(tmpdir)
+	chmod 711 $(serverbin)/backend/*
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

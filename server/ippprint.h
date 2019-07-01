@@ -13,6 +13,9 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <pwd.h>
+#include <errno.h>
+
 
 #define MAX_TYPE_LEN 64
 #define MAX_TYPES 1000

@@ -30,6 +30,9 @@ static void escape_string(char* out,char* in,int len)
   out[i]=0;
 }
 
+/*
+ * TODO: Can we use siginfo->st_mtime to prevent overcrowding?
+ */
 static void manage_device(int sig,siginfo_t *siginfo,void* context)
 {
   union sigval sigtype = siginfo->si_value;
@@ -653,6 +656,7 @@ int start_ippeveprinter(device_t *dev,int port)
     char LD_PATH[512];
     strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
     setenv("LD_LIBRARY_PATH","/usr/lib",1);
+    setenv("PRINTER",dev->device_make_and_model,1);
     envp[0]=(char*)LD_PATH;
     envp[1]=NULL;
     
