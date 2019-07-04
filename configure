@@ -628,6 +628,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+LIB_AVAHI
 libavahi_LIBS
 libavahi_CFLAGS
 PKG_CONFIG_LIBDIR
@@ -3149,6 +3150,7 @@ CUPS_LIBS=`$CUPSCONFIG --libs`
 CUPS_STATIC=`$CUPSCONFIG --static --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
+echo "$CUPS_STATIC"
 
 
 
@@ -4943,6 +4945,12 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_AVAHI $have_avahi
 _ACEOF
 
+
+if test x"$have_avahi" = x"1"; then
+    LIB_AVAHI="-lavahi-common -lavahi-client"
+    echo "$LIB_AVAHI"
+
+fi
 ######################################################################
 # Checks for typedefs, structures, and compiler characteristics.
 ac_fn_c_check_type "$LINENO" "pid_t" "ac_cv_type_pid_t" "$ac_includes_default"

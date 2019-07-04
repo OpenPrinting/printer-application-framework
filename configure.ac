@@ -102,6 +102,7 @@ CUPS_LIBS=`$CUPSCONFIG --libs`
 CUPS_STATIC=`$CUPSCONFIG --static --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
+echo "$CUPS_STATIC"
 
 AC_SUBST(CUPS_API_VERSION)
 AC_SUBST(CUPS_BUILD)
@@ -137,6 +138,12 @@ if test x"$have_avahi" = x"1"; then
     avahi-common/malloc.h avahi-common/error.h],[],[have_avahi=0])
 fi
 AC_DEFINE_UNQUOTED([HAVE_AVAHI],[$have_avahi],[Do we have Avahi?])
+
+if test x"$have_avahi" = x"1"; then
+    LIB_AVAHI="-lavahi-common -lavahi-client"
+    echo "$LIB_AVAHI"
+    AC_SUBST(LIB_AVAHI)
+fi
 ######################################################################
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T

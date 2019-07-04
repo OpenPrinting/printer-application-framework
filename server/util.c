@@ -660,15 +660,15 @@ strlcpy(char       *dst,		/* O - Destination string */
  * '_cups_strcpy()' - Copy a string allowing for overlapping strings.
  */
 
-void
-_cups_strcpy(char       *dst,		/* I - Destination string */
-             const char *src)		/* I - Source string */
-{
-  while (*src)
-    *dst++ = *src++;
+// void
+// _cups_strcpy(char       *dst,		/* I - Destination string */
+//              const char *src)		/* I - Source string */
+// {
+//   while (*src)
+//     *dst++ = *src++;
 
-  *dst = '\0';
-}
+//   *dst = '\0';
+// }
 
 char *strrev(char *str)
 {

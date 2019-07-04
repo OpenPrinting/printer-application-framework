@@ -110,7 +110,8 @@ ippprint_OBJECTS = $(am_ippprint_OBJECTS)
 ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
-server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -212,6 +213,7 @@ IPPEVEPRINTER = @IPPEVEPRINTER@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_AVAHI = @LIB_AVAHI@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
@@ -279,19 +281,26 @@ tmpdir = @tmpdir@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-LIB_AVAHI = -lavahi-common -lavahi-client
-#LIB_CUPS = -lcups
+
+# if HAVE_AVAHI
+# LIB_AVAHI = -lavahi-common -lavahi-client
+# else
+# LIB_AVAHI = 
+# endif
 LIB_UDEV = -ludev
+# CUPS_TEMP = -lpthread
+
+# CUPS_LIBS=$(CUPS_STATIC)
 AM_CFLAGS = -I..
 deviced_SOURCES = deviced.c util.c util.h
-deviced_LDADD = $(CUPS_LIBS)
+deviced_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
 ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
-ippprint_LDADD = $(CUPS_LIBS)
+ippprint_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 server_SOURCES = server.c util.c server.h util.h
-server_LDADD = $(LIB_CUPS) $(LIB_AVAHI) $(LIB_UDEV)
+server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(LIB_UDEV) $(CUPS_TEMP)
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
@@ -609,14 +618,13 @@ info: info-am
 
 info-am:
 
-install-data-am: install-data-local
+install-data-am:
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS install-exec-local \
-	install-sbinPROGRAMS
+install-exec-am: install-binPROGRAMS install-sbinPROGRAMS
 
 install-html: install-html-am
 
@@ -668,34 +676,34 @@ uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 	cscopelist-am ctags ctags-am distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-data-local install-dvi \
-	install-dvi-am install-exec install-exec-am install-exec-local \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-sbinPROGRAMS install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-sbinPROGRAMS
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-sbinPROGRAMS \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-sbinPROGRAMS
 
 .PRECIOUS: Makefile
 
 
 # install: $(install) installdirss
 
-install-data-local:
-	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
-	$(RM) $(datadir)/ppdc
-	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
-	$(RM) $(datadir)/mime/cups-mime
-	$(LN_S) $(CUPS_DATADIR)/mime $(datadir)/mime/cups-mime
-	$(RM) $(serverbin)/filter/cups-filter
-	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
+# install-data-local:
+# 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
+# 	$(RM) $(datadir)/ppdc
+# 	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
+# 	$(RM) $(datadir)/mime/cups-mime
+# 	$(LN_S) $(CUPS_DATADIR)/mime $(datadir)/mime/cups-mime
+# 	$(RM) $(serverbin)/filter/cups-filter
+# 	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
 
-install-exec-local:
-	chown -R root:root $(datadir)
-	chmod -R 777 $(tmpdir)
-	chmod 755 $(serverbin)/backend/*
+# install-exec-local:
+# 	chown -R root:root $(datadir)
+# 	chmod -R 777 $(tmpdir)
+# 	chmod 755 $(serverbin)/backend/*
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

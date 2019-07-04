@@ -5,11 +5,13 @@
 #include <sys/poll.h>
 #include <assert.h>
 #include <time.h>
-#include <avahi-client/client.h>
-#include <avahi-client/lookup.h>
-#include <avahi-common/simple-watch.h>
-#include <avahi-common/malloc.h>
-#include <avahi-common/error.h>
+#if HAVE_AVAHI
+  #include <avahi-client/client.h>
+  #include <avahi-client/lookup.h>
+  #include <avahi-common/simple-watch.h>
+  #include <avahi-common/malloc.h>
+  #include <avahi-common/error.h>
+#endif
 #include <signal.h>
 #define SUBSYSTEM "usb"
 
@@ -80,7 +82,7 @@ int monitor_usb_devices(pid_t ppid)
     return 0;
 }
 
-#ifdef HAVE_AVAHI
+#if HAVE_AVAHI
 static AvahiSimplePoll *detect = NULL;
 int ppid = 0;
 static void resolve_callback(
