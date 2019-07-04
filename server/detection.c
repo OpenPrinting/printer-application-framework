@@ -1,12 +1,9 @@
 /*
  *  Author: Dheeraj(dhirajyadav135@gmail.com)
  */
-#include <stdio.h>
 #include <libudev.h>
-#include <string.h>
 #include <sys/poll.h>
 #include <assert.h>
-#include <stdlib.h>
 #include <time.h>
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
@@ -20,6 +17,9 @@
 void static send_signal(const char* signal, pid_t ppid,int avahi)
 {
   union sigval sv;
+  // signal_data_t data;
+  // sv.sival_ptr = (signal_data_t*)calloc(1,sizeof(signal_data_t));
+  // signal_data_t *data = sv.sival_ptr;
   if(avahi)
     if(!strncasecmp(signal,"add",3))
       sv.sival_int=AVAHI_ADD;
@@ -30,6 +30,11 @@ void static send_signal(const char* signal, pid_t ppid,int avahi)
       sv.sival_int=USB_ADD;
     else
       sv.sival_int=USB_REMOVE;
+  // time(&(data->signal_time));
+  // sv.sival_ptr=(void*)(&data);
+  // fprintf(stderr,"%d %s",data->val,asctime(localtime(&(data->signal_time))));
+  // signal_data_t *data2 = (sv.sival_ptr);
+  // fprintf(stderr,"%d %s",data2.val,asctime(localtime(&(data2.signal_time))));
   sigqueue(ppid,SIGUSR1,sv);
 }
 

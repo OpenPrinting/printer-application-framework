@@ -159,6 +159,8 @@ start_backend(const char *name,		/* I - Backend to run */
   // if (_cupsFileCheck(program, _CUPS_FILE_CHECK_PROGRAM, !geteuid(),
   //                    _cupsFileCheckFilter, NULL))
   //   return (-1);
+  if(!fileCheck(program))
+    return -1;
 
   backend = backends + num_backends;
 
@@ -168,7 +170,7 @@ start_backend(const char *name,		/* I - Backend to run */
   if ((backend->pipe = cupsdPipeCommand(&(backend->pid), program, argv,
                                         root ? 0 : normal_user)) == NULL)
   {
-    fprintf(stderr, "ERROR: [cups-deviced] Unable to execute \"%s\" - %s\n",
+    fprintf(stderr, "ERROR: [deviced] Unable to execute \"%s\" - %s\n",
             program, strerror(errno));
     return (-1);
   }
@@ -177,7 +179,7 @@ start_backend(const char *name,		/* I - Backend to run */
   * Fill in the rest of the backend information...
   */
 
-  fprintf(stderr, "DEBUG: [cups-deviced] Started backend %s (PID %d)\n",
+  fprintf(stderr, "DEBUG: [deviced] Started backend %s (PID %d)\n",
           program, backend->pid);
 
   backend_fds[num_backends].fd     = cupsFileNumber(backend->pipe);
@@ -233,15 +235,15 @@ static void sigchld_handler(int sig,siginfo_t *siginfo, void*context)
     {
       if (WIFEXITED(status))
 	fprintf(stderr,
-	        "ERROR: [cups-deviced] PID %d (%s) stopped with status %d!\n",
+	        "ERROR: [deviced] PID %d (%s) stopped with status %d!\n",
 		pid, name, WEXITSTATUS(status));
       else
 	fprintf(stderr,
-	        "ERROR: [cups-deviced] PID %d (%s) crashed on signal %d!\n",
+	        "ERROR: [deviced] PID %d (%s) crashed on signal %d!\n",
 		pid, name, WTERMSIG(status));
     }
     else
       fprintf(stderr,
-              "DEBUG: [cups-deviced] PID %d (%s) exited with no errors.\n",
+              "DEBUG: [deviced] PID %d (%s) exited with no errors.\n",
 	      pid, name);
 }

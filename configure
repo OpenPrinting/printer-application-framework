@@ -655,8 +655,14 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
-LDFLAGS_CUPS
-LIB_CUPS
+CUPS_SERVERROOT
+CUPS_VERSION
+CUPS_CFLAGS
+CUPS_STATIC
+CUPS_LIBS
+CUPS_LDFLAGS
+CUPS_BUILD
+CUPS_API_VERSION
 CUPS_DATADIR
 CUPS_SERVERBIN
 CUPSCONFIG
@@ -3124,20 +3130,36 @@ fi
 fi
 cups_serverbin=`$CUPSCONFIG --serverbin`
 CUPS_DATADIR="`$CUPSCONFIG --datadir`"
-LIB_CUPS=`$CUPSCONFIG --libs`
-LDFLAGS_CUPS=`$CUPSCONFIG --ldflags`
 CUPS_SERVERBIN="$cups_serverbin"
 
 
-
-
+# AC_SUBST(LIB_CUPS)
+# AC_SUBST(LDFLAGS_CUPS)
 
 cat >>confdefs.h <<_ACEOF
 #define CUPS_SERVERBIN "$CUPS_SERVERBIN"
 _ACEOF
 
 ######################################################################
+# CUPS-CONFIG
+CUPS_API_VERSION=`$CUPSCONFIG --api-version`
+CUPS_BUILD=`$CUPSCONFIG --build`
+CUPS_CFLAGS=`$CUPSCONFIG --cflags`
+CUPS_LDFLAGS=`$CUPSCONFIG --ldflags`
+CUPS_LIBS=`$CUPSCONFIG --libs`
+CUPS_STATIC=`$CUPSCONFIG --static --libs`
+CUPS_VERSION=`$CUPSCONFIG --version`
+CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
 
+
+
+
+
+
+
+
+
+######################################################################
 # Checks for programs.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5255,6 +5277,10 @@ done
 
 ac_config_files="$ac_config_files Makefile server/Makefile"
 
+
+# This is a fake cups-config file allowing driver packages to detect this file and work accordingly.
+ac_config_files="$ac_config_files cups-config"
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5984,6 +6010,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "server/Makefile") CONFIG_FILES="$CONFIG_FILES server/Makefile" ;;
+    "cups-config") CONFIG_FILES="$CONFIG_FILES cups-config" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6673,6 +6700,7 @@ See \`config.log' for more details" "$LINENO" 5; }
   rm -f conftest-deps.mk
 }
  ;;
+    "cups-config":F) chmod +x cups-config ;;
 
   esac
 done # for ac_tag

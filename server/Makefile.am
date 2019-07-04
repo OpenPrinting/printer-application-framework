@@ -8,10 +8,10 @@ LIB_UDEV = -ludev
 AM_CFLAGS = -I..
 
 deviced_SOURCES = deviced.c util.c util.h
-deviced_LDADD = $(LIB_CUPS)
+deviced_LDADD = $(CUPS_LIBS)
 
 ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
-ippprint_LDADD = $(LIB_CUPS)
+ippprint_LDADD = $(CUPS_LIBS)
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
@@ -27,7 +27,6 @@ DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter 
 # install: $(install) installdirss
 
 install-data-local:
-	echo "Serverbin: " $(serverbin)
 	$(MKDIR_P) $(DIRECTORIES) $(DIR2)
 	$(RM) $(datadir)/ppdc
 	$(LN_S) $(CUPS_DATADIR)/ppdc $(datadir)/ppdc
@@ -35,6 +34,8 @@ install-data-local:
 	$(LN_S) $(CUPS_DATADIR)/mime $(datadir)/mime/cups-mime
 	$(RM) $(serverbin)/filter/cups-filter
 	$(LN_S) $(CUPS_SERVERBIN)/filter $(serverbin)/filter/cups-filter
+
+install-exec-local:
 	chown -R root:root $(datadir)
 	chmod -R 777 $(tmpdir)
-	chmod 711 $(serverbin)/backend/*
+	chmod 755 $(serverbin)/backend/*

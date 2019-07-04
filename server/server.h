@@ -52,6 +52,12 @@ enum child_signal{
     USB_ADD,
     USB_REMOVE
 };
+
+typedef struct{
+    time_t signal_time;
+    int val;
+}signal_data_t;
+
 static device_t devices[MAX_DEVICES];
 static cups_array_t *con_devices;
 static cups_array_t *temp_devices;
@@ -76,7 +82,7 @@ int monitor_usb_devices(pid_t ppid);
 void add_devices(cups_array_t *con, cups_array_t *temp);
 void remove_devices(cups_array_t *con,cups_array_t *temp);
 int remove_ppd(char* ppd);
-int start_ippeveprinter(device_t *dev,int port);
+int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
 #include "detection.c"

@@ -51,8 +51,8 @@ static int getFilterPath(char *in, char **out)
   cups_dentry_t* dent;
 
   snprintf(path,sizeof(path),"%s/filter/%s",SERVERBIN,in);  /* Check if we can directly access filter*/
-  
-  if(access(path,F_OK|X_OK)!=-1)
+
+  if((access(path,F_OK|X_OK)!=-1)&&fileCheck(path))
   {
     *out = strdup(path);
     return 0;
@@ -67,7 +67,7 @@ static int getFilterPath(char *in, char **out)
     if(S_ISDIR(dent->fileinfo.st_mode))
     {
       snprintf(path,sizeof(path),"%s/filter/%s/%s",SERVERBIN,filename,in);
-      if(access(path,F_OK|X_OK)!=-1){
+      if((access(path,F_OK|X_OK)!=-1)&&fileCheck(path)){
         *out = strdup(path);
         break;
       }
@@ -307,8 +307,8 @@ error:
  */
 static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
 {
-  char *device_uri=strdup(getenv("DEVICE_URI"));
-  // char *device_uri=strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");
+  // char *device_uri=strdup(getenv("DEVICE_URI"));
+  char *device_uri=strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");
   int i;
 	char userpass[256],		/* username:password (unused) */
 		host[256],		/* Hostname or IP address */
@@ -340,7 +340,9 @@ static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
 
   return 0;
 }
-int print_document(char *scheme,char *uri, char *filename)
+
+
+static int print_document(char *scheme,char *uri, char *filename)
 {
   char backend[2048];
   pid_t pid;
@@ -349,7 +351,10 @@ int print_document(char *scheme,char *uri, char *filename)
   snprintf(backend,sizeof(backend),"%s/backend/%s",SERVERBIN,scheme);
   fprintf(sout,"Backend: %s %s\n",backend,uri);
   
-  if(access(backend,F_OK|X_OK)==-1)
+  /*
+   * Check file permissions and do fileCheck().
+   */
+  if((access(backend,F_OK|X_OK)==-1)&&fileCheck(backend))
   {
     fprintf(sout,"ERROR: Unable to execute backend %s\n",scheme);
     return -1;
@@ -438,31 +443,31 @@ int main(int argc, char *argv[])
   // exit(0);
   char *inputFile=strdup(argv[1]); /* Input File */
 
-  if(getenv("CONTENT_TYPE")==NULL){
-    exit(0);
-  }
-  if(getenv("PPD")==NULL){
-    isPPD = 0;
-  }
-  if(getenv("OUTPUT_TYPE")==NULL){
-    isOut =0;
-  }
+  // if(getenv("CONTENT_TYPE")==NULL){
+  //   exit(0);
+  // }
+  // if(getenv("PPD")==NULL){
+  //   isPPD = 0;
+  // }
+  // if(getenv("OUTPUT_TYPE")==NULL){
+  //   isOut =0;
+  // }
 
-  // ppdname=strdup("/home/dj/Desktop/HP-OfficeJet-Pro-6960.ppd");
-  // setenv("PPD",ppdname,1);
-  // content_type=strdup("application/pdf");
+  ppdname=strdup("/home/dj/Desktop/HP-OfficeJet-Pro-6960.ppd");
+  setenv("PPD",ppdname,1);
+  content_type=strdup("application/pdf");
 
-  // setenv("IPP_JOB_ORIGINATING_USER_NAME","dj",1);
-  // setenv("IPP_JOB_ID","1",1);
-  // setenv("IPP_JOB_NAME","test",1);
-  // setenv("IPP_COPIES_DEFAULT","1",1);
-  // setenv("PRINTER","HP Officejet 6960",1);
+  setenv("IPP_JOB_ORIGINATING_USER_NAME","dj",1);
+  setenv("IPP_JOB_ID","1",1);
+  setenv("IPP_JOB_NAME","test",1);
+  setenv("IPP_COPIES_DEFAULT","1",1);
+  setenv("PRINTER","HP Officejet 6960",1);
   
-  if(isPPD) 
-    ppdname = strdup(getenv("PPD"));
-  content_type = strdup(getenv("CONTENT_TYPE"));
-  if(isOut)
-    output_type = strdup(getenv("OUTPUT_TYPE"));
+  // if(isPPD) 
+  //   ppdname = strdup(getenv("PPD"));
+  // content_type = strdup(getenv("CONTENT_TYPE"));
+  // if(isOut)
+  //   output_type = strdup(getenv("OUTPUT_TYPE"));
 
   cups_array_t *filter_chain,*filterfullname;
   filter_t *paths;

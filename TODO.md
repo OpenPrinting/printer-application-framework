@@ -13,12 +13,16 @@
 
 ### Work on mime_type.c
 
-### Manage signals. [Add ignore policy] [siginfo->st_mtime]
+### Manage signals. [Add ignore policy] [siginfo->st_mtime or use the st_value to store signal as well as creation time]
 
-### Make sure ippeveprinter is running as normal user.
+### Make sure ippeveprinter is running as normal user. [Entire code will be run as a non-root user]
 
 ### Clean memory and look for zombies!
 
 ### getport()
 
 ### Switch ippprint.
+
+### CUPS Filecheck. [Done]
+
+### Fake cups-config

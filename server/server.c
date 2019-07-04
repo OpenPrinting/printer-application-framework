@@ -36,6 +36,10 @@ static void escape_string(char* out,char* in,int len)
 static void manage_device(int sig,siginfo_t *siginfo,void* context)
 {
   union sigval sigtype = siginfo->si_value;
+  // signal_data_t* data = sigtype.sival_ptr;
+  // time_t currtime = data->signal_time;
+  // struct tm *timeinfo = localtime(&currtime);
+  // fprintf(stderr,"Signal mtime: %s %s\n",asctime(timeinfo),context);
   int signal_data = sigtype.sival_int;
   fprintf(stderr, "Recieved Signal: %d\n",signal_data);
   if(signal_data&&signal_data%2==0)
@@ -43,6 +47,7 @@ static void manage_device(int sig,siginfo_t *siginfo,void* context)
   else
     get_devices(1);   //Insert devices
 }
+
 void cleanup()
 {
   cupsArrayDelete(con_devices);
@@ -110,6 +115,7 @@ void start_avahi_monitor(pid_t ppid)
 
 int main(int argc,char* argv[])
 {
+  fprintf(stderr,"Port: %d\n",getport());
   pid_t pid,ppid;
   ppid = getpid();
   
@@ -467,8 +473,8 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
         fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
         cupsArrayAdd(con,dev);
         fprintf(stdout,"Added: %s\n",dev->device_id);
-        int port = getport();
-        start_ippeveprinter(dev,port);
+  
+        start_ippeveprinter(dev);
       }
     }
   }
@@ -518,10 +524,10 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
     fprintf(stderr,"Ran Out of Memory!\n");
     return (-1);
   }
-  _cups_strcpy(name,"cups-driverd");
-  _cups_strcpy(operation,"list");
-  _cups_strcpy(request_id,"0");
-  _cups_strcpy(limit,"1");
+  strcpy(name,"cups-driverd");
+  strcpy(operation,"list");
+  strcpy(request_id,"0");
+  strcpy(limit,"1");
   snprintf(options,sizeof(options),"ppd-make-and-model=\'%s\' ppd-device-id=\'%s\'",make_and_model,device_id);
   //snprintf(options,sizeof(options),"ppd-make-and-model=\'HP\'");
   // fprintf(stdout,"%s\n",options);
@@ -565,7 +571,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
       }
   }
   
-  _cups_strcpy(operation,"cat");
+  strcpy(operation,"cat");
   argv[2] = (char*) ppd_uri;
   argv[3] = NULL;
   argv[4] = NULL;
@@ -633,7 +639,7 @@ int remove_ppd(char* ppd)
  // }
 }
 
-int start_ippeveprinter(device_t *dev,int port)
+int start_ippeveprinter(device_t *dev)
 {
   pid_t pid=0,ppid=0;
   ppid = getpid();
@@ -667,8 +673,7 @@ int start_ippeveprinter(device_t *dev,int port)
       snprintf(device_uri,sizeof(device_uri),"\"%s\"",dev->device_uri);
     if(dev->ppd)
       snprintf(ppd,sizeof(ppd),"%s",dev->ppd);
-    if(port)
-      snprintf(pport,sizeof(pport),"%d",port);
+    snprintf(pport,sizeof(pport),"%d",getport());
     
     snprintf(command,sizeof(command),"%s/ippprint",BINDIR);
 
@@ -693,14 +698,7 @@ int start_ippeveprinter(device_t *dev,int port)
     logfd = open(printerlogs,O_WRONLY|O_APPEND);
     if(logfd>0)
     {
-      close(2);
       dup2(logfd,2);
-      close(logfd);
-    }
-    logfd = open(printerlogs,O_WRONLY|O_APPEND);
-    if(logfd>0)
-    {
-      close(1);
       dup2(logfd,1);
       close(logfd);
     }
@@ -722,15 +720,27 @@ int getport()
   for(;port<9000;port++)
   {
     int sd=0;
+    sd = socket(AF_INET,SOCK_STREAM,0);
+    if(sd<0)
+    {
+      continue;
+    }
+    int true = 1;
+    setsockopt(sd,SOL_SOCKET,SO_REUSEADDR,&true,sizeof(int));
     struct sockaddr_in server;
     memset(&server,0,sizeof(server));
     server.sin_family=AF_INET;
     server.sin_addr.s_addr=htonl(INADDR_ANY);
     server.sin_port=htons(port);
-    if(bind(sd,(struct sockaddr*)&server,sizeof(struct sockaddr))>=0)
+    int t;
+    if((t=bind(sd,(struct sockaddr*)&server,sizeof(struct sockaddr)))>=0)
     {
+      // fprintf(stderr,"IN: %d %d\n",sd,t);
+      close(sd);
       break;
     }
+    close(sd);
+    // fprintf(stderr,"%d %d\n",sd,t);
   }
   return port;
 }

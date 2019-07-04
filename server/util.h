@@ -69,6 +69,7 @@ extern int		cupsdExec2(const char* command, char **argv, char **env);
 extern size_t strlcpy(char *dst,const char *src,size_t size);
 void _cups_strcpy(char *dst,const char *src);
 char *strrev(char *str);
+int fileCheck(char *filename);
 
 #  ifdef __cplusplus
 }

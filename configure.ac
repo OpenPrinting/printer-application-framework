@@ -86,16 +86,32 @@ AS_IF([test "x$with_cups_config" != "xsystem"], [
 ])
 cups_serverbin=`$CUPSCONFIG --serverbin`
 CUPS_DATADIR="`$CUPSCONFIG --datadir`"
-LIB_CUPS=`$CUPSCONFIG --libs`
-LDFLAGS_CUPS=`$CUPSCONFIG --ldflags`
 CUPS_SERVERBIN="$cups_serverbin"
 AC_SUBST(CUPS_SERVERBIN)
 AC_SUBST(CUPS_DATADIR)
-AC_SUBST(LIB_CUPS)
-AC_SUBST(LDFLAGS_CUPS)
+# AC_SUBST(LIB_CUPS)
+# AC_SUBST(LDFLAGS_CUPS)
 AC_DEFINE_UNQUOTED([CUPS_SERVERBIN],["$CUPS_SERVERBIN"],[Cups serverbin directory])
 ######################################################################
+# CUPS-CONFIG
+CUPS_API_VERSION=`$CUPSCONFIG --api-version`
+CUPS_BUILD=`$CUPSCONFIG --build`
+CUPS_CFLAGS=`$CUPSCONFIG --cflags`
+CUPS_LDFLAGS=`$CUPSCONFIG --ldflags`
+CUPS_LIBS=`$CUPSCONFIG --libs`
+CUPS_STATIC=`$CUPSCONFIG --static --libs`
+CUPS_VERSION=`$CUPSCONFIG --version`
+CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
 
+AC_SUBST(CUPS_API_VERSION)
+AC_SUBST(CUPS_BUILD)
+AC_SUBST(CUPS_LDFLAGS)
+AC_SUBST(CUPS_LIBS)
+AC_SUBST(CUPS_STATIC)
+AC_SUBST(CUPS_CFLAGS)
+AC_SUBST(CUPS_VERSION)
+AC_SUBST(CUPS_SERVERROOT)
+######################################################################
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_LN_S
@@ -134,4 +150,7 @@ AC_CHECK_FUNCS([dup2 gettimeofday memmove memset socket strcasecmp strdup strerr
 
 AC_CONFIG_FILES([Makefile
                  server/Makefile])
+
+# This is a fake cups-config file allowing driver packages to detect this file and work accordingly.
+AC_CONFIG_FILES([cups-config],[chmod +x cups-config])
 AC_OUTPUT

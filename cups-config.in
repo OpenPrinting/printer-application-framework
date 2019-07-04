@@ -1,0 +1,92 @@
+#!/bin/sh
+#/*
+# * Alternate configuration file for CUPS.
+# * This allows a printer driver to be installed in
+# * directory specified by the Printer Application.
+# */
+
+VERSION="@CUPS_VERSION@"
+APIVERSION="@CUPS_API_VERSION@"
+BUILD="@CUPS_BUILD@"
+
+serverbin="@serverbin@"
+datadir="@datadir@"
+CFLAGS="@CUPS_CFLAGS@"
+LDFLAGS="@CUPS_LDFLAGS@"
+STATIC_LIBS="@CUPS_STATIC@"
+LIBS="@CUPS_LIBS@"
+CUPS_SERVERROOT="@CUPS_SERVERROOT@"
+datarootdir="@datarootdir@"
+
+usage ()
+{
+    echo "Usage: cups-config --api-version"
+    echo "       cups-config --build"
+    echo "       cups-config --cflags"
+    echo "       cups-config --datadir"
+    echo "       cups-config --help"
+    echo "       cups-config --ldflags"
+    echo "       cups-config [--image] [--static] --libs"
+    echo "       cups-config --serverbin"
+    echo "       cups-config --serverroot"
+    echo "       cups-config --version"
+
+    exit $1
+}
+
+if test $# -eq 0; then
+    usage 1
+fi
+
+static=no
+
+while test $# -gt 0; do
+    case $1 in
+	--api-version)
+	    echo $APIVERSION
+	    ;;
+	--build)
+	    echo $BUILD
+	    ;;
+	--cflags)
+	    echo $CFLAGS
+	    ;;
+	--datadir)
+	    echo $datadir
+	    ;;
+	--help)
+	    usage 0
+	    ;;
+	--image)
+	    # Do nothing
+	    ;;
+	--ldflags)
+	    echo $LDFLAGS
+	    ;;
+	--libs)
+	    if test $static = no; then
+	        echo $LIBS
+	    else
+	        echo $STATIC_LIBS
+	    fi
+	    
+	    ;;
+	--serverbin)
+	    echo $serverbin
+	    ;;
+	--serverroot)
+	    echo $CUPS_SERVERROOT
+	    ;;
+	--static)
+	    static=yes
+	    ;;
+	--version)
+	    echo $VERSION
+	    ;;
+	*)
+	    usage 1
+	    ;;
+    esac
+
+    shift
+done

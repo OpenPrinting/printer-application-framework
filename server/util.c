@@ -684,3 +684,33 @@ char *strrev(char *str)
       }
       return str;
 }
+
+/*
+ * fileCheck() - We need to check permissions of backends and filters before executing them.
+ */
+int fileCheck(char *filename)
+{
+  struct stat file;
+  if(strstr(filename,".."))
+  { 
+    fprintf(stderr,"File check failed: Relative Path\n");
+    return 0;
+  }
+  if(stat(filename,&file)<0)
+  {
+    fprintf(stderr,"File check failed!\n");
+    return 0;
+  }
+  
+  /*
+   * 1. File must be owned by root.
+   * 2. File must not be writable by GRP and OTH.
+   * 3. UID bit must not be set.
+   */
+  if(file.st_uid||file.st_mode&S_IWOTH
+        ||file.st_mode&S_IWGRP||file.st_mode&S_ISUID){
+    fprintf(stderr,"File Check Failed: Invalid Permissions! File: %s\n",filename);
+    return 0;
+  }
+  return 1;
+}
