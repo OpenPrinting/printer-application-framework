@@ -59,9 +59,9 @@ bindir="$exec_prefix/bin"
 
 AC_DEFINE_UNQUOTED([EXEC_PREFIX],["$exec_prefix"],[exec prefix])
 AC_DEFINE_UNQUOTED([PREFIX],["$prefix"],[prefix])
-AC_DEFINE_UNQUOTED([DATADIR],["$datadir"],[datadir])
+# AC_DEFINE_UNQUOTED([DATADIR],["$datadir"],[datadir])
 AC_DEFINE_UNQUOTED([CACHEDIR],["$cachedir"],[cachedir])
-AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
+# AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
 AC_DEFINE_UNQUOTED([BINDIR],["$bindir"],[bindir])
 AC_DEFINE_UNQUOTED([TMPDIR],["$tmpdir"],[temp dir])
 
@@ -102,6 +102,9 @@ CUPS_LIBS=`$CUPSCONFIG --libs`
 CUPS_STATIC=`$CUPSCONFIG --static --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
+
+AC_DEFINE_UNQUOTED([DATADIR],["$CUPS_DATADIR"],[datadir])
+AC_DEFINE_UNQUOTED([SERVERBIN],["$CUPS_SERVERBIN"],[serverbin])
 echo "$CUPS_STATIC"
 
 AC_SUBST(CUPS_API_VERSION)
@@ -159,5 +162,5 @@ AC_CONFIG_FILES([Makefile
                  server/Makefile])
 
 # This is a fake cups-config file allowing driver packages to detect this file and work accordingly.
-AC_CONFIG_FILES([cups-config],[chmod +x cups-config])
+# AC_CONFIG_FILES([cups-config],[chmod +x cups-config])
 AC_OUTPUT

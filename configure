@@ -2977,21 +2977,13 @@ cat >>confdefs.h <<_ACEOF
 #define PREFIX "$prefix"
 _ACEOF
 
-
-cat >>confdefs.h <<_ACEOF
-#define DATADIR "$datadir"
-_ACEOF
-
+# AC_DEFINE_UNQUOTED([DATADIR],["$datadir"],[datadir])
 
 cat >>confdefs.h <<_ACEOF
 #define CACHEDIR "$cachedir"
 _ACEOF
 
-
-cat >>confdefs.h <<_ACEOF
-#define SERVERBIN "$serverbin"
-_ACEOF
-
+# AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
 
 cat >>confdefs.h <<_ACEOF
 #define BINDIR "$bindir"
@@ -3151,6 +3143,17 @@ CUPS_LIBS=`$CUPSCONFIG --libs`
 CUPS_STATIC=`$CUPSCONFIG --static --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 CUPS_SERVERROOT=`$CUPSCONFIG --serverroot`
+
+
+cat >>confdefs.h <<_ACEOF
+#define DATADIR "$CUPS_DATADIR"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SERVERBIN "$CUPS_SERVERBIN"
+_ACEOF
+
 echo "$CUPS_STATIC"
 
 
@@ -5287,8 +5290,7 @@ ac_config_files="$ac_config_files Makefile server/Makefile"
 
 
 # This is a fake cups-config file allowing driver packages to detect this file and work accordingly.
-ac_config_files="$ac_config_files cups-config"
-
+# AC_CONFIG_FILES([cups-config],[chmod +x cups-config])
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -6018,7 +6020,6 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "server/Makefile") CONFIG_FILES="$CONFIG_FILES server/Makefile" ;;
-    "cups-config") CONFIG_FILES="$CONFIG_FILES cups-config" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6708,7 +6709,6 @@ See \`config.log' for more details" "$LINENO" 5; }
   rm -f conftest-deps.mk
 }
  ;;
-    "cups-config":F) chmod +x cups-config ;;
 
   esac
 done # for ac_tag
