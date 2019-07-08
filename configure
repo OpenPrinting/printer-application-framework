@@ -2991,7 +2991,7 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define TMPDIR "$tmpdir"
+#define TMPDIR "/home/dj/tmpp"
 _ACEOF
 
 

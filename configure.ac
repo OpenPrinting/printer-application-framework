@@ -63,7 +63,7 @@ AC_DEFINE_UNQUOTED([PREFIX],["$prefix"],[prefix])
 AC_DEFINE_UNQUOTED([CACHEDIR],["$cachedir"],[cachedir])
 # AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
 AC_DEFINE_UNQUOTED([BINDIR],["$bindir"],[bindir])
-AC_DEFINE_UNQUOTED([TMPDIR],["$tmpdir"],[temp dir])
+AC_DEFINE_UNQUOTED([TMPDIR],["/home/dj/tmpp"],[temp dir])
 
 # echo "$serverbin"
 AC_SUBST([serverbin])
