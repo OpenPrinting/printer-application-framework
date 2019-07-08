@@ -292,7 +292,8 @@ LIB_UDEV = -ludev
 # CUPS_TEMP = -lpthread
 
 # CUPS_LIBS=$(CUPS_STATIC)
-AM_CFLAGS = -I..
+AM_CFLAGS = -I.. $(CUPS_CFLAGS)
+AM_LDFLAGS = $(CUPS_LDFLAGS)
 deviced_SOURCES = deviced.c util.c util.h
 deviced_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
 ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h

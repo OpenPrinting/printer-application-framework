@@ -8,23 +8,27 @@ sbin_PROGRAMS =
 # endif
 
 LIB_UDEV = -ludev
-# CUPS_TEMP = -lpthread
+CUPS_TEMP = -lgss
 
 # CUPS_LIBS=$(CUPS_STATIC)
 
-AM_CFLAGS = -I..
+AM_CFLAGS = -I.. $(CUPS_CFLAGS)
+AM_LDFLAGS = $(CUPS_LDFLAGS) -static
 
 deviced_SOURCES = deviced.c util.c util.h
-deviced_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
+deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
+deviced_LDFLAGS = 
 
 ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
-ippprint_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
+ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
+ippprint_LDFLAGS = 
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 
 server_SOURCES = server.c util.c server.h util.h
-server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(LIB_UDEV) $(CUPS_TEMP)
+server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
+server_LDFLAGS = 
 
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model

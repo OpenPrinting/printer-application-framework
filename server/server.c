@@ -178,9 +178,21 @@ get_devices(int insert)
     strcpy(timeout,DEVICED_TIM);
     strcpy(user_id,DEVICED_USE);
     strcpy(options,DEVICED_OPT);
-
-    snprintf(program,sizeof(program),"%s/%s",BINDIR,name);
+    char *snap;
+    if(getenv("SNAP"))
+    {
+      snap = strdup(getenv("SNAP"));
+    }
+    else snap =strdup("");
+    snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
     fprintf(stderr,"%s\n",program);
+    char cwd[1000];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        fprintf(stderr,"Current working dir: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+        return 1;
+    }
     snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
@@ -199,10 +211,10 @@ get_devices(int insert)
 
     env[0]  = (char*) serverdir;
     env[1]  = NULL;
-
+    setenv("CUPS_SERVERBIN",SERVERBIN,1);
     DEBUG(program);
     // fprintf(stdout,"Running deviced!\n");
-    if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,env,
+    if((process->pipe = cupsdPipeCommand(&(process->pid),program,argv,
                             0))==NULL)
     {
         fprintf(stderr,"ERROR: Unable to execute!\n");
