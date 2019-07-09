@@ -11,6 +11,8 @@
 #include "server.h"
 #include <sys/socket.h>
 
+char *snap;
+
 static void DEBUG(char* x)
 {
     static int counter =0;
@@ -118,6 +120,12 @@ int main(int argc,char* argv[])
   fprintf(stderr,"Port: %d\n",getport());
   pid_t pid,ppid;
   ppid = getpid();
+
+  if(getenv("SNAP"))
+  {
+    snap = strdup(getenv("SNAP"));
+  }
+  else snap =strdup("");
   
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
@@ -178,12 +186,7 @@ get_devices(int insert)
     strcpy(timeout,DEVICED_TIM);
     strcpy(user_id,DEVICED_USE);
     strcpy(options,DEVICED_OPT);
-    char *snap;
-    if(getenv("SNAP"))
-    {
-      snap = strdup(getenv("SNAP"));
-    }
-    else snap =strdup("");
+    
     snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
     fprintf(stderr,"%s\n",program);
     char cwd[1000];
@@ -193,7 +196,7 @@ get_devices(int insert)
         perror("getcwd() error");
         return 1;
     }
-    snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
+    snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
     //     return (-1);
@@ -211,7 +214,7 @@ get_devices(int insert)
 
     env[0]  = (char*) serverdir;
     env[1]  = NULL;
-    setenv("CUPS_SERVERBIN",SERVERBIN,1);
+    setenv("CUPS_SERVERBIN",serverdir,1);
     DEBUG(program);
     // fprintf(stdout,"Running deviced!\n");
     if((process->pipe = cupsdPipeCommand(&(process->pid),program,argv,
@@ -231,9 +234,11 @@ get_devices(int insert)
             while(!parse_line(process));
         }
     }
+    fprintf(stderr,"DEBUG: Found Devices!!!\n");
     //waitpid(-1,NULL,WNOHANG);   // Clean up 
     if(insert)
     {
+      fprintf(stderr,"DEBUG: Adding Devices!\n");
       add_devices(con_devices,temp_devices);
     }
     else{
@@ -479,6 +484,7 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
     }
     if(!cupsArrayFind(con,dev))
     {
+      fprintf(stderr,"DEBUG: Getting PPD!\n");
       int ret = get_ppd(ppd,sizeof(ppd),dev->device_make_and_model,sizeof(dev->device_make_and_model),
                           dev->device_id,sizeof(dev->device_id));
       if(ret>=0){
@@ -543,15 +549,17 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   strcpy(limit,"1");
   snprintf(options,sizeof(options),"ppd-make-and-model=\'%s\' ppd-device-id=\'%s\'",make_and_model,device_id);
   //snprintf(options,sizeof(options),"ppd-make-and-model=\'HP\'");
-  // fprintf(stdout,"%s\n",options);
+  
+  snprintf(datadir,sizeof(datadir),"%s/%s",snap,DATADIR);
+  snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
+  snprintf(cachedir,sizeof(cachedir),"%s",CACHEDIR);
 
-  snprintf(datadir,sizeof(datadir),"CUPS_DATADIR=%s",DATADIR);
-  snprintf(serverdir,sizeof(serverdir),"CUPS_SERVERBIN=%s",SERVERBIN);
-  snprintf(cachedir,sizeof(cachedir),"CUPS_CACHEDIR=%s",CACHEDIR);
-
-  if((serverbin = getenv("SERVERBIN"))==NULL)
-    serverbin = CUPS_SERVERBIN;
-  snprintf(program,sizeof(program),"%s/daemon/%s",serverbin,name);
+  setenv("CUPS_DATADIR",datadir,1);
+  setenv("CUPS_SERVERBIN",serverdir,1);
+  setenv("CUPS_CACHEDIR",cachedir,1);
+  // if((serverbin = getenv("SERVERBIN"))==NULL)
+  //   serverbin = CUPS_SERVERBIN;
+  snprintf(program,sizeof(program),"%s/bin/%s",snap,name);
 
   argv[0] = (char*) name;
   argv[1] = (char*) operation;
@@ -560,13 +568,13 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   argv[4] = (char*) options;
   argv[5] = NULL;
 
-  envp[0] = (char*) datadir;
-  envp[1] = (char*) serverdir;
-  envp[2] = (char*) cachedir;
-  envp[3] = NULL;
-
-  if((process->pipe = cupsdPipeCommand2(&(process->pid),program,
-                        argv,envp,0))==NULL)
+  // envp[0] = (char*) datadir;
+  // envp[1] = (char*) serverdir;
+  // envp[2] = (char*) cachedir;
+  // envp[3] = NULL;
+  fprintf(stderr,"DEBUG: Calling command: %s\n",program);
+  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+                        argv,0))==NULL)
   {
     fprintf(stderr,"ERROR: Unable to execute!\n");
     return (-1);
@@ -589,8 +597,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   argv[3] = NULL;
   argv[4] = NULL;
   
-  if((process->pipe = cupsdPipeCommand2(&(process->pid),program,
-                        argv,envp,0))==NULL)
+  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+                        argv,0))==NULL)
   {
     fprintf(stderr,"ERROR: Unable to execute!\n");
     return (-1);
@@ -679,7 +687,7 @@ int start_ippeveprinter(device_t *dev)
     envp[0]=(char*)LD_PATH;
     envp[1]=NULL;
     
-    strncpy(name,"ippeveprinter",sizeof(name));
+    snprintf(name,sizeof(name),"%s/bin/ippeveprinter",snap);
     if(dev==NULL)
       exit(1);
     if(dev->device_uri)
