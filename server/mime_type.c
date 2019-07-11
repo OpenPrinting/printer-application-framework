@@ -136,7 +136,7 @@ static int addType(char *typename)
   type_t* type1 = calloc(1,sizeof(type));
   if(type1==NULL||type==NULL)
   {
-    fprintf(stderr,"Unable to allocate memory!\n");
+    fprintf(sout,"Unable to allocate memory!\n");
     return -1;
   }
   type->typename = strdup(typename);
@@ -166,7 +166,7 @@ static void read_file(char* fname,int conv)
   cups_file_t* in_file = cupsFileOpen(fname,"r");
 
   if(in_file==NULL){
-      fprintf(stderr,"Unable to read!\n");
+      fprintf(sout,"Unable to read!\n");
   }
   char line[2048];
   while(cupsFileGets(in_file,line,sizeof(line)))
@@ -190,7 +190,11 @@ static void readDir(char* dirname,int read_convo)
 {
   cups_dir_t *dir = cupsDirOpen(dirname);
   cups_dentry_t* dentry;
-  // fprintf(stderr,"Dir name: %s\n",dirname);
+  if(dir==NULL)
+  {
+    return;
+  }
+  // fprintf(sout,"Dir name: %s\n",dirname);
   while((dentry=cupsDirRead(dir)))
   {
       char *fname = strdup(dentry->filename);
@@ -222,7 +226,15 @@ static void readDir(char* dirname,int read_convo)
 static void load_convs(int read_convo)
 {
     char mime_dir[1024];
-    snprintf(mime_dir,sizeof(mime_dir),"%s/mime/",DATADIR);
+    char cups_datadir[1024];
+    if(getenv("SNAP"))
+    {
+      snprintf(cups_datadir,sizeof(cups_datadir),"%s/usr/share/cups",getenv("SNAP"));
+    }
+    else strncpy(cups_datadir,"/usr/share/cups/",sizeof(mime_dir));
+    snprintf(mime_dir,sizeof(mime_dir),"%s/mime/",cups_datadir);
+    fprintf(sout,"DEBUG: READING DIR %s\n",mime_dir);
+    fflush(sout);
     readDir(mime_dir,read_convo);
 }
 
@@ -251,7 +263,7 @@ static int initialize_filter_chain()
   aval_convs = cupsArrayNew((cups_array_func_t)compare_filters,NULL);
   aval_types_name = cupsArrayNew((cups_array_func_t)compare_types_name,NULL);
   aval_types = cupsArrayNew((cups_array_func_t)compare_types,NULL);
-  int num_types = mime_database->num_types;
+  
   // for(type_t* t=cupsArrayFirst(aval_types);t;t= cupsArrayNext(aval_types))
   // {
   //   fprintf(stdout,"%d %s\n",t->index,t->typename);
@@ -290,7 +302,7 @@ static filter_t* getFilter(int src_index,int dest_index)
 
 static int dijkstra(int src_index,int dest_index,cups_array_t *arr)
 {
-  fprintf(stdout,"Starting Dijkstra: %d -> %d\n",src_index,dest_index);
+  fprintf(stdout,"DEBUG: Starting Dijkstra: %d -> %d\n",src_index,dest_index);
   if(src_index==dest_index)
   {
     arr=NULL;
@@ -376,7 +388,7 @@ static int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
   int ret = dijkstra(src_index,dest_index,temp);
   if(ret<0)
   {
-    fprintf(stderr,"ERROR: Unable to find a filter chain!\n");
+    fprintf(sout,"ERROR: Unable to find a filter chain!\n");
     return -1;
   }
   int num_fil = cupsArrayCount(temp);
@@ -398,7 +410,7 @@ int get_ppd_filter_chain(char* user_src,char *user_dest,char *ppdname,cups_array
   ppd_file_t* ppd = ppdOpenFile(ppdname);
   if(ppd==NULL)
   {
-    fprintf(stderr,"Unable to open PPD!\n");
+    fprintf(sout,"ERROR: Unable to open PPD!\n");
     // return -1;
   }
   char **filters;

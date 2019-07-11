@@ -530,7 +530,6 @@ cups_file_t *				/* O - CUPS file or NULL on error */
 cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
                  const char *command,	/* I - Command to run */
                  char       **argv,	/* I - Arguments to pass to command */
-                 char       **env,
 		 uid_t      user)	/* I - User to run as or 0 for current */
 {
   int	fd,				/* Temporary file descriptor */
@@ -602,7 +601,13 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
       close(fd);
     }
     char logs[1024];
-    snprintf(logs,sizeof(logs),"%s/logs.txt",TMPDIR);
+    char *tmpdir;
+    
+    if(getenv("SNAP_COMMON"))
+      tmpdir = strdup(getenv("SNAP_COMMON"));
+    else tmpdir = strdup("/var/tmp");
+    
+    snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
     int logfd = open(logs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     close(logfd);
     if ((fd = open(logs,O_WRONLY|O_APPEND))>0)
@@ -614,7 +619,7 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     dup2(fds[1], 1);			/* >pipe */
     close(fds[1]);
 
-    cupsdExec2(command, argv,env);
+    cupsdExec(command, argv);
     exit(errno);
   }
 

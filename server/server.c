@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 
 char *snap;
+char *tmpdir; //SNAP_COMMON
 
 static void DEBUG(char* x)
 {
@@ -43,7 +44,7 @@ static void manage_device(int sig,siginfo_t *siginfo,void* context)
   // struct tm *timeinfo = localtime(&currtime);
   // fprintf(stderr,"Signal mtime: %s %s\n",asctime(timeinfo),context);
   int signal_data = sigtype.sival_int;
-  fprintf(stderr, "Recieved Signal: %d\n",signal_data);
+  // fprintf(stderr, "Recieved Signal: %d\n",signal_data);
   if(signal_data&&signal_data%2==0)
     get_devices(0); //Remove devices
   else
@@ -56,7 +57,7 @@ void cleanup()
   cupsArrayDelete(temp_devices);
 }
 static void kill_main(int sig,siginfo_t *siginfo,void* context){
-  printf("KILLING!\n");
+  printf("DEBUG: KILLING Printer Application!\n");
   cleanup();
   exit(0);
 }
@@ -117,7 +118,7 @@ void start_avahi_monitor(pid_t ppid)
 
 int main(int argc,char* argv[])
 {
-  fprintf(stderr,"Port: %d\n",getport());
+  // fprintf(stderr,"Port: %d\n",getport());
   pid_t pid,ppid;
   ppid = getpid();
 
@@ -126,6 +127,10 @@ int main(int argc,char* argv[])
     snap = strdup(getenv("SNAP"));
   }
   else snap =strdup("");
+
+  if(getenv("SNAP_COMMON"))
+    tmpdir = strdup(getenv("SNAP_COMMON"));
+  else tmpdir = strdup("/var/tmp");
   
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
@@ -176,7 +181,7 @@ get_devices(int insert)
     // fprintf(stdout,"SIZE: temp: %d\n",cupsArrayCount(temp_devices));
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
-      fprintf(stderr,"Ran Out of Memory!\n");
+      fprintf(stderr,"ERROR: Ran Out of Memory!\n");
       return (-1);
     }
 
@@ -188,14 +193,14 @@ get_devices(int insert)
     strcpy(options,DEVICED_OPT);
     
     snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
-    fprintf(stderr,"%s\n",program);
-    char cwd[1000];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        fprintf(stderr,"Current working dir: %s\n", cwd);
-    } else {
-        perror("getcwd() error");
-        return 1;
-    }
+    // fprintf(stderr,"%s\n",program);
+    // char cwd[1000];
+    // if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    //     fprintf(stderr,"Current working dir: %s\n", cwd);
+    // } else {
+    //     perror("getcwd() error");
+    //     return 1;
+    // }
     snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
     // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
     //                     _cupsFileCheckFilter,NULL))
@@ -217,10 +222,10 @@ get_devices(int insert)
     setenv("CUPS_SERVERBIN",serverdir,1);
     DEBUG(program);
     // fprintf(stdout,"Running deviced!\n");
-    if((process->pipe = cupsdPipeCommand(&(process->pid),program,argv,
+    if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,
                             0))==NULL)
     {
-        fprintf(stderr,"ERROR: Unable to execute!\n");
+        fprintf(stderr,"ERROR: Unable to execute deviced!\n");
         return (-1);
     }
     if((process_pid = waitpid(process->pid,&status,0))>0)
@@ -234,11 +239,11 @@ get_devices(int insert)
             while(!parse_line(process));
         }
     }
-    fprintf(stderr,"DEBUG: Found Devices!!!\n");
+    // fprintf(stderr,"DEBUG: Found Devices!!!\n");
     //waitpid(-1,NULL,WNOHANG);   // Clean up 
     if(insert)
     {
-      fprintf(stderr,"DEBUG: Adding Devices!\n");
+      // fprintf(stderr,"DEBUG: Adding Devices!\n");
       add_devices(con_devices,temp_devices);
     }
     else{
@@ -388,9 +393,8 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
    /*
     * Add the device to the array of available devices...
     */
-
-    if (!process_device(dclass, make_model, info, uri, device_id, location))
-      fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
+    process_device(dclass, make_model, info, uri, device_id, location);
+      // fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
 
     return (0);
   }
@@ -413,7 +417,7 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
   if (line[strlen(line) - 1] == '\n')
     line[strlen(line) - 1] = '\0';
 
-  fprintf(stderr, "ERROR: [cups-deviced] Bad line from \"%s\": %s\n",
+  fprintf(stderr, "ERROR: [deviced] Bad line from \"%s\": %s\n",
 	  backend->name, line);
   return (0);
 }
@@ -441,7 +445,7 @@ process_device(const char *device_class,
   device_t *device;
   if((device = calloc(1,sizeof(device_t)))==NULL)
   {
-    fprintf(stderr,"Ran out of memory!\n");
+    fprintf(stderr,"ERROR: Ran out of memory!\n");
     return -1;
   }
   if(device_make_and_model)
@@ -484,14 +488,14 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
     }
     if(!cupsArrayFind(con,dev))
     {
-      fprintf(stderr,"DEBUG: Getting PPD!\n");
+      // fprintf(stderr,"DEBUG: Getting PPD!\n");
       int ret = get_ppd(ppd,sizeof(ppd),dev->device_make_and_model,sizeof(dev->device_make_and_model),
                           dev->device_id,sizeof(dev->device_id));
       if(ret>=0){
         strlcpy(dev->ppd,ppd,sizeof(dev->ppd));
-        fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
+        // fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
         cupsArrayAdd(con,dev);
-        fprintf(stdout,"Added: %s\n",dev->device_id);
+        fprintf(stdout,"DEBUG: Adding Printer: %s\n",dev->device_id);
   
         start_ippeveprinter(dev);
       }
@@ -508,7 +512,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp)
     if(cupsArrayFind(temp,dev)==NULL)
     {
       remove_ppd(dev->ppd);
-      fprintf(stdout,"Removing %s\n",dev->device_id);
+      fprintf(stdout,"DEBUG: Removing Printer: %s\n",dev->device_id);
       kill_ippeveprinter(dev->eve_pid);
       cupsArrayRemove(con,dev);
       device_t *tt = dev;   // Do we need this?
@@ -540,7 +544,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   int        process_pid,status;
   if((process = calloc(1,sizeof(process_t)))==NULL)
   {
-    fprintf(stderr,"Ran Out of Memory!\n");
+    fprintf(stderr,"ERROR: Ran Out of Memory!\n");
     return (-1);
   }
   strcpy(name,"cups-driverd");
@@ -552,7 +556,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   
   snprintf(datadir,sizeof(datadir),"%s/%s",snap,DATADIR);
   snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
-  snprintf(cachedir,sizeof(cachedir),"%s",CACHEDIR);
+  snprintf(cachedir,sizeof(cachedir),"%s",tmpdir);
 
   setenv("CUPS_DATADIR",datadir,1);
   setenv("CUPS_SERVERBIN",serverdir,1);
@@ -572,8 +576,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   // envp[1] = (char*) serverdir;
   // envp[2] = (char*) cachedir;
   // envp[3] = NULL;
-  fprintf(stderr,"DEBUG: Calling command: %s\n",program);
-  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+  fprintf(stderr,"DEBUG: Executing cups-driverd at %s\n",program);
+  if((process->pipe = cupsdPipeCommand2(&(process->pid),program,
                         argv,0))==NULL)
   {
     fprintf(stderr,"ERROR: Unable to execute!\n");
@@ -597,15 +601,21 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   argv[3] = NULL;
   argv[4] = NULL;
   
-  if((process->pipe = cupsdPipeCommand(&(process->pid),program,
+  if((process->pipe = cupsdPipeCommand2(&(process->pid),program,
                         argv,0))==NULL)
   {
-    fprintf(stderr,"ERROR: Unable to execute!\n");
+    fprintf(stderr,"ERROR: Unable to execute cups-driverd!\n");
     return (-1);
   }
   
   escape_string(escp_model,make_and_model,make_len);
-  snprintf(ppd_name,sizeof(ppd_name),"%s/ppd/%s.ppd",TMPDIR,escp_model);
+  char ppd_folder[2048];
+  snprintf(ppd_folder,sizeof(ppd_folder),"%s/ppd",tmpdir);
+  if(mkdir(ppd_folder,0777)==-1)
+  {
+    fprintf(stderr,"ERROR: %s\n",strerror(errno));
+  }
+  snprintf(ppd_name,sizeof(ppd_name),"%s/ppd/%s.ppd",tmpdir,escp_model);
   cups_file_t* tempPPD;
   if((tempPPD = cupsFileOpen(ppd_name,"w"))==NULL)
   {
@@ -634,7 +644,7 @@ int get_ppd_uri(char* ppd_uri, process_t* backend)
   if (cupsFileGets(backend->pipe, line, sizeof(line)))
   {
     sscanf(line,"%s",ppd_uri);
-    return 0;  
+    return 0;
   }
   return 1;
 }
@@ -678,14 +688,14 @@ int start_ippeveprinter(device_t *dev)
       exit(0);      /*Parent as exited already!*/
     
     char *argv[11];
-    char name[16],device_uri[2048],ppd[1024],make_and_model[512],command[1024],pport[8];
+    char name[2048],device_uri[2048],ppd[1024],make_and_model[512],command[1024],pport[8];
     char *envp[2];
     char LD_PATH[512];
-    strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
-    setenv("LD_LIBRARY_PATH","/usr/lib",1);
+    // strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
+    // setenv("LD_LIBRARY_PATH","/usr/lib",1);
     setenv("PRINTER",dev->device_make_and_model,1);
-    envp[0]=(char*)LD_PATH;
-    envp[1]=NULL;
+    // envp[0]=(char*)LD_PATH;
+    // envp[1]=NULL;
     
     snprintf(name,sizeof(name),"%s/bin/ippeveprinter",snap);
     if(dev==NULL)
@@ -696,7 +706,7 @@ int start_ippeveprinter(device_t *dev)
       snprintf(ppd,sizeof(ppd),"%s",dev->ppd);
     snprintf(pport,sizeof(pport),"%d",getport());
     
-    snprintf(command,sizeof(command),"%s/ippprint",BINDIR);
+    snprintf(command,sizeof(command),"%s/bin/ippprint",snap);
 
     escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
     argv[0] = (char*)name;
@@ -713,18 +723,18 @@ int start_ippeveprinter(device_t *dev)
   
     //dup2(1,2);
     char printerlogs[1024];
-    snprintf(printerlogs,sizeof(printerlogs),"%s/printer.logs",TMPDIR);
+    snprintf(printerlogs,sizeof(printerlogs),"%s/printer.logs",tmpdir);
     int logfd = open(printerlogs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     close(logfd);
     logfd = open(printerlogs,O_WRONLY|O_APPEND);
+    // fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
+    //                  argv[4],argv[5],argv[6],argv[7]);
     if(logfd>0)
     {
       dup2(logfd,2);
       dup2(logfd,1);
       close(logfd);
     }
-    // fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
-    //                  argv[4],argv[5],argv[6],argv[7]);
     
     execvp(argv[0],argv);
 
@@ -770,11 +780,11 @@ static int kill_ippeveprinter(pid_t pid)
 {
   int status;
   if(pid>0){
-    fprintf(stdout,"Killing: %d\n",pid);
+    fprintf(stdout,"DEBUG: Killing ippeveprinter: %d\n",pid);
     kill(pid,SIGINT);
     if(waitpid(pid,&status,0)<0)
     {
-      fprintf(stderr,"WAITPID Error!\n");
+      fprintf(stderr,"ERROR: WAITPID Error!\n");
       return -1;
     }
   }

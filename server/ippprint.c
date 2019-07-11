@@ -2,8 +2,9 @@
 
 extern char **environ;
 
-FILE *sout,*serr;
 
+
+char *tmpdir; //SNAP_COMMON
 /*
  * getUserId() - Get uid for a given username.
  */
@@ -19,8 +20,9 @@ static int getUserId(const char *username)
 static void ini()
 {
   char logs[2048];
-  snprintf(logs,sizeof(logs),"%s/logs.txt",TMPDIR);
-  fprintf(stdout,"%s\n",logs);
+  tmpdir = getenv("SNAP_COMMON")?strdup(getenv("SNAP_COMMON")):strdup("");
+  snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
+  // fprintf(stdout,"%s\n",logs);
   sout = fopen(logs,"a");
   if(sout==NULL)
   {
@@ -50,7 +52,7 @@ static int getFilterPath(char *in, char **out)
   cups_dir_t* dir;
   cups_dentry_t* dent;
 
-  snprintf(path,sizeof(path),"%s/filter/%s",SERVERBIN,in);  /* Check if we can directly access filter*/
+  snprintf(path,sizeof(path),"%s/filter/%s",getenv("CUPS_SERVERBIN"),in);  /* Check if we can directly access filter*/
 
   if((access(path,F_OK|X_OK)!=-1)&&fileCheck(path))
   {
@@ -58,7 +60,7 @@ static int getFilterPath(char *in, char **out)
     return 0;
   }
 
-  snprintf(path,sizeof(path),"%s/filter",SERVERBIN);
+  snprintf(path,sizeof(path),"%s/filter",getenv("CUPS_SERVERBIN"));
   dir = cupsDirOpen(path);
   
   while((dent=cupsDirRead(dir)))  /*Check only upto one level*/
@@ -66,7 +68,7 @@ static int getFilterPath(char *in, char **out)
     char *filename = dent->filename;
     if(S_ISDIR(dent->fileinfo.st_mode))
     {
-      snprintf(path,sizeof(path),"%s/filter/%s/%s",SERVERBIN,filename,in);
+      snprintf(path,sizeof(path),"%s/filter/%s/%s",getenv("CUPS_SERVERBIN"),filename,in);
       if((access(path,F_OK|X_OK)!=-1)&&fileCheck(path)){
         *out = strdup(path);
         break;
@@ -134,8 +136,8 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
 {
   pid_t pid;
   char *filename=filter->filter;
-  fprintf(stderr,"Executing: %s\n",filename);
-  fprintf(sout,"Filenmae: %s\n",filename);
+  // fprintf(sout,"Executing: %s\n",filename);
+  // fprintf(sout,"Filenmae: %s\n",filename);
   if((pid=fork())<0)
   {
     return -1;
@@ -160,10 +162,9 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
     argv[5]=strdup("\"\"");             // Options
     argv[6]=NULL;
     char newpath[1024];
-    setenv("CUPS_SERVERBIN",CUPS_SERVERBIN,1);
     setenv("OUTFORMAT",filter->dest->typename,1);
     execvp(*argv,argv);
-    fflush(stderr);
+    fflush(sout);
     exit(0);
   }
   else{
@@ -199,17 +200,17 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
 
   if(children==NULL)
   {
-    fprintf(stderr,"Out of memory!\n");
+    fprintf(sout,"ERROR: Ran out of memory!\n");
     return -1;
   }
 
   if(numPipes>MAX_PIPES)
   {
-    fprintf(stderr,"ERROR: Too many Filters!\n");
+    fprintf(sout,"ERROR: Too many Filters!\n");
     return -1;
   }
 
-  snprintf(outName,sizeof(outName),"%s/printjob.XXXXXX",TMPDIR);
+  snprintf(outName,sizeof(outName),"%s/printjob.XXXXXX",tmpdir);
 
   for(int i=0;i<numPipes;i++)  
   {
@@ -222,21 +223,21 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
   if(inputFd<0)
   {
     if(errno == EACCES)
-      fprintf(stderr,"ERROR: Permission Denied! Unable to open file: %s\n",inputFile);
+      fprintf(sout,"ERROR: Permission Denied! Unable to open file: %s\n",inputFile);
     else
-      fprintf(stderr,"ERROR: ERRNO: %d Unable to open file: %s\n",errno,inputFile);
+      fprintf(sout,"ERROR: ERRNO: %d Unable to open file: %s\n",errno,inputFile);
     return -1;
   }
 
   int outputFd = mkstemp(outName);
   if(outputFd<0)
   {
-    fprintf(stderr,"ERROR: ");
+    fprintf(sout,"ERROR: ");
     if(errno==EACCES)
-      fprintf(stderr,"Permission Denied!");
+      fprintf(sout,"Permission Denied!");
     if(errno==EEXIST)
-      fprintf(stderr,"Directory is full! Used all temporary file names! ");
-    fprintf(stderr,"Unable to open temporary file!\n");
+      fprintf(sout,"Directory is full! Used all temporary file names! ");
+    fprintf(sout,"Unable to open temporary file!\n");
     return -1;
   }
 
@@ -256,7 +257,7 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
                 tempFilter,i);  /* Execute the printer */
     if(pd<0)
     {
-      fprintf(stderr,"ERROR: Unable to execute filter %s!\n",tempFilter->filter);
+      fprintf(sout,"ERROR: Unable to execute filter %s!\n",tempFilter->filter);
       killall=1;  /* Chain failed kill all filters */
       goto error;
     }
@@ -268,11 +269,11 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
     close(pipes[2*i+1]);
   }
 
-  while(pd=waitpid(-1,&status,0)>0){    /* Wait for all child processes to exit. */
+  while((pd=waitpid(-1,&status,0))>0){    /* Wait for all child processes to exit. */
     if(WIFEXITED(status))
     {
       int es = WEXITSTATUS(status);
-      fprintf(stderr,"%d Exited with status %d\n",pd,es); 
+      fprintf(sout,"%s: Filter Process %d exited with status %d\n",(es?"ERROR":"DEBUG"),pd,es); 
       if(es){
         killall=1;    /* (Atleast) One filter failed. kill entire chain. */
         goto error;
@@ -307,8 +308,8 @@ error:
  */
 static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
 {
-  // char *device_uri=strdup(getenv("DEVICE_URI"));
-  char *device_uri=strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");
+  char *device_uri=strdup(getenv("DEVICE_URI"));
+  // char *device_uri=strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");
   int i;
 	char userpass[256],		/* username:password (unused) */
 		host[256],		/* Hostname or IP address */
@@ -333,7 +334,7 @@ static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
   if (httpSeparateURI(HTTP_URI_CODING_ALL,device_uri, scheme, schemelen, 
     userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
   {
-    fprintf(stderr, "[Job %d] Bad device URI \"%s\".\n", 0, device_uri);
+    fprintf(sout, "[Job %d] Bad device URI \"%s\".\n", 0, device_uri);
     *device_uri_out=NULL;
     return -1;
   }
@@ -348,8 +349,8 @@ static int print_document(char *scheme,char *uri, char *filename)
   pid_t pid;
   int status;
 
-  snprintf(backend,sizeof(backend),"%s/backend/%s",SERVERBIN,scheme);
-  fprintf(sout,"Backend: %s %s\n",backend,uri);
+  snprintf(backend,sizeof(backend),"%s/backend/%s",getenv("CUPS_SERVERBIN"),scheme);
+  fprintf(sout,"DEBUG: Backend: %s %s\n",backend,uri);
   
   /*
    * Check file permissions and do fileCheck().
@@ -360,11 +361,11 @@ static int print_document(char *scheme,char *uri, char *filename)
     return -1;
   }
   
-  dup2(fileno(sout),2); /* stderr-> File logs */
+  dup2(fileno(sout),2); /* sout-> File logs */
   
   if((pid=fork())<0)
   {
-    fprintf(stderr,"Unable to fork!\n");
+    fprintf(sout,"Unable to fork!\n");
     return -1;
   }
   else if(pid==0)
@@ -374,7 +375,7 @@ static int print_document(char *scheme,char *uri, char *filename)
     uid = getUserId(getenv("IPP_JOB_ORIGINATING_USER_NAME"));
     snprintf(userid,sizeof(userid),"%d",(uid<0?1000:uid));
 
-    fprintf(stderr,"%s %s %s %s %s %s\n",uri,getenv("IPP_JOB_ID"),userid,
+    fprintf(sout,"DEBUG: Executing backend: %s %s %s %s %s %s\n",uri,getenv("IPP_JOB_ID"),userid,
                           getenv("IPP_JOB_NAME"),getenv("IPP_COPIES_DEFAULT"),filename);
     char *argv[10];
     argv[0]=strdup(uri);
@@ -402,6 +403,11 @@ static int print_document(char *scheme,char *uri, char *filename)
   return 0;
 }
 
+static int delete_temp_file(char *filename)
+{
+  return unlink(filename);
+}
+
 void testApplyFilterChain()
 {
   cups_array_t* t = cupsArrayNew(NULL,NULL);
@@ -410,7 +416,7 @@ void testApplyFilterChain()
   cupsArrayAdd(t,"1");
   cupsArrayAdd(t,"1");
   char inputFile[1024];
-  snprintf(inputFile,sizeof(inputFile),"%s/logs.txt",TMPDIR);
+  snprintf(inputFile,sizeof(inputFile),"%s/logs.txt",tmpdir);
   // char *outFile;
   applyFilterChain(t,inputFile,NULL,0);
 }
@@ -418,7 +424,10 @@ void testApplyFilterChain()
 int main(int argc, char *argv[])
 {
   ini();
-
+  // if(getenv("CUPS_SERVERBIN"))
+  //   fprintf(sout,"%s\n",getenv("CUPS_SERVERBIN"));
+  // if(getenv("CUPS_SERVERBIN")==NULL)
+  //   setenv("CUPS_SERVERBIN",CUPS_SERVERBIN,1);
   char device_scheme[32],*device_uri;
   char *ppdname=NULL;
   char *output_type=NULL;
@@ -426,14 +435,14 @@ int main(int argc, char *argv[])
   char finalFile[1024];
 
   getDeviceScheme(&device_uri,device_scheme,sizeof(device_scheme));
-  fprintf(stderr,"DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);
+  fprintf(sout,"DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);
   
   char **s = environ;
   int isPPD = 1,isOut=1;    
-  for(;*s;){
-      fprintf(sout,"%s\n",*s);
-      s = (s+1);
-  }
+  // for(;*s;){
+  //     fprintf(sout,"%s\n",*s);
+  //     s = (s+1);
+  // }
   
   if(argc!=2)
   {
@@ -443,31 +452,33 @@ int main(int argc, char *argv[])
   // exit(0);
   char *inputFile=strdup(argv[1]); /* Input File */
 
-  // if(getenv("CONTENT_TYPE")==NULL){
-  //   exit(0);
-  // }
-  // if(getenv("PPD")==NULL){
-  //   isPPD = 0;
-  // }
-  // if(getenv("OUTPUT_TYPE")==NULL){
-  //   isOut =0;
-  // }
-
-  ppdname=strdup("/home/dj/Desktop/HP-OfficeJet-Pro-6960.ppd");
-  setenv("PPD",ppdname,1);
-  content_type=strdup("application/pdf");
-
-  setenv("IPP_JOB_ORIGINATING_USER_NAME","dj",1);
-  setenv("IPP_JOB_ID","1",1);
-  setenv("IPP_JOB_NAME","test",1);
-  setenv("IPP_COPIES_DEFAULT","1",1);
-  setenv("PRINTER","HP Officejet 6960",1);
+  if(getenv("CONTENT_TYPE")==NULL){
+    exit(0);
+  }
+  if(getenv("PPD")==NULL){
+    isPPD = 0;
+  }
+  if(getenv("OUTPUT_TYPE")==NULL){
+    isOut =0;
+  }
+  if(isPPD) 
+    ppdname = strdup(getenv("PPD"));
   
-  // if(isPPD) 
-  //   ppdname = strdup(getenv("PPD"));
-  // content_type = strdup(getenv("CONTENT_TYPE"));
-  // if(isOut)
-  //   output_type = strdup(getenv("OUTPUT_TYPE"));
+  content_type = strdup(getenv("CONTENT_TYPE"));
+  
+  if(isOut)
+    output_type = strdup(getenv("OUTPUT_TYPE"));
+
+  // ppdname=strdup("/home/dj/Desktop/HP-OfficeJet-Pro-6960.ppd");
+  // setenv("PPD",ppdname,1);
+  // content_type=strdup("application/pdf");
+
+  // setenv("IPP_JOB_ORIGINATING_USER_NAME","dj",1);
+  // setenv("IPP_JOB_ID","1",1);
+  // setenv("IPP_JOB_NAME","test",1);
+  // setenv("IPP_COPIES_DEFAULT","1",1);
+  setenv("PRINTER","HP Officejet 6960",1);
+
 
   cups_array_t *filter_chain,*filterfullname;
   filter_t *paths;
@@ -477,34 +488,34 @@ int main(int argc, char *argv[])
 
   if(res<0)
   {
-    fprintf(stderr,"ERROR: Unable to find required filters");
+    fprintf(sout,"ERROR: Unable to find required filters");
     exit(-1);
   }
-
+  fprintf(sout,"DEBUG: Filter Chain for the job:\n");
   for(tempFilter=cupsArrayFirst(filter_chain);tempFilter;
     tempFilter=cupsArrayNext(filter_chain))
   {
-    fprintf(sout,"Filter: %s\n",tempFilter->filter);
+    fprintf(sout,"DEBUG: Filter: %s\n",tempFilter->filter);
   }
   
   res = getFilterPaths(filter_chain,&filterfullname);
   if(res<0)
   {
-    fprintf(stderr,"ERROR: Unable to find required filters!\n");
+    fprintf(sout,"ERROR: Unable to find required filters!\n");
     exit(-1);
   }
-  for(paths=cupsArrayFirst(filterfullname);paths;
-    paths=cupsArrayNext(filterfullname))
-  {
-    fprintf(sout,"Filter fn: %s\n",paths->filter);
-  }
-  fflush(sout);
+  // for(paths=cupsArrayFirst(filterfullname);paths;
+  //   paths=cupsArrayNext(filterfullname))
+  // {
+  //   fprintf(sout,"Filter fn: %s\n",paths->filter);
+  // }
+  // fflush(sout);
   res = applyFilterChain(filterfullname,inputFile,finalFile,sizeof(finalFile));
   // fprintf(sout,"Final File Name: %s\n",finalFile);
   
   if(res<0)
   {
-    fprintf(stderr,"ERROR: Filter Chain Error!\n");
+    fprintf(sout,"ERROR: Filter Chain Error!\n");
     exit(-1);
   }
 
@@ -517,7 +528,11 @@ int main(int argc, char *argv[])
     }
   }
 
+  delete_temp_file(finalFile);
+
   fprintf(sout,"*****************************************************\n");
   fclose(sout);
+  if(res)
+    return -1;
   return res;
 }
