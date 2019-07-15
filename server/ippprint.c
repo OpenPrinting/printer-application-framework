@@ -477,7 +477,7 @@ int main(int argc, char *argv[])
   // setenv("IPP_JOB_ID","1",1);
   // setenv("IPP_JOB_NAME","test",1);
   // setenv("IPP_COPIES_DEFAULT","1",1);
-  setenv("PRINTER","HP Officejet 6960",1);
+  // setenv("PRINTER","HP Officejet 6960",1);
 
 
   cups_array_t *filter_chain,*filterfullname;

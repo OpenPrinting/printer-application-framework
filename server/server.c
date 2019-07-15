@@ -220,7 +220,7 @@ get_devices(int insert)
     env[0]  = (char*) serverdir;
     env[1]  = NULL;
     setenv("CUPS_SERVERBIN",serverdir,1);
-    DEBUG(program);
+    // DEBUG(program);
     // fprintf(stdout,"Running deviced!\n");
     if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,
                             0))==NULL)
