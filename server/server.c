@@ -284,7 +284,7 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
     */
 
     strlcpy(temp, line, sizeof(temp));
-    // fprintf(stdout,"%s\n",line);
+    fprintf(stdout,"%s\n",line);
    /*
     * device-class
     */

@@ -8,12 +8,12 @@ sbin_PROGRAMS =
 # endif
 
 LIB_UDEV = -ludev
-CUPS_TEMP = -lgss
+CUPS_TEMP = -lgss -lpthread
 
 # CUPS_LIBS=$(CUPS_STATIC)
 
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)
-AM_LDFLAGS = $(CUPS_LDFLAGS) -static
+AM_LDFLAGS = $(CUPS_LDFLAGS)
 
 deviced_SOURCES = deviced.c util.c util.h
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
