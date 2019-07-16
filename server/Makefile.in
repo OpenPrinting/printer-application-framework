@@ -86,7 +86,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT)
+bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT) \
+	libusb$(EXEEXT)
 sbin_PROGRAMS =
 subdir = server
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -103,15 +104,26 @@ PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_deviced_OBJECTS = deviced.$(OBJEXT) util.$(OBJEXT)
 deviced_OBJECTS = $(am_deviced_OBJECTS)
 am__DEPENDENCIES_1 =
-deviced_DEPENDENCIES = $(am__DEPENDENCIES_1)
+deviced_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+deviced_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(deviced_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_ippprint_OBJECTS = ippprint.$(OBJEXT) mime_type.$(OBJEXT) \
 	util.$(OBJEXT)
 ippprint_OBJECTS = $(am_ippprint_OBJECTS)
-ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1)
+ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_libusb_OBJECTS = libusb.$(OBJEXT)
+libusb_OBJECTS = $(am_libusb_OBJECTS)
+libusb_DEPENDENCIES =
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+server_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(server_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -128,8 +140,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/deviced.Po ./$(DEPDIR)/ippprint.Po \
-	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
-	./$(DEPDIR)/util.Po
+	./$(DEPDIR)/libusb.Po ./$(DEPDIR)/mime_type.Po \
+	./$(DEPDIR)/server.Po ./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -143,9 +155,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(server_SOURCES)
-DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
+SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(libusb_SOURCES) \
 	$(server_SOURCES)
+DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
+	$(libusb_SOURCES) $(server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -289,20 +302,25 @@ top_srcdir = @top_srcdir@
 # LIB_AVAHI = 
 # endif
 LIB_UDEV = -ludev
-# CUPS_TEMP = -lpthread
+CUPS_TEMP = -lgss
 
 # CUPS_LIBS=$(CUPS_STATIC)
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)
-AM_LDFLAGS = $(CUPS_LDFLAGS)
+AM_LDFLAGS = $(CUPS_LDFLAGS) -static
 deviced_SOURCES = deviced.c util.c util.h
-deviced_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
+deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
+deviced_LDFLAGS = 
 ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
-ippprint_LDADD = $(CUPS_LIBS) $(CUPS_TEMP)
+ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
+ippprint_LDFLAGS = 
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 server_SOURCES = server.c util.c server.h util.h
-server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(LIB_UDEV) $(CUPS_TEMP)
+server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
+server_LDFLAGS = 
+libusb_SOURCES = libusb.c
+libusb_LDADD = -lusb-1.0 -ludev -lpthread
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
@@ -427,15 +445,19 @@ clean-sbinPROGRAMS:
 
 deviced$(EXEEXT): $(deviced_OBJECTS) $(deviced_DEPENDENCIES) $(EXTRA_deviced_DEPENDENCIES) 
 	@rm -f deviced$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(deviced_OBJECTS) $(deviced_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(deviced_LINK) $(deviced_OBJECTS) $(deviced_LDADD) $(LIBS)
 
 ippprint$(EXEEXT): $(ippprint_OBJECTS) $(ippprint_DEPENDENCIES) $(EXTRA_ippprint_DEPENDENCIES) 
 	@rm -f ippprint$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(ippprint_OBJECTS) $(ippprint_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(ippprint_LINK) $(ippprint_OBJECTS) $(ippprint_LDADD) $(LIBS)
+
+libusb$(EXEEXT): $(libusb_OBJECTS) $(libusb_DEPENDENCIES) $(EXTRA_libusb_DEPENDENCIES) 
+	@rm -f libusb$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(libusb_OBJECTS) $(libusb_LDADD) $(LIBS)
 
 server$(EXEEXT): $(server_OBJECTS) $(server_DEPENDENCIES) $(EXTRA_server_DEPENDENCIES) 
 	@rm -f server$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(server_OBJECTS) $(server_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(server_LINK) $(server_OBJECTS) $(server_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -445,6 +467,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libusb.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@ # am--include-marker
@@ -601,6 +624,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-sbinPROGRAMS \
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/libusb.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
@@ -651,6 +675,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/libusb.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
