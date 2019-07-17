@@ -1,3 +1,15 @@
+/*
+ *  Printer Application Framework.
+ * 
+ *  This is the helper code of the ippprint script. This code is responsible
+ *  for determining the filter chain.
+ *
+ *  Copyright 2019 by Dheeraj.
+ *
+ *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ *  information.
+ */
+
 #include "ippprint.h"
 #include "util.h"
 

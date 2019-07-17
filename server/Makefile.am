@@ -1,3 +1,12 @@
+#########################################################################
+# Makefile for printer applications framework project.					#
+# 																		#
+# Copyright 2019 by Dheeraj.											#
+#																		#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more	#
+# information. 															#
+#########################################################################
+
 bin_PROGRAMS = server deviced ippprint libusb #mime_type
 sbin_PROGRAMS = 
 

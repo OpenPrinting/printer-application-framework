@@ -1,6 +1,15 @@
 /*
- *  Author: Dheeraj(dhirajyadav135@gmail.com)
+ *  Printer Application Framework.
+ * 
+ *  This is helper code of the server daemon. It is reponsible for detecting
+ *  when a device is attached or removed.
+ *
+ *  Copyright 2019 by Dheeraj.
+ *
+ *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ *  information.
  */
+
 #include <libudev.h>
 #include <sys/poll.h>
 #include <assert.h>

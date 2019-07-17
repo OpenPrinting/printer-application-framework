@@ -39,7 +39,7 @@ static void escape_string(char* out,char* in,int len)
 static void manage_device(int sig,siginfo_t *siginfo,void* context)
 {
   union sigval sigtype = siginfo->si_value;
-  fprintf(stderr,"STD: Manage Device!!\n");
+  // fprintf(stderr,"STD: Manage Device!!\n");
   // signal_data_t* data = sigtype.sival_ptr;
   // time_t currtime = data->signal_time;
   // struct tm *timeinfo = localtime(&currtime);
@@ -119,7 +119,7 @@ void start_avahi_monitor(pid_t ppid)
 
 int main(int argc,char* argv[])
 {
-  fprintf(stderr,"Port: %d\n",getport());
+  // fprintf(stderr,"Port: %d\n",getport());
   pid_t pid,ppid;
   ppid = getpid();
 
@@ -284,7 +284,7 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
     */
 
     strlcpy(temp, line, sizeof(temp));
-    fprintf(stdout,"%s\n",line);
+    // fprintf(stdout,"%s\n",line);
    /*
     * device-class
     */

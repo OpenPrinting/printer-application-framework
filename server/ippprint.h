@@ -1,3 +1,16 @@
+/*
+ *  Printer Application Framework.
+ * 
+ *  ippprint script is executed by the ippeveprinter. This script is 
+ *  responsible for applying the filter chain and sending the job to
+ *  the backend.
+ *
+ *  Copyright 2019 by Dheeraj.
+ *
+ *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ *  information.
+ */
+
 #include <cups/cups.h>
 #include <cups/array.h>
 #include <cups/dir.h>

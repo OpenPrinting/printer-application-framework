@@ -1,6 +1,7 @@
 /*
  * Mini-daemon utility definitions for CUPS.
  *
+ * Copyright 2019 by Dheeraj.
  * Copyright 2007-2014 by Apple Inc.
  * Copyright 1997-2005 by Easy Software Products.
  *
