@@ -7,7 +7,7 @@
 # information. 															#
 #########################################################################
 
-bin_PROGRAMS = server deviced ippprint libusb #mime_type
+bin_PROGRAMS = server deviced ippprint #mime_type
 sbin_PROGRAMS = 
 
 # if HAVE_AVAHI
@@ -39,8 +39,6 @@ server_SOURCES = server.c util.c server.h util.h
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 
-libusb_SOURCES = libusb.c
-libusb_LDADD = -lusb-1.0 -ludev -lpthread
 
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model

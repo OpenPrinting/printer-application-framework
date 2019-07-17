@@ -14,6 +14,15 @@
 
 @SET_MAKE@
 
+#########################################################################
+# Makefile for printer applications framework project.					#
+# 																		#
+# Copyright 2019 by Dheeraj.											#
+#																		#
+# Licensed under Apache License v2.0.  See the file "LICENSE" for more	#
+# information. 															#
+#########################################################################
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -86,8 +95,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT) \
-	libusb$(EXEEXT)
+bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT)
 sbin_PROGRAMS =
 subdir = server
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -115,9 +123,6 @@ ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am_libusb_OBJECTS = libusb.$(OBJEXT)
-libusb_OBJECTS = $(am_libusb_OBJECTS)
-libusb_DEPENDENCIES =
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -140,8 +145,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/deviced.Po ./$(DEPDIR)/ippprint.Po \
-	./$(DEPDIR)/libusb.Po ./$(DEPDIR)/mime_type.Po \
-	./$(DEPDIR)/server.Po ./$(DEPDIR)/util.Po
+	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
+	./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -155,10 +160,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(libusb_SOURCES) \
-	$(server_SOURCES)
+SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(server_SOURCES)
 DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
-	$(libusb_SOURCES) $(server_SOURCES)
+	$(server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -319,8 +323,6 @@ ippprint_LDFLAGS =
 server_SOURCES = server.c util.c server.h util.h
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
-libusb_SOURCES = libusb.c
-libusb_LDADD = -lusb-1.0 -ludev -lpthread
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
@@ -451,10 +453,6 @@ ippprint$(EXEEXT): $(ippprint_OBJECTS) $(ippprint_DEPENDENCIES) $(EXTRA_ippprint
 	@rm -f ippprint$(EXEEXT)
 	$(AM_V_CCLD)$(ippprint_LINK) $(ippprint_OBJECTS) $(ippprint_LDADD) $(LIBS)
 
-libusb$(EXEEXT): $(libusb_OBJECTS) $(libusb_DEPENDENCIES) $(EXTRA_libusb_DEPENDENCIES) 
-	@rm -f libusb$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(libusb_OBJECTS) $(libusb_LDADD) $(LIBS)
-
 server$(EXEEXT): $(server_OBJECTS) $(server_DEPENDENCIES) $(EXTRA_server_DEPENDENCIES) 
 	@rm -f server$(EXEEXT)
 	$(AM_V_CCLD)$(server_LINK) $(server_OBJECTS) $(server_LDADD) $(LIBS)
@@ -467,7 +465,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libusb.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@ # am--include-marker
@@ -624,7 +621,6 @@ clean-am: clean-binPROGRAMS clean-generic clean-sbinPROGRAMS \
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
-	-rm -f ./$(DEPDIR)/libusb.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
@@ -675,7 +671,6 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
-	-rm -f ./$(DEPDIR)/libusb.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
