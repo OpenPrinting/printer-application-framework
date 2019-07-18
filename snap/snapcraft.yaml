@@ -1,14 +1,108 @@
-name: Printer Application Framework # you probably want to 'snapcraft register <name>'
+name: printer-application # you probably want to 'snapcraft register <name>'
 base: core18 # the base snap is the execution environment for this snap
-version: '0.1' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Printer Application Framework # 79 char long summary
+version: '0.0.1' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Snap for Printer driver packages. # 79 char long summary
 description: |
-  Printer Application Framework
+  This snapcraft.yaml file can be used as a base to create snaps of different printer\
+  driver packages.
 
 grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+apps:
+  run-server:
+    command: bin/server
+    daemon: simple
+    environment:
+     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+    plugs: 
+    -  network 
+    -  network-bind
+    -  avahi-control
+    -  raw-usb
+    -  home
+    -  hardware-observe
+  run-deviced:
+    command: bin/deviced
+  run-ippprint:
+    command: bin/ippprint
+    environment:
+     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+
+  run-ippeveprinter:
+    command: bin/ippeveprinter
+    environment:
+     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+    plugs: [network, network-bind, avahi-control, raw-usb]
 
 parts:
-  my-part:
+  ippsample:
+    plugin: autotools
+    source: https://github.com/dheeraj135/ippsample.git
+    configflags:
+      - --datarootdir=/usr/share/
+    build-packages:
+    - libcups2-dev
+    - zlib1g
+    - liblzma5  
+    organize: 
+      lib/libcups.a : lib/cups/
+
+  server:
     # See 'snapcraft plugins'
-    plugin: nil
+    plugin: autotools
+    source: https://github.com/dheeraj135/Printer-Applications-Framework.git
+    source-type: git
+    build-packages:
+      - libcups2
+      - libcups2-dev
+      - perl
+      - automake
+      - autoconf
+      - m4
+      - libudev-dev
+      - libavahi-client-dev
+      - libavahi-common-dev
+      - libavahi-common3
+      - libavahi-client3
+      - libgnutls28-dev
+
+    stage-packages:
+      - libcups2
+      - libavahi-common3
+      - libavahi-client3
+      - udev
+
+    override-build: |
+      autoreconf
+      snapcraftctl build
+
+    after: [ippsample]
+  
+  cups-filters:
+    plugin: dump
+    source: ./temp
+    stage-packages:
+    - cups-filters
+    - cups
+    prime:
+    - usr/lib/cups/filter/
+    - usr/share/cups/mime/
+    stage:
+    - usr/lib/cups/filter/
+    - usr/share/cups/mime/
+    organize:
+     /usr/lib/cups/filter/* : usr/lib/cups/filter/
+     /usr/share/cups/mime/* : usr/share/cups/mime/
+
+  libraries:
+    plugin: dump
+    source: ./temp
+    prime:
+    - .
+    stage:
+    - .
+    stage-packages:
+    - libqpdf21
+    - libcupsfilters1
+    - ghostscript
