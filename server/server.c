@@ -688,8 +688,9 @@ int start_ippeveprinter(device_t *dev)
     if(getppid() != ppid)
       exit(0);      /*Parent as exited already!*/
     
-    char *argv[11];
-    char name[2048],device_uri[2048],ppd[1024],make_and_model[512],command[1024],pport[8];
+    char *argv[15];
+    char name[2048],device_uri[2048],ppd[1024],make_and_model[512]
+      ,command[1024],pport[8],location[3096];
     char *envp[2];
     char LD_PATH[512];
     // strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
@@ -708,7 +709,7 @@ int start_ippeveprinter(device_t *dev)
     snprintf(pport,sizeof(pport),"%d",getport());
     
     snprintf(command,sizeof(command),"%s/bin/ippprint",snap);
-
+    snprintf(location,sizeof(location),"Printer Application, Original Device Info: %d",dev->device_info);
     escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
     argv[0] = (char*)name;
     argv[1] = "-D";
@@ -719,8 +720,12 @@ int start_ippeveprinter(device_t *dev)
     argv[6] = (char*)command;
     argv[7] = "-p";
     argv[8] = (char*) pport;
-    argv[9]= (char*)make_and_model;
-    argv[10] = NULL;
+    argv[9] = "-l";
+    argv[10] = (char*)location;
+    argv[11] = "-K";
+    argv[12] = (char*)tmpdir;
+    argv[13]= (char*)make_and_model;
+    argv[14] = NULL;
   
     //dup2(1,2);
     char printerlogs[1024];
