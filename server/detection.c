@@ -9,7 +9,7 @@
  *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
  *  information.
  */
-
+#include <server.h>
 #include <libudev.h>
 #include <sys/poll.h>
 #include <assert.h>
@@ -23,72 +23,85 @@
 #endif
 #include <signal.h>
 #define SUBSYSTEM "usb"
+#define NUM_PROCESS 3
 
-
-void static send_signal(const char* signal, pid_t ppid,int avahi)
+void static send_signal(const char* signal, pid_t ppid,int hardware_index)
 {
   union sigval sv;
-  // signal_data_t data;
-  // sv.sival_ptr = (signal_data_t*)calloc(1,sizeof(signal_data_t));
-  // signal_data_t *data = sv.sival_ptr;
-  if(avahi)
-    if(!strncasecmp(signal,"add",3))
-      sv.sival_int=AVAHI_ADD;
-    else
-      sv.sival_int=AVAHI_REMOVE;
-  else
-    if(!strncasecmp(signal,"add",3))
-      sv.sival_int=USB_ADD;
-    else
-      sv.sival_int=USB_REMOVE;
-  // time(&(data->signal_time));
-  // sv.sival_ptr=(void*)(&data);
-  // fprintf(stderr,"%d %s",data->val,asctime(localtime(&(data->signal_time))));
-  // signal_data_t *data2 = (sv.sival_ptr);
-  // fprintf(stderr,"%d %s",data2.val,asctime(localtime(&(data2.signal_time))));
+  int offset = 0;
+  if(!strncasecmp(signal,"add",3))
+  {
+    offset = 1;
+  }
+  else if(!strncasecmp(signal,"remove",6))
+  {
+    offset = 2;
+  }
+  hardware_index = 2*hardware_index+offset;
+  sv.sival_int = hardware_index;
   sigqueue(ppid,SIGUSR1,sv);
 }
 
-int monitor_usb_devices(pid_t ppid)
+int monitor_devices(pid_t ppid)
 {
     struct udev* udev = udev_new();
     if(!udev) {
         fprintf(stderr,"udev_new() failed!\n");
         return -1;
     }
-    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
-
-    udev_monitor_filter_add_match_subsystem_devtype(mon, SUBSYSTEM, NULL);
-    udev_monitor_enable_receiving(mon);
-
-    int fd = udev_monitor_get_fd(mon);
-
-    int num_process = 1;
-    struct pollfd pfds[1];
-    pfds[0].fd = fd;
-    pfds[0].events = POLLIN;
-
-    while(1){
-        int ret = poll(&pfds[0],(nfds_t)num_process,-1);
-        if(ret>0)
-        {
-            struct udev_device* dev = udev_monitor_receive_device(mon);
-            if(udev_device_get_devnode(dev))
-            {
-                const char* action = udev_device_get_action(dev);
-                if(action)
-                {
-                    if(!strncasecmp(action,"add",3)||!strncasecmp(action,"remove",6))
-                    {
-                        send_signal(action,ppid,0);
-                    }
-                }
-            }
-            udev_device_unref(dev);
-        }
+    
+    struct udev_monitor* mon[NUM_PROCESS];
+    struct pollfd pfds[NUM_PROCESS];
+    char arr[NUM_PROCESS][10]={"usb","tty","parallel"};
+    for(int i=0;i<NUM_PROCESS;i++)
+    {
+      mon[i] = udev_monitor_new_from_netlink(udev,"udev");
+      udev_monitor_filter_add_match_subsystem_devtype(mon[i],arr[i],NULL);
+      /*
+       *  The thing is, for parallel we will have to monitor multple subsystems. [parallel,printer,lp]
+       */
+      if(i==2)
+      {
+        udev_monitor_filter_add_match_subsystem_devtype(mon[i],"printers",NULL);
+        udev_monitor_filter_add_match_subsystem_devtype(mon[i],"lp",NULL);
+      }
+      udev_monitor_enable_receiving(mon[i]);
+      pfds[i].fd = udev_monitor_get_fd(mon[i]);
+      pfds[i].events = POLLIN;
     }
-    udev_unref(udev);
-    return 0;
+    while(1) {
+      int ret = poll(&pfds[0],(nfds_t)NUM_PROCESS,-1);
+      fprintf(stderr,"IN: %d\n",ret);
+      if(ret>0){
+  for(int i=0;i<NUM_PROCESS;i++)
+  {
+    if(pfds[i].revents & POLLIN){
+      pfds[i].revents = 0;
+
+      struct udev_device* dev = udev_monitor_receive_device(mon[i]);
+      const char *devnode;
+      if(devnode = udev_device_get_devnode(dev))
+      {
+        const char *action = udev_device_get_action(dev);
+        if(!strncasecmp(action,"add",3)||!strncasecmp(action,"remove",6))
+        {
+          send_signal(action,ppid,i+1);
+        }
+        // const char *devpath = udev_device_get_devpath(dev);
+        // const char *devtype = udev_device_get_devtype(dev);
+        // fprintf(stderr,"Signal Type:%s\tAction:%s\tDevpath:%s\tDevtype:%s\n",arr[i],action,devpath,devtype);
+      }
+      udev_device_unref(dev);
+    }
+  }
+      }
+    }
+  for(int i=0;i<NUM_PROCESS;i++)
+  {
+    udev_monitor_unref(mon[i]);
+  }
+  udev_unref(udev);
+  return 0;
 }
 
 #if HAVE_AVAHI
@@ -111,7 +124,7 @@ static void resolve_callback(
         assert(r);
         switch(event) {
           case AVAHI_RESOLVER_FOUND:
-            send_signal("add",ppid,1);
+            send_signal("add",ppid,0);
         }
         avahi_service_resolver_free(r);
     }
@@ -138,7 +151,7 @@ static void browse_callback(
           domain,AVAHI_PROTO_UNSPEC,0,resolve_callback,c);
         break;
       case AVAHI_BROWSER_REMOVE:
-        send_signal("remove",ppid,1);
+        send_signal("remove",ppid,0);
         break;
     }
 }

@@ -46,11 +46,15 @@ typedef struct
 } device_t;
 
 enum child_signal{
-    NO_SIGNAL,
-    AVAHI_ADD,
-    AVAHI_REMOVE,
-    USB_ADD,
-    USB_REMOVE
+    NO_SIGNAL,      // 0
+    AVAHI_ADD,      // 1
+    AVAHI_REMOVE,   // 2
+    USB_ADD,        // 3
+    USB_REMOVE,     // 4
+    SERIAL_ADD,     // 5
+    SERIAL_REMOVE,  // 6
+    PARALLEL_ADD,   // 7
+    PARALLEL_REMOVE // 8
 };
 
 typedef struct{
@@ -77,12 +81,13 @@ static int get_ppd(char* ppd,int ppd_len,char *make_and_model,int make_len,
 int get_ppd_uri(char* ppd_uri,process_t* process);
 int print_ppd(process_t* backend,cups_file_t* tempPPD);
 
-int monitor_usb_devices(pid_t ppid);
-
+int monitor_devices(pid_t ppid);
+#ifdef HAVE_AVAHI
+int monitor_avahi_devices(pid_t ppid);
+#endif
 void add_devices(cups_array_t *con, cups_array_t *temp);
 void remove_devices(cups_array_t *con,cups_array_t *temp);
 int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
-#include "detection.c"

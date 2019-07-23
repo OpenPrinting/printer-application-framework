@@ -121,7 +121,8 @@ ippprint_OBJECTS = $(am_ippprint_OBJECTS)
 ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT)
+am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT) \
+	detection.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
@@ -142,9 +143,9 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/deviced.Po ./$(DEPDIR)/ippprint.Po \
-	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
-	./$(DEPDIR)/util.Po
+am__depfiles_remade = ./$(DEPDIR)/detection.Po ./$(DEPDIR)/deviced.Po \
+	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/mime_type.Po \
+	./$(DEPDIR)/server.Po ./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -318,7 +319,7 @@ ippprint_LDFLAGS =
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
-server_SOURCES = server.c util.c server.h util.h
+server_SOURCES = server.c util.c server.h util.h detection.c
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 DIRECTORIES = $(tmpdir)/ppd \
@@ -461,6 +462,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/detection.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
@@ -617,7 +619,8 @@ clean-am: clean-binPROGRAMS clean-generic clean-sbinPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/deviced.Po
+		-rm -f ./$(DEPDIR)/detection.Po
+	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
@@ -667,7 +670,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/deviced.Po
+		-rm -f ./$(DEPDIR)/detection.Po
+	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po

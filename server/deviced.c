@@ -12,6 +12,7 @@
 
 #include "util.h"
 #include "deviced.h"
+#include "server.h"
 #include <cups/file.h>
 #include <cups/dir.h>
 #include <poll.h>
@@ -64,17 +65,30 @@ int main(int argc,
     device_limit,
     timeout;
   char *server_bin,
-    dirname[1024];
+    dirname[1024]; 
+  char includes[4096];    //Include-Exclude String
+  int inc_length=0,
+      exc_length=0;
+  int isInclude = 1;
+  char inc_backends[MAX_BACKENDS][1024];  //Include Backends
+  char exc_backends[MAX_BACKENDS][1024];  //Exclude Backends
   cups_dir_t *dir;    // FD
   cups_dentry_t *dent;
   double end_time,current_time;
-  if(argc<3||argc>3){
-    fprintf(stderr,"Usage: %s limit timeout\n",argv[0]);
+  if(argc<4||argc>4){
+    fprintf(stderr,"Usage: %s limit timeout include/exclude\nFor the include-exclude string,\
+     first character can be +(include) or -(exclude).\n If include mode is used only mentioned backends are used and in exclude\
+     mode only mentioned backends are ignored.",argv[0]);
     return 0;
   }
 
   device_limit = atoi(argv[1]);
   timeout = atoi(argv[2]);
+  strncpy(includes,argv[3],sizeof(includes));
+  
+  if(strlen(argv[3])>=sizeof(includes))
+    includes[sizeof(includes)-1]='\0';
+  
   if(timeout<1)
   {
     timeout = DEFAULT_TIMEOUT_LIMIT;
@@ -94,13 +108,67 @@ int main(int argc,
                     "directory(%s): %s\n",dirname,strerror(errno));
     exit(1);
   }
+  if(strlen(includes))
+  {
+    if(includes[0]=='-') isInclude = 0;
+    int k=0;
+    char *cj = includes+1;
+    for(;*cj;cj++)
+    {
+      if(*cj==',') {
+        if(isInclude){
+          inc_backends[inc_length][k++]=0;
+          inc_length++;
+        }
+        else{
+          exc_backends[exc_length][k++]=0;
+          exc_length++;
+        }
+        k=0;
+      }
+      else{
+        if(isInclude) inc_backends[inc_length][k++]=*cj;
+        else exc_backends[exc_length][k++]=*cj;
+      }
+    }
+    if(k)
+    if(isInclude){
+      inc_backends[inc_length][k++]=0;
+      inc_length++;
+    }
+    else {
+      exc_backends[exc_length][k++]=0;
+      exc_length++;
+    }
+  }
   while((dent = cupsDirRead(dir))!=NULL)
   {
     if (!S_ISREG(dent->fileinfo.st_mode) ||
         !isalnum(dent->filename[0] & 255) ||
         (dent->fileinfo.st_mode & (S_IRUSR | S_IXUSR)) != (S_IRUSR | S_IXUSR))
       continue;
-    start_backend(dent->filename, !(dent->fileinfo.st_mode & (S_IWGRP | S_IRWXO)));
+    
+    int invalid = 0;
+    if(exc_length){
+      for(int i=0;i<exc_length;i++)
+      {
+        if(!strncasecmp(exc_backends[i],dent->filename,strlen(exc_backends[i])))
+        {
+          invalid = 1;
+        }
+      }
+    }
+    else{
+      invalid = 1;
+      for(int i=0;i<inc_length;i++)
+      {
+        if(!strncasecmp(inc_backends[i],dent->filename,strlen(inc_backends[i])))
+          invalid = 0;
+      }
+    }
+
+    if(!invalid)
+      start_backend(dent->filename, !(dent->fileinfo.st_mode & (S_IWGRP | S_IRWXO)));
   }
   cupsDirClose(dir);
   

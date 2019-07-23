@@ -35,7 +35,7 @@ ippprint_LDFLAGS =
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 
-server_SOURCES = server.c util.c server.h util.h
+server_SOURCES = server.c util.c server.h util.h detection.c
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 

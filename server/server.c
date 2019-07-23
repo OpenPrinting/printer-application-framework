@@ -39,13 +39,8 @@ static void escape_string(char* out,char* in,int len)
 static void manage_device(int sig,siginfo_t *siginfo,void* context)
 {
   union sigval sigtype = siginfo->si_value;
-  // fprintf(stderr,"STD: Manage Device!!\n");
-  // signal_data_t* data = sigtype.sival_ptr;
-  // time_t currtime = data->signal_time;
-  // struct tm *timeinfo = localtime(&currtime);
-  // fprintf(stderr,"Signal mtime: %s %s\n",asctime(timeinfo),context);
   int signal_data = sigtype.sival_int;
-  // fprintf(stderr, "Recieved Signal: %d\n",signal_data);
+  fprintf(stderr, "Recieved Signal: %d\n",signal_data);
   if(signal_data&&signal_data%2==0)
     get_devices(0); //Remove devices
   else
@@ -87,7 +82,7 @@ static int signal_listeners()
   return 0;
 }
 
-void start_usb_monitor(pid_t ppid)
+void start_hardware_monitor(pid_t ppid)
 {
   int status = 0;
   if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
@@ -96,7 +91,7 @@ void start_usb_monitor(pid_t ppid)
   }
   if(getppid() != ppid)
     exit(0);      /*Parent as exited already!*/
-  monitor_usb_devices(ppid);  /*Listen for usb devices!*/
+  monitor_devices(ppid);  /*Listen for usb devices!*/
 }
 
 #ifdef HAVE_AVAHI
@@ -137,7 +132,7 @@ int main(int argc,char* argv[])
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 
   if((pid=fork())==0){
-    start_usb_monitor(ppid);
+    start_hardware_monitor(ppid);
   }
   else if(pid<0)
   {
@@ -216,7 +211,8 @@ get_devices(int insert)
     // argv[6] = NULL;
     argv[1] = (char*) limit;
     argv[2] = (char*) timeout;
-    argv[3] = NULL;
+    argv[3] = (char*)"";
+    argv[4] = NULL;
 
     env[0]  = (char*) serverdir;
     env[1]  = NULL;
@@ -709,7 +705,7 @@ int start_ippeveprinter(device_t *dev)
     snprintf(pport,sizeof(pport),"%d",getport());
     
     snprintf(command,sizeof(command),"%s/bin/ippprint",snap);
-    snprintf(location,sizeof(location),"Printer Application, Original Device Info: %d",dev->device_info);
+    snprintf(location,sizeof(location),"Printer Application, Original Device Info: %s",dev->device_info);
     escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
     argv[0] = (char*)name;
     argv[1] = "-D";
