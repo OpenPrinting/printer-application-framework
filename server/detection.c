@@ -71,7 +71,6 @@ int monitor_devices(pid_t ppid)
     }
     while(1) {
       int ret = poll(&pfds[0],(nfds_t)NUM_PROCESS,-1);
-      fprintf(stderr,"IN: %d\n",ret);
       if(ret>0){
   for(int i=0;i<NUM_PROCESS;i++)
   {

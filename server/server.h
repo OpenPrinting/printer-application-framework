@@ -45,6 +45,8 @@ typedef struct
     int eve_pid;
 } device_t;
 
+#define NUM_SIGNALS 4
+
 enum child_signal{
     NO_SIGNAL,      // 0
     AVAHI_ADD,      // 1
@@ -67,7 +69,7 @@ static cups_array_t *con_devices;
 static cups_array_t *temp_devices;
 static int compare_devices(device_t *d0,device_t *d1);
 
-static int get_devices();
+static int get_devices(int insert,int signal);
 static int parse_line(process_t*);
 static int		process_device(const char *device_class,
 				   const char *device_make_and_model,

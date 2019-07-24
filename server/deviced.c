@@ -116,6 +116,7 @@ int main(int argc,
     for(;*cj;cj++)
     {
       if(*cj==',') {
+        if(k==0) continue;
         if(isInclude){
           inc_backends[inc_length][k++]=0;
           inc_length++;
@@ -149,7 +150,15 @@ int main(int argc,
       continue;
     
     int invalid = 0;
-    if(exc_length){
+    if(inc_length){
+      invalid = 1;
+      for(int i=0;i<inc_length;i++)
+      {
+        if(!strncasecmp(inc_backends[i],dent->filename,strlen(inc_backends[i])))
+          invalid = 0;
+      }
+    }
+    else{
       for(int i=0;i<exc_length;i++)
       {
         if(!strncasecmp(exc_backends[i],dent->filename,strlen(exc_backends[i])))
@@ -158,15 +167,6 @@ int main(int argc,
         }
       }
     }
-    else{
-      invalid = 1;
-      for(int i=0;i<inc_length;i++)
-      {
-        if(!strncasecmp(inc_backends[i],dent->filename,strlen(inc_backends[i])))
-          invalid = 0;
-      }
-    }
-
     if(!invalid)
       start_backend(dent->filename, !(dent->fileinfo.st_mode & (S_IWGRP | S_IRWXO)));
   }

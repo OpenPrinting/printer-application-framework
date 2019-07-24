@@ -42,9 +42,9 @@ static void manage_device(int sig,siginfo_t *siginfo,void* context)
   int signal_data = sigtype.sival_int;
   fprintf(stderr, "Recieved Signal: %d\n",signal_data);
   if(signal_data&&signal_data%2==0)
-    get_devices(0); //Remove devices
+    get_devices(0,signal_data); //Remove devices
   else
-    get_devices(1);   //Insert devices
+    get_devices(1,signal_data);   //Insert devices
 }
 
 void cleanup()
@@ -151,16 +151,18 @@ int main(int argc,char* argv[])
   if(signal_listeners())  /*Set signal listeners in parent*/ 
     return 1;
 
-  while(1)            /*Infinite loop*/
-    sleep(1000000);
-
+  while(1){            /*Infinite loop*/
+    sleep(10);
+    get_devices(1,0);
+    get_devices(0,0);
+  }
   cleanup();
   
   return 0;
 }
 
 static int 
-get_devices(int insert)
+get_devices(int insert,int signal)
 
 {
     const char  *serverbin; // ServerBin
@@ -172,15 +174,53 @@ get_devices(int insert)
     char        serverdir[1024];
     process_t   *process;
     int         process_pid,status;
-    
+    char        includes[4096];
+    char        isInclude = '+';
+    char        tempstr[4095];
+    char        arr[4][32]={"dnssd","usb","serial","parallel"};
+
     cupsArrayClear(temp_devices);
-    // fprintf(stdout,"SIZE: temp: %d\n",cupsArrayCount(temp_devices));
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
       fprintf(stderr,"ERROR: Ran Out of Memory!\n");
       return (-1);
     }
 
+    if(!signal){
+      isInclude = '-';
+      includes[0]=isInclude;
+      char *cj = &includes[1];
+      for(int i=0;i<4;i++)
+      {
+        for(int j=0;j<strlen(arr[i]);j++,cj++)
+          *cj=arr[i][j];
+        *cj = ',';
+        cj++;
+      }
+      *cj=0;
+      cj=0;
+    }
+    else{
+      includes[0]=isInclude;
+      char *cj = &includes[1];
+      int index = (signal-1)/2;
+      for(int j=0;j<strlen(arr[index]);j++,cj++)
+        *cj = arr[index][j];
+      if(getenv("SNAP_BACKENDS"))
+      {
+        *cj = ',';cj++;
+        char *bk = strdup(getenv("SNAP_BACKENDS"));
+        char *t = bk;
+        while(*t){
+          *cj = *t;
+          cj++;
+          t++;
+        }
+      }
+      *cj =0;
+      cj =0;
+    }
+    fprintf(stderr,"Signal: %s\n",includes);
     strcpy(name,"deviced");
     strcpy(reques_id,DEVICED_REQ);
     strcpy(limit,DEVICED_LIM);
@@ -189,36 +229,18 @@ get_devices(int insert)
     strcpy(options,DEVICED_OPT);
     
     snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
-    // fprintf(stderr,"%s\n",program);
-    // char cwd[1000];
-    // if (getcwd(cwd, sizeof(cwd)) != NULL) {
-    //     fprintf(stderr,"Current working dir: %s\n", cwd);
-    // } else {
-    //     perror("getcwd() error");
-    //     return 1;
-    // }
     snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
-    // if(_cupsFileCheck(program,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
-    //                     _cupsFileCheckFilter,NULL))
-    //     return (-1);
 
     argv[0] = (char*) name;
-    // argv[1] = (char*) reques_id;
-    // argv[2] = (char*) limit;
-    // argv[3] = (char*) timeout;
-    // argv[4] = (char*) user_id;
-    // argv[5] = (char*) options;
-    // argv[6] = NULL;
     argv[1] = (char*) limit;
     argv[2] = (char*) timeout;
-    argv[3] = (char*)"";
+    argv[3] = (char*) includes;
     argv[4] = NULL;
 
     env[0]  = (char*) serverdir;
     env[1]  = NULL;
     setenv("CUPS_SERVERBIN",serverdir,1);
-    // DEBUG(program);
-    // fprintf(stdout,"Running deviced!\n");
+
     if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,
                             0))==NULL)
     {
@@ -229,18 +251,11 @@ get_devices(int insert)
     {
         if(WIFEXITED(status))
         {
-            // do{
-            //     parse_line(process);
-            // }
-            // while(_cupsFilePeekAhead(process->pipe,'\n'));
             while(!parse_line(process));
         }
     }
-    // fprintf(stderr,"DEBUG: Found Devices!!!\n");
-    //waitpid(-1,NULL,WNOHANG);   // Clean up 
     if(insert)
     {
-      // fprintf(stderr,"DEBUG: Adding Devices!\n");
       add_devices(con_devices,temp_devices);
     }
     else{
