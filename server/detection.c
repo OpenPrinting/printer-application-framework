@@ -176,11 +176,38 @@ int monitor_avahi_devices(pid_t parent_pid)
     goto fail;
   }
 
-  if(!(client = avahi_client_new(avahi_simple_poll_get(detect),0,client_callback,NULL,&error))){
+  if(!(client = avahi_client_new(avahi_simple_poll_get(detect)
+      ,0,client_callback,NULL,&error))){
     fprintf(stderr,"Unable to create client object!\n");
     goto fail;
   }
-  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,AVAHI_PROTO_UNSPEC,"_http._tcp",NULL,0,browse_callback,client))){
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_fax-ipp._tcp",NULL,0,browse_callback,client))){
+   fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
+   goto fail;
+  }
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_ipp._tcp",NULL,0,browse_callback,client))){
+   fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
+   goto fail;
+  }
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_ipp-tls._tcp",NULL,0,browse_callback,client))){
+   fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
+   goto fail;
+  }
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_ipps._tcp",NULL,0,browse_callback,client))){
+   fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
+   goto fail;
+  }
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_pdl-datastream._tcp",NULL,0,browse_callback,client))){
+   fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
+   goto fail;
+  }
+  if(!(sb=avahi_service_browser_new(client,AVAHI_IF_UNSPEC,
+  AVAHI_PROTO_UNSPEC,"_printer._tcp",NULL,0,browse_callback,client))){
    fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(client)));
    goto fail;
   }

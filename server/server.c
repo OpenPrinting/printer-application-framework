@@ -153,8 +153,7 @@ int main(int argc,char* argv[])
 
   while(1){            /*Infinite loop*/
     sleep(10);
-    get_devices(1,0);
-    get_devices(0,0);
+    get_devices(2,0);
   }
   cleanup();
   
@@ -254,11 +253,15 @@ get_devices(int insert,int signal)
             while(!parse_line(process));
         }
     }
-    if(insert)
+    if(insert==1)
     {
       add_devices(con_devices,temp_devices);
     }
+    else if(!insert){
+      remove_devices(con_devices,temp_devices);
+    }
     else{
+      add_devices(con_devices,temp_devices);
       remove_devices(con_devices,temp_devices);
     }
     free(process);
