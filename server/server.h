@@ -79,7 +79,7 @@ static int		process_device(const char *device_class,
 				   const char *device_location);
 
 static int get_ppd(char* ppd,int ppd_len,char *make_and_model,int make_len,
-                    char *device_id, int dev_len);
+                    char *device_id, int dev_len,char* device_uri);
 int get_ppd_uri(char* ppd_uri,process_t* process);
 int print_ppd(process_t* backend,cups_file_t* tempPPD);
 
@@ -88,7 +88,7 @@ int monitor_devices(pid_t ppid);
 int monitor_avahi_devices(pid_t ppid);
 #endif
 void add_devices(cups_array_t *con, cups_array_t *temp);
-void remove_devices(cups_array_t *con,cups_array_t *temp);
+void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes);
 int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev);
 int getport();

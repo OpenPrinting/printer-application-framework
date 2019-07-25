@@ -448,6 +448,7 @@ int main(int argc, char *argv[])
   char finalFile[1024];
 
   getDeviceScheme(&device_uri,device_scheme,sizeof(device_scheme));
+  setenv("DEVICE_URI",device_uri,1);
   fprintf(sout,"DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);
   
   char **s = environ;

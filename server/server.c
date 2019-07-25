@@ -258,11 +258,11 @@ get_devices(int insert,int signal)
       add_devices(con_devices,temp_devices);
     }
     else if(!insert){
-      remove_devices(con_devices,temp_devices);
+      remove_devices(con_devices,temp_devices,includes);
     }
     else{
       add_devices(con_devices,temp_devices);
-      remove_devices(con_devices,temp_devices);
+      remove_devices(con_devices,temp_devices,includes);
     }
     free(process);
     return (0);
@@ -505,7 +505,7 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
     {
       // fprintf(stderr,"DEBUG: Getting PPD!\n");
       int ret = get_ppd(ppd,sizeof(ppd),dev->device_make_and_model,sizeof(dev->device_make_and_model),
-                          dev->device_id,sizeof(dev->device_id));
+                          dev->device_id,sizeof(dev->device_id),dev->device_uri);
       if(ret>=0){
         strlcpy(dev->ppd,ppd,sizeof(dev->ppd));
         // fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
@@ -518,12 +518,58 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
   }
 }
 
-void remove_devices(cups_array_t *con,cups_array_t *temp)
+int getBackend(char *uri,char *backend,int bklen)
 {
+  	char userpass[256],		/* username:password (unused) */
+		host[256],		/* Hostname or IP address */
+		resource[256];		/* Resource path */
+    int	port;			/* Port number */
+    
+    if(uri==NULL)
+    {
+      backend = NULL;
+      return -1;
+    }
+    if(uri[0]=='\"')
+    {
+      int len = strlen(uri);
+      for(int i=0;i<len-2;i++)
+        uri[i]=uri[i+1];
+      uri[len-2]=0;
+    }
+    if(httpSeparateURI(HTTP_URI_CODING_ALL,uri,backend,bklen,
+    userpass,sizeof(userpass),host,sizeof(host),&port,resource,sizeof(resource))< HTTP_URI_STATUS_OK)
+    {
+      fprintf(stdout,"ERROR: %s %s\n",uri,backend);
+      return -1;
+    }
+    return 0;
+}
+
+void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
+{
+  fprintf(stdout,"Remove Device\n");
   device_t *dev = cupsArrayFirst(con);
   char ppd[128];
+  int inc = 1;
+  if(includes[0]=='-') inc = 0;
   for(;dev;dev=cupsArrayNext(con))
   {
+    char backend[32];
+    fprintf(stdout,"TT: %s\n",dev->device_uri);
+    if(getBackend(dev->device_uri,backend,sizeof(backend)))
+      continue;
+    fprintf(stdout,"Searching in %s for %s %d\n",includes,backend,inc);
+    if(inc)
+    {
+      if(!strstr(includes,backend))
+        continue;
+    }
+    else{
+      if(strstr(includes,backend))
+        continue;
+    }
+    fprintf(stdout,"Searching in %s for %s\n",includes,backend);
     if(cupsArrayFind(temp,dev)==NULL)
     {
       remove_ppd(dev->ppd);
@@ -543,7 +589,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp)
 static int
 get_ppd(char* ppd, int ppd_len,            /* O- */ 
         char *make_and_model,int make_len,
-        char *device_id, int dev_len) /* I- */
+        char *device_id, int dev_len,char *device_uri) /* I- */
 {
   const char *serverbin;
   char program[2048];
@@ -622,8 +668,9 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
     fprintf(stderr,"ERROR: Unable to execute cups-driverd!\n");
     return (-1);
   }
-  
-  escape_string(escp_model,make_and_model,make_len);
+  char ppdn[1024];
+  snprintf(ppdn,sizeof(ppdn),"%s-%s",make_and_model,device_uri);
+  escape_string(escp_model,ppdn,sizeof(ppdn));
   char ppd_folder[2048];
   snprintf(ppd_folder,sizeof(ppd_folder),"%s/ppd",tmpdir);
   if(mkdir(ppd_folder,0777)==-1)
@@ -670,6 +717,7 @@ int print_ppd(process_t* backend,cups_file_t *temp)
   if (cupsFileGets(backend->pipe,line,sizeof(line)))
   {
     cupsFilePrintf(temp,"%s\n",line);
+    //fprintf(stdout,"%s\n",line);
     return 1;
   }
   return 0;
@@ -681,7 +729,7 @@ int remove_ppd(char* ppd)
   //                   _cupsFileCheckFilter,NULL))
   //   return (-1);
   // else{
-    return unlink(ppd);
+  //  return unlink(ppd);
  // }
 }
 
@@ -724,7 +772,12 @@ int start_ippeveprinter(device_t *dev)
     
     snprintf(command,sizeof(command),"%s/bin/ippprint",snap);
     snprintf(location,sizeof(location),"Printer Application, Original Device Info: %s",dev->device_info);
-    escape_string(make_and_model,dev->device_make_and_model,sizeof(dev->device_make_and_model));
+    char printer_name[60];
+    char scheme[10];
+    getBackend(dev->device_uri,scheme,sizeof(scheme));
+    snprintf(printer_name,60,"%s-%s",dev->device_make_and_model,scheme);
+    printer_name[sizeof(printer_name)-1]=0;
+    escape_string(make_and_model,printer_name,sizeof(printer_name));
     argv[0] = (char*)name;
     argv[1] = "-D";
     argv[2] = (char*)device_uri;
@@ -749,9 +802,9 @@ int start_ippeveprinter(device_t *dev)
     int logfd = open(printerlogs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     close(logfd);
     logfd = open(printerlogs,O_WRONLY|O_APPEND);
-    // fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
-    //                  argv[4],argv[5],argv[6],argv[7],argv[8],argv[9],argv[10] ,argv[11],argv[12],argv[13],
-    //                  argv[14],argv[15]);
+    fprintf(stdout,"EXEC:%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
+                     argv[4],argv[5],argv[6],argv[7],argv[8],argv[9],argv[10] ,argv[11],argv[12],argv[13],
+                     argv[14],argv[15]);
     if(logfd>0)
     {
       dup2(logfd,2);
