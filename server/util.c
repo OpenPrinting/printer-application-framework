@@ -294,8 +294,8 @@ cupsdPipeCommand(int        *pid,	/* O - Process ID or 0 on error */
     * Child comes here...
     */
 
-    if (!getuid() && user)
-      setuid(user);			/* Run as restricted user */
+    // if (!getuid() && user)
+    //   setuid(user);			/* Run as restricted user */
 
     if ((fd = open("/dev/null", O_RDONLY)) > 0)
     {
@@ -593,8 +593,8 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     * Child comes here...
     */
 
-    if (!getuid() && user)
-      setuid(user);			/* Run as restricted user */
+    // if (!getuid() && user)
+    //   setuid(user);			/* Run as restricted user */
 
     if ((fd = open("/dev/null", O_RDONLY)) > 0)
     {

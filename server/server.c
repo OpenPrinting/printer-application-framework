@@ -170,7 +170,7 @@ get_devices(int insert,int signal)
     char        *env[7];
     char        name[32],reques_id[16],limit[16],
                 timeout[16],user_id[16],options[1024];
-    char        serverdir[1024];
+    char        serverdir[1024],serverroot[1024],datadir[1024];
     process_t   *process;
     int         process_pid,status;
     char        includes[4096];
@@ -229,16 +229,18 @@ get_devices(int insert,int signal)
     
     snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
     snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
+    snprintf(serverroot,sizeof(serverroot),"%s/etc/cups",snap);
+    snprintf(datadir,sizeof(datadir),"%s/usr/share/cups",snap);
+
+    setenv("CUPS_SERVERBIN",serverdir,1);
+    setenv("CUPS_DATADIR",datadir,1);
+    setenv("CUPS_SERVERROOT",serverroot,1);
 
     argv[0] = (char*) name;
     argv[1] = (char*) limit;
     argv[2] = (char*) timeout;
     argv[3] = (char*) includes;
     argv[4] = NULL;
-
-    env[0]  = (char*) serverdir;
-    env[1]  = NULL;
-    setenv("CUPS_SERVERBIN",serverdir,1);
 
     if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,
                             0))==NULL)
