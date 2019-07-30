@@ -524,7 +524,7 @@ cupsdExec2(const char *command,		/* I - Full path to program */
 
 
 /*
- * 'cupsdPipeCommand()' - Read output from a command.
+ * 'cupsdPipeCommand2()' - Read output from a command.
  */
 
 cups_file_t *				/* O - CUPS file or NULL on error */

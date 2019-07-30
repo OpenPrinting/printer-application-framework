@@ -8,6 +8,10 @@
  *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
  *  information.
  */
+#ifndef PAF_SERVER_H
+
+#define PAF_SERVER_H
+
 #include <config.h>
 #include <cups/file.h>
 #include <cups/array.h>
@@ -93,3 +97,5 @@ int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
+
+#endif

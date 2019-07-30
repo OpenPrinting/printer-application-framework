@@ -160,6 +160,9 @@ int main(int argc,char* argv[])
   return 0;
 }
 
+/*
+ * get_devices(int,int) - Get list of devices from deviced utility
+ */
 static int 
 get_devices(int insert,int signal)
 
