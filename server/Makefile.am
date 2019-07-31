@@ -17,7 +17,7 @@ sbin_PROGRAMS =
 # endif
 
 LIB_UDEV = -ludev
-# CUPS_TEMP = -lgss -lpthread
+CUPS_TEMP = -lpthread
 
 # CUPS_LIBS=$(CUPS_STATIC)
 

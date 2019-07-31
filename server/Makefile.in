@@ -112,20 +112,22 @@ PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_deviced_OBJECTS = deviced.$(OBJEXT) util.$(OBJEXT) log.$(OBJEXT)
 deviced_OBJECTS = $(am_deviced_OBJECTS)
 am__DEPENDENCIES_1 =
-deviced_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+deviced_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 deviced_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(deviced_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_ippprint_OBJECTS = ippprint.$(OBJEXT) mime_type.$(OBJEXT) \
 	util.$(OBJEXT) log.$(OBJEXT)
 ippprint_OBJECTS = $(am_ippprint_OBJECTS)
-ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT) \
 	detection.$(OBJEXT) log.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 server_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(server_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
@@ -214,6 +216,7 @@ CUPS_SERVERROOT = @CUPS_SERVERROOT@
 CUPS_STATIC = @CUPS_STATIC@
 CUPS_VERSION = @CUPS_VERSION@
 CYGPATH_W = @CYGPATH_W@
+DEBUG_LEVEL = @DEBUG_LEVEL@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
@@ -306,7 +309,7 @@ top_srcdir = @top_srcdir@
 # LIB_AVAHI = 
 # endif
 LIB_UDEV = -ludev
-# CUPS_TEMP = -lgss -lpthread
+CUPS_TEMP = -lpthread
 
 # CUPS_LIBS=$(CUPS_STATIC)
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)

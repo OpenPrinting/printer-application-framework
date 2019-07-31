@@ -12,6 +12,9 @@
 /* datadir */
 #undef DATADIR
 
+/* Debugging level of the software. */
+#undef DEBUG_LEVEL
+
 /* exec prefix */
 #undef EXEC_PREFIX
 

@@ -12,6 +12,7 @@
 
 #define PAF_SERVER_H
 
+#include "log.h"
 #include <config.h>
 #include <cups/file.h>
 #include <cups/array.h>

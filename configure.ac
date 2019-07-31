@@ -116,6 +116,14 @@ AC_SUBST(CUPS_CFLAGS)
 AC_SUBST(CUPS_VERSION)
 AC_SUBST(CUPS_SERVERROOT)
 ######################################################################
+# Debug level
+dbg_level=1
+if test "x$DEBUG_LEVEL"!="x";then
+    dbg_level=$DEBUG_LEVEL
+fi
+AC_ARG_VAR(DEBUG_LEVEL,[Enable or set Debugging level[1-3] 3 is heighest])
+AC_DEFINE_UNQUOTED([DEBUG_LEVEL],[$dbg_level],[Debugging level of the software.])
+######################################################################
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_LN_S

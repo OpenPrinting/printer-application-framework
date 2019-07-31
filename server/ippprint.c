@@ -32,16 +32,16 @@ static int getUserId(const char *username)
 
 static void ini()
 {
-  char logs[2048];
-  tmpdir = getenv("SNAP_COMMON")?strdup(getenv("SNAP_COMMON")):strdup("");
-  snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
-  // fprintf(stdout,"%s\n",logs);
-  sout = fopen(logs,"a");
-  if(sout==NULL)
-  {
-    fprintf(stderr,"UNABLE TO OPEN!\n");
-  }
-  fprintf(sout,"*****************************************************\n");
+  // char logs[2048];
+  // tmpdir = getenv("SNAP_COMMON")?strdup(getenv("SNAP_COMMON")):strdup("");
+  // snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
+  // // fprintf(stdout,"%s\n",logs);
+  // sout = fopen(logs,"a");
+  // if(sout==NULL)
+  // {
+  //   fprintf(stderr,"UNABLE TO OPEN!\n");
+  // }
+  // fprintf(sout,"*****************************************************\n");
 }
 
 /*
@@ -150,7 +150,7 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
   pid_t pid;
   char *filename=filter->filter;
   // fprintf(sout,"Executing: %s\n",filename);
-  // fprintf(sout,"Filenmae: %s\n",filename);
+  debug_printf("DEBUG2: Executing Command: %s\n",filename);
   if((pid=fork())<0)
   {
     return -1;
@@ -213,13 +213,13 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
 
   if(children==NULL)
   {
-    fprintf(sout,"ERROR: Ran out of memory!\n");
+    debug_printf("ERROR: Ran out of memory!\n");
     return -1;
   }
 
   if(numPipes>MAX_PIPES)
   {
-    fprintf(sout,"ERROR: Too many Filters!\n");
+    debug_printf("ERROR: Too many Filters!\n");
     return -1;
   }
 
@@ -236,21 +236,21 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
   if(inputFd<0)
   {
     if(errno == EACCES)
-      fprintf(sout,"ERROR: Permission Denied! Unable to open file: %s\n",inputFile);
+      debug_printf("ERROR: Permission Denied! Unable to open file: %s\n",inputFile);
     else
-      fprintf(sout,"ERROR: ERRNO: %d Unable to open file: %s\n",errno,inputFile);
+      debug_printf("ERROR: ERRNO: %d Unable to open file: %s\n",errno,inputFile);
     return -1;
   }
 
   int outputFd = mkstemp(outName);
   if(outputFd<0)
   {
-    fprintf(sout,"ERROR: ");
+    debug_printf("ERROR: ");
     if(errno==EACCES)
-      fprintf(sout,"Permission Denied!");
+      debug_printf("Permission Denied!");
     if(errno==EEXIST)
-      fprintf(sout,"Directory is full! Used all temporary file names! ");
-    fprintf(sout,"Unable to open temporary file!\n");
+      debug_printf("Directory is full! Used all temporary file names! ");
+    debug_printf("Unable to open temporary file!\n");
     return -1;
   }
 
@@ -270,7 +270,7 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
                 tempFilter,i);  /* Execute the printer */
     if(pd<0)
     {
-      fprintf(sout,"ERROR: Unable to execute filter %s!\n",tempFilter->filter);
+      debug_printf("ERROR: Unable to execute filter %s!\n",tempFilter->filter);
       killall=1;  /* Chain failed kill all filters */
       goto error;
     }
@@ -286,7 +286,7 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
     if(WIFEXITED(status))
     {
       int es = WEXITSTATUS(status);
-      fprintf(sout,"%s: Filter Process %d exited with status %d\n",(es?"ERROR":"DEBUG"),pd,es); 
+      debug_printf("%s: Filter Process %d exited with status %d\n",(es?"ERROR":"DEBUG"),pd,es); 
       if(es){
         killall=1;    /* (Atleast) One filter failed. kill entire chain. */
         goto error;
@@ -294,7 +294,7 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
     }
   }
 
-  fprintf(sout,"DEBUG: Applied Filter Chain!\n");
+  debug_printf("DEBUG: Applied Filter Chain!\n");
 
 error:
   if(killall){
@@ -347,7 +347,7 @@ static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
   if (httpSeparateURI(HTTP_URI_CODING_ALL,device_uri, scheme, schemelen, 
     userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK)
   {
-    fprintf(sout, "[Job %d] Bad device URI \"%s\".\n", 0, device_uri);
+    debug_printf("ERROR: [Job %d] Bad device URI \"%s\".\n", 0, device_uri);
     *device_uri_out=NULL;
     return -1;
   }
@@ -363,14 +363,14 @@ static int print_document(char *scheme,char *uri, char *filename)
   int status;
 
   snprintf(backend,sizeof(backend),"%s/backend/%s",getenv("CUPS_SERVERBIN"),scheme);
-  fprintf(sout,"DEBUG: Backend: %s %s\n",backend,uri);
+  debug_printf("DEBUG: Backend: %s %s\n",backend,uri);
   
   /*
    * Check file permissions and do fileCheck().
    */
   if((access(backend,F_OK|X_OK)==-1)&&fileCheck(backend))
   {
-    fprintf(sout,"ERROR: Unable to execute backend %s\n",scheme);
+    debug_printf("ERROR: Unable to execute backend %s\n",scheme);
     return -1;
   }
   
@@ -378,7 +378,7 @@ static int print_document(char *scheme,char *uri, char *filename)
   
   if((pid=fork())<0)
   {
-    fprintf(sout,"Unable to fork!\n");
+    debug_printf("ERROR: Unable to fork!\n");
     return -1;
   }
   else if(pid==0)
@@ -388,7 +388,7 @@ static int print_document(char *scheme,char *uri, char *filename)
     uid = getUserId(getenv("IPP_JOB_ORIGINATING_USER_NAME"));
     snprintf(userid,sizeof(userid),"%d",(uid<0?1000:uid));
 
-    fprintf(sout,"DEBUG: Executing backend: %s %s %s %s %s %s\n",uri,getenv("IPP_JOB_ID"),userid,
+    debug_printf("DEBUG: Executing backend: %s %s %s %s %s %s\n",uri,getenv("IPP_JOB_ID"),userid,
                           getenv("IPP_JOB_NAME"),getenv("IPP_COPIES_DEFAULT"),filename);
     char *argv[10];
     argv[0]=strdup(uri);
@@ -409,7 +409,7 @@ static int print_document(char *scheme,char *uri, char *filename)
     if(WIFEXITED(status))
     {
       int er = WEXITSTATUS(status);
-      fprintf(sout,"%s: Process %d exited with status %d\n",(er?"ERROR":"DEBUG"),pid,er);
+      debug_printf("%s: Process %d exited with status %d\n",(er?"ERROR":"DEBUG"),pid,er);
       return er;
     }
   }
@@ -449,7 +449,7 @@ int main(int argc, char *argv[])
 
   getDeviceScheme(&device_uri,device_scheme,sizeof(device_scheme));
   setenv("DEVICE_URI",device_uri,1);
-  fprintf(sout,"DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);
+  debug_printf("DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);
   
   char **s = environ;
   int isPPD = 1,isOut=1;    

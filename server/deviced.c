@@ -9,17 +9,7 @@
  *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
  *  information.
  */
-
-#include "util.h"
 #include "deviced.h"
-#include "server.h"
-#include <cups/file.h>
-#include <cups/dir.h>
-#include <poll.h>
-#include <signal.h>
-#include <unistd.h>
-#include <error.h>
-#include <wait.h>
 
 #define MAX_BACKENDS 200
 

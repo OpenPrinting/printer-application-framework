@@ -1,108 +1,37 @@
+/*
+ *  Printer Application Framework.
+ * 
+ *  This file handles debug logging of the Framework.
+ *  Important environment variables-
+ *      DEBUG_LEVEL = 0,1,2,3 [3 is the highest level of logging].
+ *
+ *  Copyright 2019 by Dheeraj.
+ *
+ *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ *  information.
+ */
 #include "log.h"
 
 /*
  *  getLock(char*) - Get lock of a file
  *  Returns - 
- *  0   - Some other process have locked this file.
- *  +ve - File is locked.
- *  -1  - Permission error.
- *  Sometimes, a process might exit without releasing the lock,
- *  this can have a very bad effect on the entire system. So, we
- *  store pid of locking process in the lock file. If the process
- *  has exited then we need to delete this lock file.
- */
-static int _getLock(char *filename,int trynum)
-{
-    char lockname[PATH_MAX];
-    snprintf(lockname,sizeof(lockname),"%s.lock",filename);
-    int fd = open(lockname,O_CREAT|O_WRONLY|O_EXCL,
-    S_IRUSR|S_IWUSR);
-    if(fd<0){
-        if(errno==EEXIST){
-            if(trynum%50==0)
-            {
-                fd = open(lockname,O_RDONLY);
-                if(fd<0){
-                    return 0;
-                }
-                else{
-                    char pstring[10];
-                    int sz = read(fd,pstring,sizeof(pstring));
-                    // fprintf(stderr,"READ: %d\n",sz);
-                    if(sz>=sizeof(pstring))
-                        pstring[sizeof(pstring)-1]=0;
-                    int pid = atoi(pstring);
-                    int kres = kill(pid,0);
-                    if(kres<0){
-                        if(errno==ESRCH){
-                            int res = remove(lockname);
-                        }
-                    }
-                }
-            }
-            return 0;
-        }
-        return -1;
-    }
-    char pidstring[10];
-    snprintf(pidstring,sizeof(pidstring),"%d",getpid());
-    write(fd,pidstring,sizeof(pidstring));
-    return fd;
-}
-
-/*
- *  waitForLock(char*) - Wait until we get lock on the file.
- *  Returns - 
+ *  0 - Success
  *  -1  - Error.
- *  0   - Timeout.
- *  +ve   - FD of lock file.
  */
-static int _waitForLock(char *filename)
+static int _getLock(cups_file_t *file,int block)
 {
-    int loop=0;
-    int timeout = DEFAULT_TIMEOUT;
-    int num_tries = DEFAULT_NUM_CHECKS;
-    if(getenv("PAF_NUM_CHECKS")){
-        num_tries = atoi(getenv("PAF_NUM_CHECKS"));
-    }
-    if(getenv("PAF_TIMEOUT")){
-        timeout = atoi(getenv("PAF_TIMEOUT"));
-    }
-    int lock_fd = 0;
-    while(loop<num_tries)
-    {
-        log_fd = _getLock(filename,loop);
-        
-        if(log_fd>0)
-            return log_fd;
-        else if(log_fd<0)
-            return -1;
-        
-        struct timespec ts;
-        ts.tv_sec = timeout/1000;
-        ts.tv_nsec = (timeout%1000)*1000000;
-        nanosleep(&ts,NULL);
-        loop++;
-    }
-    return 0;
+    return cupsFileLock(file,block);
 }
 
 /*
  *  _releaseLock(filename,fd) - Release lock on file-filename
  *  Returns-
  *  0 - Success
- *  -1 - fd is negative.
+ *  -1 - Error
  */
-static int _releaseLock(char *filename, int fd)
+static int _releaseLock(cups_file_t *file)
 {
-    char lockname[PATH_MAX];
-    snprintf(lockname,sizeof(lockname),"%s.lock",filename);
-    if(fd<0){
-        return -1;
-    }
-    close(fd);
-    unlink(lockname);
-    return 0;
+    return cupsFileUnlock(file);
 }
 
 /*
@@ -121,15 +50,19 @@ static int initialize_log()
     if(log_initialized) return 0;
     char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
     snprintf(logfile,sizeof(logfile),"%s/logs.txt",tmpdir);
+    int temp_level;
     if(getenv("DEBUG_LEVEL"))
     {
-        int temp_level = atoi(getenv("DEBUG_LEVEL"));
-        if(temp_level>3||temp_level<0){
+        temp_level = atoi(getenv("DEBUG_LEVEL"));
+    }
+    else{
+        temp_level = DEBUG_LEVEL;
+    }
+    if(temp_level>3||temp_level<0){
             temp_level = 1; //Simply ignore
         }
         log_level = temp_level;
-    }
-    if(log_level){
+    if(log_level>1){
         fprintf(stderr,"Initializing Debugging!\n");
     }
     int logfd = open(logfile,O_CREAT|O_WRONLY|O_EXCL,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -154,20 +87,23 @@ static int initialize_log()
  */
 int debug_printf(char *format, ...)
 {
+    initialize_log();
     va_list arg;
     int res =0 ;
+    char logline[3096];
+    va_start(arg,format);
+    vsnprintf(logline,sizeof(logline),format,arg);
+    va_end(arg);
     int message_level=0;
-    if(!strncmp(format,"ERROR:",6))
+    if(!strncmp(logline,"ERROR:",6))
         message_level = 1;
-    else if(!strncmp(format,"DEBUG:",6))
+    else if(!strncmp(logline,"DEBUG:",6))
         message_level = 2;
-    else if(!strncmp(format,"DEBUG2:",7))
+    else if(!strncmp(logline,"DEBUG2:",7))
         message_level = 3;
     if(message_level<=log_level)
     {
-        va_start(arg,format);
-        res = _debug_log(format,arg);
-        va_end(arg);
+        res = _debug_log(logline,sizeof(logline));
     }
     return res;
 }
@@ -194,29 +130,23 @@ static void gettime(char *timestring,int len)
  * -1   -   Error
  * else Number of bytes written
  */
-static int _debug_log(char *format, va_list arg)
+static int _debug_log(char *logline,int len)
 {
     int res;
     char timestring[128];
-    char format2[3096];
+    char format2[3224];
     gettime(timestring,sizeof(timestring));
-    snprintf(format2,sizeof(format2),"[%s] %s",timestring,format);
-    if(initialize_log())
-        return -1;
-    int log_fd = _waitForLock(logfile);
-    if(log_fd<=0){
-        fprintf(stderr,"ERROR: Unable to get lock on logfile!\n");
-        return -1;
-    }
-    FILE* logs = fopen(logfile,"a");
+    snprintf(format2,sizeof(format2),"[%s] %s",timestring,logline);
+    format2[sizeof(format2)-1]=0;
+    cups_file_t* logs = cupsFileOpen(logfile,"a");
     if(logs==NULL)
     {
-        fprintf(stderr,"ERROR: Unable to open logfile!\n");
-        return -1;
+        fprintf(stderr,"ERROR: FILE NULL\n");
     }
-    res = vfprintf(logs,format2,arg);
-    fclose(logs);
-    _releaseLock(logfile,log_fd);
+    _getLock(logs,1);
+    res= cupsFileWrite(logs,format2,strlen(format2));
+    cupsFileClose(logs);
+    _releaseLock(logs);
     return res;
 }
 
@@ -245,19 +175,28 @@ int logFromFile(cups_file_t *file)
     return 0;
 }
 
-// int main()
-// {
-//     // debug_printf("HELLO WORLD\n");
-//     // debug_printf("ERROR: HELLO THERE\n");
-//     // debug_printf("DEBUG: What's up?\n");
-//     // debug_printf("DEBUG2: HELLO %d %s %s %s %s %s %d\n",1, "Dheerajjjjjjjjjjjjjjjjjjjjjj",
-//     // "Dheeraj","Dheeraj","Dheeraj","Dheeraj",1000);
-//     cups_file_t* file = cupsFileOpen("/var/snap/hplip-printer-application/common/logs.txt","r");
-//     if(file==NULL)
-//     {
-//         fprintf(stderr,"Unable to open file!\n");
-//         return 0;
-//     }
-//     logFromFile(file);
-//     return 0;
-// }
+void * _logThread(void *t)
+{
+    cups_file_t *file = (cups_file_t*)t;
+    if(file==NULL){
+        pthread_exit((void*)NULL);
+    }
+    char line[2048];
+    int len;
+    while(cupsFileGets(file,line,sizeof(line)))
+    {
+        len = strlen(line);
+        if(len<sizeof(line))
+        {
+            line[len+1]=(char)0;
+            line[len]='\n';
+        }
+        debug_printf(line);
+    }
+    pthread_exit((void*)NULL);
+}
+
+void logFromFile2(pthread_t *process_logger, cups_file_t* file)
+{
+    pthread_create(process_logger,NULL,_logThread,(void*)file);
+}

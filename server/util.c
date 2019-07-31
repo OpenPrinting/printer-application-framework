@@ -630,19 +630,7 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     }
     char logs[1024];
     char *tmpdir;
-    
-    // if(getenv("SNAP_COMMON"))
-    //   tmpdir = strdup(getenv("SNAP_COMMON"));
-    // else tmpdir = strdup("/var/tmp");
-    
-    // snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
-    // int logfd = open(logs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    // close(logfd);
-    // if ((fd = open(logs,O_WRONLY|O_APPEND))>0)
-    // {
-    //   dup2(fd,2);
-    //   close(fd);
-    // }
+
     dup2(erfd[1],2);      /* 2> err */
     close(erfd[1]);
 
@@ -660,7 +648,7 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
   close(fds[1]);
 
   if(errlog){
-    *errlog = cupsFileOpen(erfd[0],"r");
+    *errlog = cupsFileOpenFd(erfd[0],"r");
   }
 
   return (cupsFileOpenFd(fds[0], "r"));

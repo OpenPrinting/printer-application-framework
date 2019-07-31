@@ -33,6 +33,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include "util.h"
+#include "log.h"
 
 #define MAX_TYPE_LEN 64
 #define MAX_TYPES 1000

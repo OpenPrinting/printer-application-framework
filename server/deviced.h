@@ -10,5 +10,14 @@
  *  information.
  */
 
+#include "server.h"
+#include <cups/file.h>
+#include <cups/dir.h>
+#include <poll.h>
+#include <signal.h>
+#include <unistd.h>
+#include <error.h>
+#include <wait.h>
+
 #define DEFAULT_TIMEOUT_LIMIT 1000
 #define DEFAULT_SERVERBIN "/usr/lib/cups/"

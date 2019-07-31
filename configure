@@ -656,6 +656,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+DEBUG_LEVEL
 CUPS_SERVERROOT
 CUPS_VERSION
 CUPS_CFLAGS
@@ -746,6 +747,7 @@ enable_dependency_tracking
       ac_precious_vars='build_alias
 host_alias
 target_alias
+DEBUG_LEVEL
 CC
 CFLAGS
 LDFLAGS
@@ -1396,6 +1398,7 @@ Optional Packages:
   --with-cups-config=path Specify path to cups-config executable.
 
 Some influential environment variables:
+  DEBUG_LEVEL Enable or set Debugging level[1-3] 3 is heighest
   CC          C compiler command
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
@@ -3163,6 +3166,18 @@ echo "$CUPS_STATIC"
 
 
 
+
+######################################################################
+# Debug level
+dbg_level=1
+if test "x$DEBUG_LEVEL"!="x";then
+    dbg_level=$DEBUG_LEVEL
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define DEBUG_LEVEL $dbg_level
+_ACEOF
 
 ######################################################################
 # Checks for programs.
