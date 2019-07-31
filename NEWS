@@ -1,0 +1,18 @@
+CHANGES in V0.0.1:
+    - ippprint: As of now, ippprint does not do any formatting.
+      As of now, we are assuming that host is taking care of 
+      the formatting and other stuff. We need to test this.
+    - Logging: DEBUG_LEVEL environment variable can be used
+      at build time as well as at runtime to change the 
+      debugging level.
+      1 - ERROR:
+      2 - DEBUG:
+      3 - DEBUG2:
+    - deviced now uses simple include/exclude schemes. 
+      Example: "+dnssd,usb" will execute only dnssd and usb
+      backends. "-dnssd,usb" will execute everything except 
+      dnssd and usb.
+    - deviced: deviced utility based on cups-
+      deviced, but stripped down to remove 
+      IPP responses and other functionalities.
+    

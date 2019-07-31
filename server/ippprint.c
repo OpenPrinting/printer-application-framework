@@ -30,19 +30,6 @@ static int getUserId(const char *username)
   return (int)p->pw_uid;
 }
 
-static void ini()
-{
-  // char logs[2048];
-  // tmpdir = getenv("SNAP_COMMON")?strdup(getenv("SNAP_COMMON")):strdup("");
-  // snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
-  // // fprintf(stdout,"%s\n",logs);
-  // sout = fopen(logs,"a");
-  // if(sout==NULL)
-  // {
-  //   fprintf(stderr,"UNABLE TO OPEN!\n");
-  // }
-  // fprintf(sout,"*****************************************************\n");
-}
 
 /*
  * getFilterPath() - Get path to required filter.
@@ -436,11 +423,7 @@ void testApplyFilterChain()
 
 int main(int argc, char *argv[])
 {
-  ini();
-  // if(getenv("CUPS_SERVERBIN"))
-  //   fprintf(sout,"%s\n",getenv("CUPS_SERVERBIN"));
-  // if(getenv("CUPS_SERVERBIN")==NULL)
-  //   setenv("CUPS_SERVERBIN",CUPS_SERVERBIN,1);
+  
   char device_scheme[32],*device_uri;
   char *ppdname=NULL;
   char *output_type=NULL;
