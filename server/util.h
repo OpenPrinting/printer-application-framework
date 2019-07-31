@@ -63,7 +63,7 @@ extern void		cupsdSendIPPString(ipp_tag_t value_tag,
 extern void		cupsdSendIPPTrailer(void);
 
 extern cups_file_t *cupsdPipeCommand2(int *pid, const char *command,
-								char **argv, uid_t user);
+								char **argv,cups_file_t **errlog, uid_t user);
 
 extern int		cupsdExec2(const char* command, char **argv, char **env);
 

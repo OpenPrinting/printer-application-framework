@@ -531,11 +531,12 @@ cups_file_t *				/* O - CUPS file or NULL on error */
 cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
                  const char *command,	/* I - Command to run */
                  char       **argv,	/* I - Arguments to pass to command */
+                 cups_file_t **errlog,  /* O- cups file for stderr */
 		 uid_t      user)	/* I - User to run as or 0 for current */
 {
   int	fd,				/* Temporary file descriptor */
-	fds[2];				/* Pipe file descriptors */
-
+	fds[2],				/* Pipe file descriptors */
+  erfd[2];      /* Error Logging FD      */
 
  /*
   * First create the pipe...
@@ -546,7 +547,11 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     *pid = 0;
     return (NULL);
   }
-
+  if(pipe(erfd))
+  {
+    *pid = 0;
+    return (NULL);
+  }
  /*
   * Set the "close on exec" flag on each end of the pipe...
   */
@@ -571,6 +576,26 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     return (NULL);
   }
 
+    if (fcntl(erfd[0], F_SETFD, fcntl(erfd[0], F_GETFD) | FD_CLOEXEC))
+  {
+    close(erfd[0]);
+    close(erfd[1]);
+
+    *pid = 0;
+
+    return (NULL);
+  }
+
+  if (fcntl(erfd[1], F_SETFD, fcntl(erfd[1], F_GETFD) | FD_CLOEXEC))
+  {
+    close(erfd[0]);
+    close(erfd[1]);
+
+    *pid = 0;
+
+    return (NULL);
+  }
+
  /*
   * Then run the command...
   */
@@ -584,6 +609,8 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     *pid = 0;
     close(fds[0]);
     close(fds[1]);
+    close(erfd[0]);
+    close(erfd[1]);
 
     return (NULL);
   }
@@ -604,18 +631,20 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     char logs[1024];
     char *tmpdir;
     
-    if(getenv("SNAP_COMMON"))
-      tmpdir = strdup(getenv("SNAP_COMMON"));
-    else tmpdir = strdup("/var/tmp");
+    // if(getenv("SNAP_COMMON"))
+    //   tmpdir = strdup(getenv("SNAP_COMMON"));
+    // else tmpdir = strdup("/var/tmp");
     
-    snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
-    int logfd = open(logs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    close(logfd);
-    if ((fd = open(logs,O_WRONLY|O_APPEND))>0)
-    {
-      dup2(fd,2);
-      close(fd);
-    }
+    // snprintf(logs,sizeof(logs),"%s/logs.txt",tmpdir);
+    // int logfd = open(logs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    // close(logfd);
+    // if ((fd = open(logs,O_WRONLY|O_APPEND))>0)
+    // {
+    //   dup2(fd,2);
+    //   close(fd);
+    // }
+    dup2(erfd[1],2);      /* 2> err */
+    close(erfd[1]);
 
     dup2(fds[1], 1);			/* >pipe */
     close(fds[1]);
@@ -627,8 +656,12 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
  /*
   * Parent comes here, open the input side of the pipe...
   */
-
+  close(erfd[1]);
   close(fds[1]);
+
+  if(errlog){
+    *errlog = cupsFileOpen(erfd[0],"r");
+  }
 
   return (cupsFileOpenFd(fds[0], "r"));
 }

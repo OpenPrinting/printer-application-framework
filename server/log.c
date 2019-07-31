@@ -6,8 +6,12 @@
  *  0   - Some other process have locked this file.
  *  +ve - File is locked.
  *  -1  - Permission error.
+ *  Sometimes, a process might exit without releasing the lock,
+ *  this can have a very bad effect on the entire system. So, we
+ *  store pid of locking process in the lock file. If the process
+ *  has exited then we need to delete this lock file.
  */
-int _getLock(char *filename)
+static int _getLock(char *filename,int trynum)
 {
     char lockname[PATH_MAX];
     snprintf(lockname,sizeof(lockname),"%s.lock",filename);
@@ -15,10 +19,34 @@ int _getLock(char *filename)
     S_IRUSR|S_IWUSR);
     if(fd<0){
         if(errno==EEXIST){
+            if(trynum%50==0)
+            {
+                fd = open(lockname,O_RDONLY);
+                if(fd<0){
+                    return 0;
+                }
+                else{
+                    char pstring[10];
+                    int sz = read(fd,pstring,sizeof(pstring));
+                    // fprintf(stderr,"READ: %d\n",sz);
+                    if(sz>=sizeof(pstring))
+                        pstring[sizeof(pstring)-1]=0;
+                    int pid = atoi(pstring);
+                    int kres = kill(pid,0);
+                    if(kres<0){
+                        if(errno==ESRCH){
+                            int res = remove(lockname);
+                        }
+                    }
+                }
+            }
             return 0;
         }
         return -1;
     }
+    char pidstring[10];
+    snprintf(pidstring,sizeof(pidstring),"%d",getpid());
+    write(fd,pidstring,sizeof(pidstring));
     return fd;
 }
 
@@ -29,7 +57,7 @@ int _getLock(char *filename)
  *  0   - Timeout.
  *  +ve   - FD of lock file.
  */
-int _waitForLock(char *filename)
+static int _waitForLock(char *filename)
 {
     int loop=0;
     int timeout = DEFAULT_TIMEOUT;
@@ -43,8 +71,7 @@ int _waitForLock(char *filename)
     int lock_fd = 0;
     while(loop<num_tries)
     {
-        loop++;
-        log_fd = _getLock(filename);
+        log_fd = _getLock(filename,loop);
         
         if(log_fd>0)
             return log_fd;
@@ -55,11 +82,18 @@ int _waitForLock(char *filename)
         ts.tv_sec = timeout/1000;
         ts.tv_nsec = (timeout%1000)*1000000;
         nanosleep(&ts,NULL);
+        loop++;
     }
     return 0;
 }
 
-int _releaseLock(char *filename, int fd)
+/*
+ *  _releaseLock(filename,fd) - Release lock on file-filename
+ *  Returns-
+ *  0 - Success
+ *  -1 - fd is negative.
+ */
+static int _releaseLock(char *filename, int fd)
 {
     char lockname[PATH_MAX];
     snprintf(lockname,sizeof(lockname),"%s.lock",filename);
@@ -68,6 +102,7 @@ int _releaseLock(char *filename, int fd)
     }
     close(fd);
     unlink(lockname);
+    return 0;
 }
 
 /*
@@ -81,7 +116,7 @@ int _releaseLock(char *filename, int fd)
  *  -1  - Error
  *  0   - Success
  */
-int initialize_log()
+static int initialize_log()
 {
     if(log_initialized) return 0;
     char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
@@ -111,7 +146,13 @@ int initialize_log()
     return 0;
 }
 
-int debug_printf(const char *format, ...)
+/*
+ * debug_printf(char *,...) - Print to log file.
+ * returns -
+ * -1   - Error.
+ * else Number of bytes written.
+ */
+int debug_printf(char *format, ...)
 {
     va_list arg;
     int res =0 ;
@@ -131,13 +172,38 @@ int debug_printf(const char *format, ...)
     return res;
 }
 
-static int _debug_log(const char *format, va_list arg)
+/*
+ * gettime() - Get Date Time String.
+ * Returns - Void
+ */
+static void gettime(char *timestring,int len)
+{
+    time_t rawtime = time(NULL);
+    if(rawtime<0)
+    {
+        timestring="0-0-0";
+        return;
+    }
+    struct tm *ptm = localtime(&rawtime);
+    strftime(timestring,len,"%d-%b-%y %a %T %z ",ptm);
+}
+
+/*
+ * _debug_log(char *,va_list) - Print to file
+ * Returns -
+ * -1   -   Error
+ * else Number of bytes written
+ */
+static int _debug_log(char *format, va_list arg)
 {
     int res;
+    char timestring[128];
+    char format2[3096];
+    gettime(timestring,sizeof(timestring));
+    snprintf(format2,sizeof(format2),"[%s] %s",timestring,format);
     if(initialize_log())
         return -1;
     int log_fd = _waitForLock(logfile);
-    fprintf(stderr,"Format: %s\n",format);
     if(log_fd<=0){
         fprintf(stderr,"ERROR: Unable to get lock on logfile!\n");
         return -1;
@@ -148,20 +214,50 @@ static int _debug_log(const char *format, va_list arg)
         fprintf(stderr,"ERROR: Unable to open logfile!\n");
         return -1;
     }
-    res = vfprintf(logs,format,arg);
+    res = vfprintf(logs,format2,arg);
     fclose(logs);
     _releaseLock(logfile,log_fd);
     return res;
 }
 
-// int logFromPipe()
+/*
+ * logFromFile() - Read lines from a cups file and write to log file.
+ * Returns - 
+ * -1 - Error
+ * 0 - Success
+ */
+int logFromFile(cups_file_t *file)
+{
+    if(file==NULL) 
+        return -1;
+    char line[2048];
+    int len;
+    while(cupsFileGets(file,line,sizeof(line)))
+    {
+        len = strlen(line);
+        if(len<sizeof(line))
+        {
+            line[len+1]=(char)0;
+            line[len]='\n';
+        }
+        debug_printf(line);
+    }
+    return 0;
+}
 
 // int main()
 // {
-//     debug_printf("HELLO WORLD\n");
-//     debug_printf("ERROR: HELLO THERE\n");
-//     debug_printf("DEBUG: What's up?\n");
-//     debug_printf("DEBUG2: HELLO %d %s %s %s %s %s %d\n",1, "Dheerajjjjjjjjjjjjjjjjjjjjjj",
-//     "Dheeraj","Dheeraj","Dheeraj","Dheeraj",1000);
+//     // debug_printf("HELLO WORLD\n");
+//     // debug_printf("ERROR: HELLO THERE\n");
+//     // debug_printf("DEBUG: What's up?\n");
+//     // debug_printf("DEBUG2: HELLO %d %s %s %s %s %s %d\n",1, "Dheerajjjjjjjjjjjjjjjjjjjjjj",
+//     // "Dheeraj","Dheeraj","Dheeraj","Dheeraj",1000);
+//     cups_file_t* file = cupsFileOpen("/var/snap/hplip-printer-application/common/logs.txt","r");
+//     if(file==NULL)
+//     {
+//         fprintf(stderr,"Unable to open file!\n");
+//         return 0;
+//     }
+//     logFromFile(file);
 //     return 0;
 // }
