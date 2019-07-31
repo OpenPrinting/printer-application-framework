@@ -24,18 +24,18 @@ LIB_UDEV = -ludev
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)
 AM_LDFLAGS = $(CUPS_LDFLAGS)
 
-deviced_SOURCES = deviced.c util.c util.h
+deviced_SOURCES = deviced.c util.c log.c
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 deviced_LDFLAGS = 
 
-ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
+ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h log.c
 ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 ippprint_LDFLAGS = 
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 
-server_SOURCES = server.c util.c server.h util.h detection.c
+server_SOURCES = server.c util.c server.h detection.c log.c
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 

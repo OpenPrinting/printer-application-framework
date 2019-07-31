@@ -109,20 +109,20 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
-am_deviced_OBJECTS = deviced.$(OBJEXT) util.$(OBJEXT)
+am_deviced_OBJECTS = deviced.$(OBJEXT) util.$(OBJEXT) log.$(OBJEXT)
 deviced_OBJECTS = $(am_deviced_OBJECTS)
 am__DEPENDENCIES_1 =
 deviced_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 deviced_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(deviced_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_ippprint_OBJECTS = ippprint.$(OBJEXT) mime_type.$(OBJEXT) \
-	util.$(OBJEXT)
+	util.$(OBJEXT) log.$(OBJEXT)
 ippprint_OBJECTS = $(am_ippprint_OBJECTS)
 ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_server_OBJECTS = server.$(OBJEXT) util.$(OBJEXT) \
-	detection.$(OBJEXT)
+	detection.$(OBJEXT) log.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
@@ -144,8 +144,9 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/detection.Po ./$(DEPDIR)/deviced.Po \
-	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/mime_type.Po \
-	./$(DEPDIR)/server.Po ./$(DEPDIR)/util.Po
+	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/log.Po \
+	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
+	./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -310,16 +311,16 @@ LIB_UDEV = -ludev
 # CUPS_LIBS=$(CUPS_STATIC)
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)
 AM_LDFLAGS = $(CUPS_LDFLAGS)
-deviced_SOURCES = deviced.c util.c util.h
+deviced_SOURCES = deviced.c util.c log.c
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 deviced_LDFLAGS = 
-ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h
+ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h log.c
 ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 ippprint_LDFLAGS = 
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
-server_SOURCES = server.c util.c server.h util.h detection.c
+server_SOURCES = server.c util.c server.h detection.c log.c
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 DIRECTORIES = $(tmpdir)/ppd \
@@ -465,6 +466,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/detection.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@ # am--include-marker
@@ -622,6 +624,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
@@ -673,6 +676,7 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
 	-rm -f ./$(DEPDIR)/util.Po
