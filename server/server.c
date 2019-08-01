@@ -183,10 +183,11 @@ get_devices(int insert,int signal)
     char        arr[4][32]={"dnssd","usb","serial","parallel"};
     cups_file_t *errlog;
 
-    if(cupsArrayCount(temp_devices))
-      cupsArrayDelete(temp_devices);
-    free(temp_devices);
-    temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
+    cupsArrayClear(temp_devices);
+    // if(cupsArrayCount(temp_devices))
+    //   cupsArrayDelete(temp_devices);
+    // free(temp_devices);
+    // temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
     
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
