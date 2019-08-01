@@ -268,6 +268,7 @@ get_devices(int insert,int signal)
         }
         pthread_join(logThread,NULL);
     }
+    fprintf(stderr,"INSERTING!!!!\n");
     if(insert==1)
     {
       add_devices(con_devices,temp_devices);
@@ -428,7 +429,7 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
     if(strlen(uri)==0)
       goto error;
     process_device(dclass, make_model, info, uri, device_id, location);
-      // fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
+    fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
 
     return (0);
   }
