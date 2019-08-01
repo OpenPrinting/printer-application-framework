@@ -232,8 +232,8 @@ get_devices(int insert,int signal)
     strcpy(user_id,DEVICED_USE);
     strcpy(options,DEVICED_OPT);
     
-    // snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
-    snprintf(program,sizeof(program),"deviced");
+    snprintf(program,sizeof(program),"%s/%s/%s",snap,BINDIR,name);
+    // snprintf(program,sizeof(program),"deviced");
     snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
     snprintf(serverroot,sizeof(serverroot),"%s/etc/cups",snap);
     snprintf(datadir,sizeof(datadir),"%s/usr/share/cups",snap);
