@@ -118,7 +118,9 @@ AC_SUBST(CUPS_SERVERROOT)
 ######################################################################
 # Debug level
 dbg_level=1
-if test ! -z "$DEBUG";then
+if test "x$DEBUG_LEVEL" = "x";then
+    dbg_level=1
+else
     dbg_level=$DEBUG_LEVEL
 fi
 AC_ARG_VAR(DEBUG_LEVEL,[Enable or set Debugging level[1-3] 3 is heighest])

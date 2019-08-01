@@ -3170,7 +3170,9 @@ echo "$CUPS_STATIC"
 ######################################################################
 # Debug level
 dbg_level=1
-if test ! -z "$DEBUG";then
+if test "x$DEBUG_LEVEL" = "x";then
+    dbg_level=1
+else
     dbg_level=$DEBUG_LEVEL
 fi
 
