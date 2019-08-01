@@ -225,10 +225,7 @@ start_backend(const char *name,		/* I - Backend to run */
     server_bin = DEFAULT_SERVERBIN;
 
   snprintf(program, sizeof(program), "%s/backend/%s", server_bin, name);
-  
-  // if (_cupsFileCheck(program, _CUPS_FILE_CHECK_PROGRAM, !geteuid(),
-  //                    _cupsFileCheckFilter, NULL))
-  //   return (-1);
+
   if(!fileCheck(program))
     return -1;
 
@@ -316,4 +313,6 @@ static void sigchld_handler(int sig,siginfo_t *siginfo, void*context)
       fprintf(stderr,
               "DEBUG: [deviced] PID %d (%s) exited with no errors.\n",
 	      pid, name);
+    if(backend->name)
+      free(backend->name);
 }

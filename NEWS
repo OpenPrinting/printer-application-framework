@@ -1,4 +1,5 @@
 CHANGES in V0.0.1:
+    - Fix memory leaks reported by valgrind.
     - ippprint: As of now, ippprint does not do any formatting.
       As of now, we are assuming that host is taking care of 
       the formatting and other stuff. We need to test this.

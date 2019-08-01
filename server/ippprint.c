@@ -164,7 +164,8 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
     char newpath[1024];
     setenv("OUTFORMAT",filter->dest->typename,1);
     execvp(*argv,argv);
-    fflush(sout);
+    for(int i=0;i<6;i++)
+      free(argv[i]);
     exit(0);
   }
   else{
@@ -423,7 +424,7 @@ void testApplyFilterChain()
 
 int main(int argc, char *argv[])
 {
-  
+
   char device_scheme[32],*device_uri;
   char *ppdname=NULL;
   char *output_type=NULL;

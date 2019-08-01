@@ -50,6 +50,7 @@ static int initialize_log()
     if(log_initialized) return 0;
     char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
     snprintf(logfile,sizeof(logfile),"%s/logs.txt",tmpdir);
+    free(tmpdir);
     int temp_level;
     if(getenv("DEBUG_LEVEL"))
     {
@@ -145,8 +146,8 @@ static int _debug_log(char *logline,int len)
     }
     _getLock(logs,1);
     res= cupsFileWrite(logs,format2,strlen(format2));
-    cupsFileClose(logs);
     _releaseLock(logs);
+    cupsFileClose(logs);
     return res;
 }
 
@@ -193,6 +194,7 @@ void * _logThread(void *t)
         }
         debug_printf(line);
     }
+    cupsFileClose(file);
     pthread_exit((void*)NULL);
 }
 

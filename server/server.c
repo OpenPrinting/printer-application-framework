@@ -33,14 +33,12 @@ static void escape_string(char* out,char* in,int len)
   out[i]=0;
 }
 
-/*
- * TODO: Can we use siginfo->st_mtime to prevent overcrowding?
- */
+
 static void manage_device(int sig,siginfo_t *siginfo,void* context)
 {
   union sigval sigtype = siginfo->si_value;
   int signal_data = sigtype.sival_int;
-  debug_printf("Recieved Signal: %d\n",signal_data);
+  debug_printf("DEBUG2: Recieved Signal: %d\n",signal_data);
   if(signal_data&&signal_data%2==0)
     get_devices(0,signal_data); //Remove devices
   else
@@ -49,11 +47,17 @@ static void manage_device(int sig,siginfo_t *siginfo,void* context)
 
 void cleanup()
 {
-  cupsArrayDelete(con_devices);
-  cupsArrayDelete(temp_devices);
+  if(cupsArrayCount(con_devices))
+    cupsArrayDelete(con_devices);
+  if(cupsArrayCount(temp_devices))
+    cupsArrayDelete(temp_devices);
+  if(snap)
+    free(snap);
+  if(tmpdir)
+    free(tmpdir);
 }
 static void kill_main(int sig,siginfo_t *siginfo,void* context){
-  printf("DEBUG: KILLING Printer Application!\n");
+  debug_printf("DEBUG2: KILLING Printer Application!\n");
   cleanup();
   exit(0);
 }
@@ -181,7 +185,12 @@ get_devices(int insert,int signal)
     char        tempstr[4095];
     char        arr[4][32]={"dnssd","usb","serial","parallel"};
     cups_file_t *errlog;
-    cupsArrayClear(temp_devices);
+
+    if(cupsArrayCount(temp_devices))
+      cupsArrayDelete(temp_devices);
+    free(temp_devices);
+    temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
+    
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
       debug_printf("ERROR: Ran Out of Memory!\n");
@@ -218,6 +227,7 @@ get_devices(int insert,int signal)
           cj++;
           t++;
         }
+        free(bk);
       }
       *cj =0;
       cj =0;
@@ -273,6 +283,8 @@ get_devices(int insert,int signal)
       add_devices(con_devices,temp_devices);
       remove_devices(con_devices,temp_devices,includes);
     }
+    if(cupsArrayCount(temp_devices))
+      cupsArrayDelete(temp_devices);
     free(process);
     return (0);
 }
@@ -475,6 +487,7 @@ process_device(const char *device_class,
   {
     if(!strncasecmp(device_make_and_model,"Unknown",7))
     {
+      free(device);
       return -2;
     }
   }
@@ -823,7 +836,7 @@ int start_ippeveprinter(device_t *dev)
     }
     
     execvp(argv[0],argv);
-
+    free(argv[14]);
     exit(0);
   }
   if(dev)
