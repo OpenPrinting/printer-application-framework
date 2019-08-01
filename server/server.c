@@ -523,10 +523,11 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
       if(ret>=0){
         strlcpy(dev->ppd,ppd,sizeof(dev->ppd));
         // fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
-        cupsArrayAdd(con,dev);
-        fprintf(stdout,"DEBUG: Adding Printer: %s\n",dev->device_id);
+        device_t *dev2 = devCopy(dev);
+        cupsArrayAdd(con,dev2);
+        fprintf(stdout,"DEBUG: Adding Printer: %s\n",dev2->device_id);
   
-        start_ippeveprinter(dev);
+        start_ippeveprinter(dev2);
       }
     }
   }
@@ -883,4 +884,19 @@ static int kill_ippeveprinter(pid_t pid)
     }
   }
   return 0;
+}
+
+device_t* devCopy(device_t *in)
+{
+  device_t* out;
+  out = calloc(1,sizeof(device_t));
+  strcpy(out->device_class,in->device_class);
+  strcpy(out->device_info,in->device_info);
+  strcpy(out->device_uri,in->device_uri);
+  strcpy(out->device_location,in->device_location);
+  strcpy(out->device_make_and_model,in->device_make_and_model);
+  strcpy(out->device_id,in->device_id);
+  strcpy(out->ppd,in->ppd);
+  out->eve_pid = in->eve_pid;
+  return out;
 }

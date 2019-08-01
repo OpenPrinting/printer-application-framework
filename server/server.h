@@ -101,5 +101,5 @@ int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
-
+device_t* devCopy(device_t*);
 #endif
