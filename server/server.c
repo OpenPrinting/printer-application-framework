@@ -579,6 +579,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
       if(strstr(includes,backend))
         continue;
     }
+    fprintf(stderr,"Is was not strstr eorro\n");
     if(cupsArrayFind(temp,dev)==NULL)
     {
       remove_ppd(dev->ppd);
@@ -588,6 +589,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
       device_t *tt = dev;   // Do we need this?
       free(tt);
     }
+    fprintf(stderr,"WTF?");
   }
 }
 
