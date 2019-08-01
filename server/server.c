@@ -496,17 +496,22 @@ process_device(const char *device_class,
 
   if(device_uri)
     strlcpy(device->device_uri,device_uri,sizeof(device->device_uri));
+  fprintf(stderr,"uri\n");
   if(device_class)
     strlcpy(device->device_class,device_class,sizeof(device->device_class));
+  fprintf(stderr,"Class\n");
   if(device_make_and_model)
     strlcpy(device->device_make_and_model,device_make_and_model,sizeof(device->device_make_and_model));
+  fprintf(stderr,"Make\n");
   if(device_info)
     strlcpy(device->device_info,device_info,sizeof(device->device_info));
+  fprintf(stderr,"Device info\n");
   if(device_id)
     strlcpy(device->device_id,device_id,sizeof(device->device_id));
+  fprintf(stderr,"Device ID\n");
   if(device_location)
     strlcpy(device->device_location,device_location,sizeof(device->device_location));
-
+  fprintf(stderr,"Done ALL!\n");
   if(cupsArrayFind(temp_devices,device))
     free(device);
   else{
