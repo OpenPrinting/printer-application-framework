@@ -144,12 +144,16 @@ int main(int argc,char* argv[])
     sleep(10);
     for(int i=1;i<=2*NUM_SIGNALS;i++)
     {
+      fprintf(stderr,"I: %d\n",i);
       if(pending_signals[i]){
         pending_signals[i]=0;
         get_devices(i%2,i);
       }
+      fprintf(stderr,"I: %d\n",i);
     }
+    fprintf(stderr,"Tadain\n");
     get_devices(2,0);
+    fprintf(stderr,"Tadaout\n");
   }
   cleanup();
   
