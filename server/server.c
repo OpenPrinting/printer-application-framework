@@ -152,7 +152,8 @@ int main(int argc,char* argv[])
       fprintf(stderr,"I: %d\n",i);
     }
     fprintf(stderr,"Tadain\n");
-    get_devices(2,0);
+    get_devices(0,0);
+    get_devices(1,0);
     fprintf(stderr,"Tadaout\n");
   }
   cleanup();
