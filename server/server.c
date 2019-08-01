@@ -185,8 +185,8 @@ get_devices(int insert,int signal)
 
     if(cupsArrayCount(temp_devices))
       cupsArrayDelete(temp_devices);
-    // free(temp_devices);
-    // temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
+    free(temp_devices);
+    temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
     
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
@@ -512,11 +512,14 @@ process_device(const char *device_class,
   if(device_location)
     strlcpy(device->device_location,device_location,sizeof(device->device_location));
   fprintf(stderr,"Done ALL!\n");
-  if(cupsArrayFind(temp_devices,device))
+  if(cupsArrayFind(temp_devices,device)){
     free(device);
+  }
   else{
+    fprintf(stderr,"Adding!\n");
     cupsArrayAdd(temp_devices,device); // Do we need device limit????
   }
+  fprintf(stderr,"EXIT!!!\n");
   return 0;
 }
 
