@@ -274,8 +274,9 @@ get_devices(int insert,int signal)
       add_devices(con_devices,temp_devices);
       remove_devices(con_devices,temp_devices,includes);
     }
-    if(cupsArrayCount(temp_devices))
-      cupsArrayDelete(temp_devices);
+    fprintf(stderr,"Exit from get_devices\n");
+    // if(cupsArrayCount(temp_devices))
+    //   cupsArrayDelete(temp_devices);
     free(process);
     return (0);
 }
