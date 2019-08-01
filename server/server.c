@@ -569,6 +569,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
     char backend[32];
     if(getBackend(dev->device_uri,backend,sizeof(backend)))
       continue;
+    fprintf(stderr,"Searching %s %s\n",backend,includes);
     if(inc)
     {
       if(!strstr(includes,backend))
