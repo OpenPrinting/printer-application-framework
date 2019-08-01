@@ -419,6 +419,8 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
    /*
     * Add the device to the array of available devices...
     */
+    if(strlen(uri)==0)
+      goto error;
     process_device(dclass, make_model, info, uri, device_id, location);
       // fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
 
@@ -589,7 +591,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
       device_t *tt = dev;   // Do we need this?
       free(tt);
     }
-    fprintf(stderr,"WTF?");
+    fprintf(stderr,"WTF?\n");
   }
 }
 
