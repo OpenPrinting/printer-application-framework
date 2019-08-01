@@ -1,4 +1,6 @@
 CHANGES in V0.0.1:
+    - Use threads instead of fork for avahi monitor and hardware
+      monitors.
     - Fix memory leaks reported by valgrind.
     - ippprint: As of now, ippprint does not do any formatting.
       As of now, we are assuming that host is taking care of 

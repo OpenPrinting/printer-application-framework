@@ -39,14 +39,16 @@ static void manage_device(int sig,siginfo_t *siginfo,void* context)
   union sigval sigtype = siginfo->si_value;
   int signal_data = sigtype.sival_int;
   debug_printf("DEBUG2: Recieved Signal: %d\n",signal_data);
-  if(signal_data&&signal_data%2==0)
-    get_devices(0,signal_data); //Remove devices
-  else
-    get_devices(1,signal_data);   //Insert devices
+  printf("DEBUG2: Recieved Signal: %d\n",signal_data);
+  pending_signals[signal_data]++;
 }
 
 void cleanup()
 {
+  #ifdef HAVE_AVAHI
+  pthread_cancel(avahiThread);
+  #endif
+  pthread_cancel(hardwareThread);
   if(cupsArrayCount(con_devices))
     cupsArrayDelete(con_devices);
   if(cupsArrayCount(temp_devices))
@@ -86,29 +88,19 @@ static int signal_listeners()
   return 0;
 }
 
-void start_hardware_monitor(pid_t ppid)
+void* start_hardware_monitor(void *n)
 {
-  int status = 0;
-  if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-    perror(0);    /*Unable to set prctl*/
-    exit(1);
-  }
-  if(getppid() != ppid)
-    exit(0);      /*Parent as exited already!*/
+  pid_t ppid = getpid();
   monitor_devices(ppid);  /*Listen for usb devices!*/
+  pthread_exit(NULL);
 }
 
 #ifdef HAVE_AVAHI
-void start_avahi_monitor(pid_t ppid)
+void* start_avahi_monitor(void *n)
 {
-  int status = 0;
-  if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-    perror(0);    /*Unable to set prctl*/
-    exit(1);
-  }
-  if(getppid() != ppid)
-    exit(0);      /*Parent as exited already!*/
+  pid_t ppid = getpid();
   monitor_avahi_devices(ppid);  /*Listen for usb devices!*/
+  pthread_exit(NULL);
 }
 #endif
 
@@ -118,7 +110,6 @@ void start_avahi_monitor(pid_t ppid)
 
 int main(int argc,char* argv[])
 {
-  // fprintf(stderr,"Port: %d\n",getport());
   pid_t pid,ppid;
   ppid = getpid();
 
@@ -131,32 +122,33 @@ int main(int argc,char* argv[])
   if(getenv("SNAP_COMMON"))
     tmpdir = strdup(getenv("SNAP_COMMON"));
   else tmpdir = strdup("/var/tmp");
+
+  for(int i=0;i<2*NUM_SIGNALS+1;i++)
+    pending_signals[i] = 0;
   
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 
-  if((pid=fork())==0){
-    start_hardware_monitor(ppid);
-  }
-  else if(pid<0)
-  {
-    perror(0);    /* Unable to fork! */
-    exit(1);
-  }
+  pthread_create(&hardwareThread,NULL,start_hardware_monitor,NULL);
+  
   #if HAVE_AVAHI
-  if((pid=fork())==0){
-    start_avahi_monitor(ppid);
-  }
-  else if(pid<0){
-    perror(0);
-    exit(1);
-  }
+  
+  pthread_create(&avahiThread,NULL,start_avahi_monitor,NULL);
+  
   #endif
   if(signal_listeners())  /*Set signal listeners in parent*/ 
     return 1;
 
   while(1){            /*Infinite loop*/
     sleep(10);
+    sleep(10);
+    for(int i=1;i<=2*NUM_SIGNALS;i++)
+    {
+      if(pending_signals[i]){
+        pending_signals[i]=0;
+        get_devices(i%2,i);
+      }
+    }
     get_devices(2,0);
   }
   cleanup();
@@ -188,8 +180,8 @@ get_devices(int insert,int signal)
 
     if(cupsArrayCount(temp_devices))
       cupsArrayDelete(temp_devices);
-    free(temp_devices);
-    temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
+    // free(temp_devices);
+    // temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
     
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
@@ -255,7 +247,6 @@ get_devices(int insert,int signal)
     argv[2] = (char*) timeout;
     argv[3] = (char*) includes;
     argv[4] = NULL;
-
     if((process->pipe = cupsdPipeCommand2(&(process->pid),program,argv,&errlog,
                             0))==NULL)
     {
@@ -667,13 +658,10 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   {
       if(WIFEXITED(status))
       {
-          // do{          
           if(get_ppd_uri(ppd_uri,process)) //All we need is a single line!
             return (-1);
-          // fprintf(stdout,"PPD-URI: %s\n",ppd_uri);
-          // }
-          // while(_cupsFilePeekAhead(process->pipe,'\n'));
       }
+      cupsFileClose(process->pipe);
       pthread_join(logThread,NULL);
   }
   
@@ -714,6 +702,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
         int st =0,counter=0;
         while((st=print_ppd(process,tempPPD))>0) counter++;
       }
+      cupsFileClose(process->pipe);
       pthread_join(logThread,NULL);
   }
   
@@ -754,6 +743,7 @@ int remove_ppd(char* ppd)
   // else{
   //  return unlink(ppd);
  // }
+ return 0;
 }
 
 int start_ippeveprinter(device_t *dev)
