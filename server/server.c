@@ -426,8 +426,9 @@ if (cupsFileGets(backend->pipe, line, sizeof(line)))
    /*
     * Add the device to the array of available devices...
     */
-    if(strlen(uri)==0)
-      goto error;
+    fprintf(stderr,"%s %s %s %s %s\n",dclass,make_model,info,uri,device_id,location);
+    // if(strlen(uri)==0)
+    //   goto error;
     process_device(dclass, make_model, info, uri, device_id, location);
     fprintf(stderr, "DEBUG: Found device \"%s\"...\n", uri);
 
@@ -477,6 +478,7 @@ process_device(const char *device_class,
     const char *device_id,
     const char *device_location)
 {
+  fprintf(stderr,"Processing!!!\n");
   device_t *device;
   if((device = calloc(1,sizeof(device_t)))==NULL)
   {
