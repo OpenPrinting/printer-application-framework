@@ -57,16 +57,8 @@ static void kill_main(int sig,siginfo_t *siginfo,void* context){
   cleanup();
   exit(0);
 }
-static int signal_listeners()
+static int kill_listeners()
 {
-  struct sigaction device_act;
-  memset(&device_act,'\0',sizeof(device_act));
-  device_act.sa_sigaction = &manage_device;
-  device_act.sa_flags = SA_SIGINFO;
-  if(sigaction(SIGUSR1,&device_act,NULL)<0){
-    debug_printf("ERROR: Unable to start usb detector!\n");
-    return 1;
-  }
   struct sigaction kill_act;
   memset(&kill_act,'\0',sizeof(kill_act));
   kill_act.sa_sigaction = &kill_main;
@@ -81,29 +73,55 @@ static int signal_listeners()
   }
   return 0;
 }
-
-void start_hardware_monitor(pid_t ppid)
+static int signal_listeners()
 {
-  int status = 0;
-  if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-    perror(0);    /*Unable to set prctl*/
-    exit(1);
+  struct sigaction device_act;
+  memset(&device_act,'\0',sizeof(device_act));
+  device_act.sa_sigaction = &manage_device;
+  device_act.sa_flags = SA_SIGINFO;
+  if(sigaction(SIGUSR1,&device_act,NULL)<0){
+    debug_printf("ERROR: Unable to start usb detector!\n");
+    return 1;
   }
-  if(getppid() != ppid)
-    exit(0);      /*Parent as exited already!*/
+  // struct sigaction kill_act;
+  // memset(&kill_act,'\0',sizeof(kill_act));
+  // kill_act.sa_sigaction = &kill_main;
+  // kill_act.sa_flags = SA_SIGINFO;
+  // if(sigaction(SIGHUP,&kill_act,NULL)<0){
+  //   debug_printf("ERROR: Unable to set cleanup process!\n");
+  //   return 1;
+  // }
+  // if(sigaction(SIGINT,&kill_act,NULL)<0){
+  //   debug_printf("ERROR: Unable to set cleanup process!\n");
+  //   return 1;
+  // }
+  return 0;
+}
+
+void* start_hardware_monitor(void *n)
+{
+  // int status = 0;
+  // if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
+  //   perror(0);    /*Unable to set prctl*/
+  //   exit(1);
+  // }
+  // if(getppid() != ppid)
+  //   exit(0);      /*Parent as exited already!*/
+  pid_t ppid = getpid();
   monitor_devices(ppid);  /*Listen for usb devices!*/
 }
 
 #ifdef HAVE_AVAHI
-void start_avahi_monitor(pid_t ppid)
+void* start_avahi_monitor(void *n)
 {
-  int status = 0;
-  if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-    perror(0);    /*Unable to set prctl*/
-    exit(1);
-  }
-  if(getppid() != ppid)
-    exit(0);      /*Parent as exited already!*/
+  // int status = 0;
+  // if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
+  //   perror(0);    /*Unable to set prctl*/
+  //   exit(1);
+  // }
+  // if(getppid() != ppid)
+  //   exit(0);      /*Parent as exited already!*/
+  pid_t ppid = getpid();
   monitor_avahi_devices(ppid);  /*Listen for usb devices!*/
 }
 #endif
@@ -131,22 +149,27 @@ int main(int argc,char* argv[])
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 
-  if((pid=fork())==0){
-    start_hardware_monitor(ppid);
-  }
-  else if(pid<0)
-  {
-    perror(0);    /* Unable to fork! */
-    exit(1);
-  }
+  // if((pid=fork())==0){
+  //   start_hardware_monitor(ppid);
+  // }
+  // else if(pid<0)
+  // {
+  //   perror(0);    /* Unable to fork! */
+  //   exit(1);
+  // }
+  kill_listeners();
+  pthread_t hardwareThread;
+  pthread_create(&hardwareThread,NULL,start_hardware_monitor,NULL);
   #if HAVE_AVAHI
-  if((pid=fork())==0){
-    start_avahi_monitor(ppid);
-  }
-  else if(pid<0){
-    perror(0);
-    exit(1);
-  }
+  pthread_t avahiThread;
+  pthread_create(&avahiThread,NULL,start_avahi_monitor,NULL);
+  // if((pid=fork())==0){
+  //   start_avahi_monitor(ppid);
+  // }
+  // else if(pid<0){
+  //   perror(0);
+  //   exit(1);
+  // }
   #endif
   if(signal_listeners())  /*Set signal listeners in parent*/ 
     return 1;
