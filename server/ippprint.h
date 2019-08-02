@@ -56,7 +56,6 @@ typedef struct{
   cups_array_t **filter_graph;
 }database_t;
 
-FILE *sout,*serr;
 
 int get_ppd_filter_chain(char* user_src,char* user_dest,char *ppdname,cups_array_t **arr);
 filter_t* filterCopy(filter_t *t);

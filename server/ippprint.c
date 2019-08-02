@@ -136,7 +136,6 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
 {
   pid_t pid;
   char *filename=filter->filter;
-  // fprintf(sout,"Executing: %s\n",filename);
   debug_printf("DEBUG2: Executing Command: %s\n",filename);
   if((pid=fork())<0)
   {
@@ -164,7 +163,6 @@ static pid_t executeCommand(int inPipe,int outPipe,filter_t *filter,int i)
     char newpath[1024];
     setenv("OUTFORMAT",filter->dest->typename,1);
     execvp(*argv,argv);
-    fflush(sout);
     exit(0);
   }
   else{
@@ -361,7 +359,7 @@ static int print_document(char *scheme,char *uri, char *filename)
     return -1;
   }
   
-  dup2(fileno(sout),2); /* sout-> File logs */
+  // dup2(fileno(sout),2); /* sout-> File logs */
   
   if((pid=fork())<0)
   {
@@ -437,7 +435,7 @@ int main(int argc, char *argv[])
   char **s = environ;
   int isPPD = 1,isOut=1;    
   // for(;*s;){
-  //     fprintf(sout,"%s\n",*s);
+  //     debug_printf("%s\n",*s);
   //     s = (s+1);
   // }
   
@@ -445,7 +443,6 @@ int main(int argc, char *argv[])
   {
     return -1;
   }
-  // fclose(sout);
   // exit(0);
   char *inputFile=strdup(argv[1]); /* Input File */
 
@@ -485,34 +482,33 @@ int main(int argc, char *argv[])
 
   if(res<0)
   {
-    fprintf(sout,"ERROR: Unable to find required filters");
+    debug_printf("ERROR: Unable to find required filters");
     exit(-1);
   }
-  fprintf(sout,"DEBUG: Filter Chain for the job:\n");
+  debug_printf("DEBUG: Filter Chain for the job:\n");
   for(tempFilter=cupsArrayFirst(filter_chain);tempFilter;
     tempFilter=cupsArrayNext(filter_chain))
   {
-    fprintf(sout,"DEBUG: Filter: %s\n",tempFilter->filter);
+    debug_printf("DEBUG: Filter: %s\n",tempFilter->filter);
   }
   
   res = getFilterPaths(filter_chain,&filterfullname);
   if(res<0)
   {
-    fprintf(sout,"ERROR: Unable to find required filters!\n");
+    debug_printf("ERROR: Unable to find required filters!\n");
     exit(-1);
   }
   // for(paths=cupsArrayFirst(filterfullname);paths;
   //   paths=cupsArrayNext(filterfullname))
   // {
-  //   fprintf(sout,"Filter fn: %s\n",paths->filter);
+  //   debug_printf("Filter fn: %s\n",paths->filter);
   // }
-  // fflush(sout);
   res = applyFilterChain(filterfullname,inputFile,finalFile,sizeof(finalFile));
-  // fprintf(sout,"Final File Name: %s\n",finalFile);
+  // debug_printf("Final File Name: %s\n",finalFile);
   
   if(res<0)
   {
-    fprintf(sout,"ERROR: Filter Chain Error!\n");
+    debug_printf("ERROR: Filter Chain Error!\n");
     exit(-1);
   }
 
@@ -521,14 +517,14 @@ int main(int argc, char *argv[])
     res = print_document(device_scheme,device_uri,finalFile);
     if(res==0)
     {
-      fprintf(sout,"DEBUG: Successfully printed file!\n");
+      debug_printf("DEBUG: Successfully printed file!\n");
     }
   }
 
   delete_temp_file(finalFile);
 
-  fprintf(sout,"*****************************************************\n");
-  fclose(sout);
+  debug_printf("*****************************************************\n");
+  
   if(res)
     return -1;
   return res;
