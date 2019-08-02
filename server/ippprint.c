@@ -30,7 +30,12 @@ static int getUserId(const char *username)
   return (int)p->pw_uid;
 }
 
-
+void ini()
+{
+  if(getenv("SNAP_COMMON"))
+    tmpdir = strdup(getenv("SNAP_COMMON"));
+  else tmpdir = strdup("/var/tmp");
+}
 /*
  * getFilterPath() - Get path to required filter.
  * 
@@ -209,7 +214,7 @@ static int applyFilterChain(cups_array_t* filters,char *inputFile,char *finalFil
   }
 
   snprintf(outName,sizeof(outName),"%s/printjob.XXXXXX",tmpdir);
-
+  debug_printf(outName);
   for(int i=0;i<numPipes;i++)  
   {
     res = pipe(pipes+2*i);  /* Try Opening Pipes */
@@ -421,6 +426,7 @@ void testApplyFilterChain()
 
 int main(int argc, char *argv[])
 {
+  ini();
   setenv("LOG_NAME","ippprint.txt",1);
   char device_scheme[32],*device_uri;
   char *ppdname=NULL;
