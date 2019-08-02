@@ -75,14 +75,15 @@ static int kill_listeners()
 }
 static int signal_listeners()
 {
-  struct sigaction device_act;
-  memset(&device_act,'\0',sizeof(device_act));
-  device_act.sa_sigaction = &manage_device;
-  device_act.sa_flags = SA_SIGINFO;
-  if(sigaction(SIGUSR1,&device_act,NULL)<0){
-    debug_printf("ERROR: Unable to start usb detector!\n");
-    return 1;
-  }
+  // struct sigaction device_act;
+  // memset(&device_act,'\0',sizeof(device_act));
+  // device_act.sa_sigaction = &manage_device;
+  // device_act.sa_flags = SA_SIGINFO;
+  // if(sigaction(SIGUSR1,&device_act,NULL)<0){
+  //   debug_printf("ERROR: Unable to start usb detector!\n");
+  //   return 1;
+  // }
+  signal(SIGUSR1,SIG_IGN);
   // struct sigaction kill_act;
   // memset(&kill_act,'\0',sizeof(kill_act));
   // kill_act.sa_sigaction = &kill_main;
@@ -132,7 +133,7 @@ void* start_avahi_monitor(void *n)
 
 int main(int argc,char* argv[])
 {
-  // fprintf(stderr,"Port: %d\n",getport());
+  
   pid_t pid,ppid;
   ppid = getpid();
 
@@ -149,6 +150,8 @@ int main(int argc,char* argv[])
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 
+  for(int i=0;i<=2*NUM_SIGNALS;i++)
+    pending_signals[i]=0;
   // if((pid=fork())==0){
   //   start_hardware_monitor(ppid);
   // }
@@ -171,12 +174,16 @@ int main(int argc,char* argv[])
   //   exit(1);
   // }
   #endif
-  if(signal_listeners())  /*Set signal listeners in parent*/ 
-    return 1;
+  // if(signal_listeners())  /*Set signal listeners in parent*/ 
+  //   return 1;
 
   while(1){            /*Infinite loop*/
     sleep(10);
+    for(int i=1;i<=2*NUM_SIGNALS;i++){
+      get_devices(i%2,i);
+    }
     get_devices(2,0);
+    // get_devices(2,0);
   }
   cleanup();
   
@@ -279,11 +286,14 @@ get_devices(int insert,int signal)
     logFromFile2(&logThread,errlog);
     if((process_pid = waitpid(process->pid,&status,0))>0)
     {
-        if(WIFEXITED(status))
-        {
+        // if(WIFEXITED(status))
+        // {
             while(!parse_line(process));
-        }
+        // }
         pthread_join(logThread,NULL);
+    }
+    else{
+      fprintf(stdout,"Failed to collect! PID ERROR! %d %s\n",process->pid,strerror(errno));
     }
     if(insert==1)
     {

@@ -43,6 +43,7 @@ static int signal_listeners()
     exit(1);
   }
 }
+
 /*
  * main()
  * Do we need exclude-include???
@@ -71,7 +72,7 @@ int main(int argc,
      mode only mentioned backends are ignored.",argv[0]);
     return 0;
   }
-
+  
   device_limit = atoi(argv[1]);
   timeout = atoi(argv[2]);
   strncpy(includes,argv[3],sizeof(includes));
@@ -182,7 +183,9 @@ int main(int argc,
   }
     }
   }
-
+  signal(SIGQUIT,SIG_IGN);
+  kill(-1*getpid(),SIGQUIT);
+  return 0;
 }
 
 static double				/* O - Time in seconds */
