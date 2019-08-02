@@ -49,7 +49,8 @@ static int initialize_log()
 {
     if(log_initialized) return 0;
     char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
-    snprintf(logfile,sizeof(logfile),"%s/logs.txt",tmpdir);
+    char *logname = strdup((getenv("LOG_NAME")?getenv("LOG_NAME"):"logs.txt"));
+    snprintf(logfile,sizeof(logfile),"%s/%s",tmpdir,logname);
     int temp_level;
     if(getenv("DEBUG_LEVEL"))
     {

@@ -312,7 +312,7 @@ static filter_t* getFilter(int src_index,int dest_index)
 
 static int dijkstra(int src_index,int dest_index,cups_array_t *arr)
 {
-  fprintf(stdout,"DEBUG: Starting Dijkstra: %d -> %d\n",src_index,dest_index);
+  debug_printf("DEBUG: Starting Dijkstra: %d -> %d\n",src_index,dest_index);
   if(src_index==dest_index)
   {
     arr=NULL;
@@ -388,7 +388,7 @@ static int get_filter_chain(char* user_src, char* user_dest,cups_array_t **arr)
   if(src_index<0||dest_index<0)
   {
     *arr = NULL;
-    fprintf(stdout,"ERROR: Not found in types! %d %d\n",src_index,dest_index);
+    debug_printf("ERROR: Not found in types! %d %d\n",src_index,dest_index);
     return -1;
   }
 

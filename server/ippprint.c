@@ -421,7 +421,7 @@ void testApplyFilterChain()
 
 int main(int argc, char *argv[])
 {
-  
+  setenv("LOG_NAME","ippprint.txt",1);
   char device_scheme[32],*device_uri;
   char *ppdname=NULL;
   char *output_type=NULL;
@@ -434,10 +434,10 @@ int main(int argc, char *argv[])
   
   char **s = environ;
   int isPPD = 1,isOut=1;    
-  // for(;*s;){
-  //     debug_printf("%s\n",*s);
-  //     s = (s+1);
-  // }
+  for(;*s;){
+      debug_printf("%s\n",*s);
+      s = (s+1);
+  }
   
   if(argc!=2)
   {
@@ -498,11 +498,11 @@ int main(int argc, char *argv[])
     debug_printf("ERROR: Unable to find required filters!\n");
     exit(-1);
   }
-  // for(paths=cupsArrayFirst(filterfullname);paths;
-  //   paths=cupsArrayNext(filterfullname))
-  // {
-  //   debug_printf("Filter fn: %s\n",paths->filter);
-  // }
+  for(paths=cupsArrayFirst(filterfullname);paths;
+    paths=cupsArrayNext(filterfullname))
+  {
+    debug_printf("Filter fn: %s\n",paths->filter);
+  }
   res = applyFilterChain(filterfullname,inputFile,finalFile,sizeof(finalFile));
   // debug_printf("Final File Name: %s\n",finalFile);
   
