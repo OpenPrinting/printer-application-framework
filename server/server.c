@@ -152,6 +152,12 @@ int main(int argc,char* argv[])
 
   for(int i=0;i<=2*NUM_SIGNALS;i++)
     pending_signals[i]=0;
+  
+  if(pthread_mutex_init(&signal_lock,NULL)!=0)
+  {
+    printf("ERROR: Mutex init Failed\n");
+    return -1;
+  }
   // if((pid=fork())==0){
   //   start_hardware_monitor(ppid);
   // }
@@ -180,7 +186,16 @@ int main(int argc,char* argv[])
   while(1){            /*Infinite loop*/
     sleep(10);
     for(int i=1;i<=2*NUM_SIGNALS;i++){
-      get_devices(i%2,i);
+      int exec = 0;
+      pthread_mutex_lock(&signal_lock);
+      if(pending_signals[i])
+      {
+        pending_signals[i] = 0;
+        exec = 1;
+      }
+      pthread_mutex_unlock(&signal_lock);
+      if(exec)
+        get_devices(i%2,i);
     }
     get_devices(2,0);
     // get_devices(2,0);

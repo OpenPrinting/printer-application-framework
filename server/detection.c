@@ -9,7 +9,7 @@
  *  Licensed under Apache License v2.0.  See the file "LICENSE" for more
  *  information.
  */
-#include <server.h>
+#include "server.h"
 #include <libudev.h>
 #include <sys/poll.h>
 #include <assert.h>
@@ -27,7 +27,7 @@
 
 void static send_signal(const char* signal, pid_t ppid,int hardware_index)
 {
-  union sigval sv;
+  // union sigval sv;
   int offset = 0;
   if(!strncasecmp(signal,"add",3))
   {
@@ -38,8 +38,11 @@ void static send_signal(const char* signal, pid_t ppid,int hardware_index)
     offset = 2;
   }
   hardware_index = 2*hardware_index+offset;
-  sv.sival_int = hardware_index;
-  sigqueue(ppid,SIGUSR1,sv);
+  // sv.sival_int = hardware_index;
+  // sigqueue(ppid,SIGUSR1,sv);
+  pthread_mutex_lock(&signal_lock);
+  pending_signals[hardware_index] ++;
+  pthread_mutex_lock(&signal_lock);
 }
 
 int monitor_devices(pid_t ppid)
