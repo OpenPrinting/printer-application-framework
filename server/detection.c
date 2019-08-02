@@ -41,8 +41,10 @@ void static send_signal(const char* signal, pid_t ppid,int hardware_index)
   // sv.sival_int = hardware_index;
   // sigqueue(ppid,SIGUSR1,sv);
   pthread_mutex_lock(&signal_lock);
+  // fprintf(stdout,"Incrmeneting Pending signals!\n");
+  // fprintf(stdout,"%d: %d\n",hardware_index,pending_signals[hardware_index]);
   pending_signals[hardware_index] ++;
-  pthread_mutex_lock(&signal_lock);
+  pthread_mutex_unlock(&signal_lock);
 }
 
 int monitor_devices(pid_t ppid)

@@ -64,8 +64,8 @@ enum child_signal{
     PARALLEL_REMOVE // 8
 };
 
-static int pending_signals[2*NUM_SIGNALS+1];
-static pthread_mutex_t signal_lock;
+int pending_signals[2*NUM_SIGNALS+1];
+pthread_mutex_t signal_lock;
 typedef struct{
     time_t signal_time;
     int val;

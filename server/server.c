@@ -198,7 +198,6 @@ int main(int argc,char* argv[])
         get_devices(i%2,i);
     }
     get_devices(2,0);
-    // get_devices(2,0);
   }
   cleanup();
   
