@@ -158,30 +158,17 @@ int main(int argc,char* argv[])
     printf("ERROR: Mutex init Failed\n");
     return -1;
   }
-  // if((pid=fork())==0){
-  //   start_hardware_monitor(ppid);
-  // }
-  // else if(pid<0)
-  // {
-  //   perror(0);    /* Unable to fork! */
-  //   exit(1);
-  // }
+
   kill_listeners();
   pthread_t hardwareThread;
   pthread_create(&hardwareThread,NULL,start_hardware_monitor,NULL);
   #if HAVE_AVAHI
+
   pthread_t avahiThread;
   pthread_create(&avahiThread,NULL,start_avahi_monitor,NULL);
-  // if((pid=fork())==0){
-  //   start_avahi_monitor(ppid);
-  // }
-  // else if(pid<0){
-  //   perror(0);
-  //   exit(1);
-  // }
+
   #endif
-  // if(signal_listeners())  /*Set signal listeners in parent*/ 
-  //   return 1;
+
 
   while(1){            /*Infinite loop*/
     sleep(10);
@@ -204,6 +191,20 @@ int main(int argc,char* argv[])
   return 0;
 }
 
+device_t* deviceCopy(device_t *in)
+{
+  device_t* out;
+  out = calloc(1,sizeof(device_t));
+  strcpy(out->device_class,in->device_class);
+  strcpy(out->device_info,in->device_info);
+  strcpy(out->device_uri,in->device_uri);
+  strcpy(out->device_location,in->device_location);
+  strcpy(out->device_make_and_model,in->device_make_and_model);
+  strcpy(out->device_id,in->device_id);
+  strcpy(out->ppd,in->ppd);
+  out->eve_pid = in->eve_pid;
+  return out;
+}
 /*
  * get_devices(int,int) - Get list of devices from deviced utility
  */
@@ -225,7 +226,14 @@ get_devices(int insert,int signal)
     char        tempstr[4095];
     char        arr[4][32]={"dnssd","usb","serial","parallel"};
     cups_file_t *errlog;
-    cupsArrayClear(temp_devices);
+    // cupsArrayClear(temp_devices);
+    device_t *temp = cupsArrayFirst(temp_devices);
+    for(;temp;temp=cupsArrayNext(temp_devices))
+    {
+      cupsArrayRemove(temp_devices,temp);
+      free(temp);
+    }
+
     if((process = calloc(1,sizeof(process_t)))==NULL)
     {
       debug_printf("ERROR: Ran Out of Memory!\n");
@@ -294,6 +302,8 @@ get_devices(int insert,int signal)
                             0))==NULL)
     {
         debug_printf("ERROR: Unable to execute deviced!\n");
+        cupsFileClose(errlog);
+        free(process);
         return (-1);
     }
     pthread_t logThread;
@@ -522,6 +532,7 @@ process_device(const char *device_class,
   {
     if(!strncasecmp(device_make_and_model,"Unknown",7))
     {
+      free(device);
       return -2;
     }
   }
@@ -564,10 +575,11 @@ void add_devices(cups_array_t *con, cups_array_t *temp)
       if(ret>=0){
         strlcpy(dev->ppd,ppd,sizeof(dev->ppd));
         // fprintf(stdout,"PPD LOC: %s\n",dev->ppd);
-        cupsArrayAdd(con,dev);
-        fprintf(stdout,"DEBUG: Adding Printer: %s\n",dev->device_id);
+        device_t* newDev = deviceCopy(dev);
+        cupsArrayAdd(con,newDev);
+        fprintf(stdout,"DEBUG: Adding Printer: %s\n",newDev->device_uri);
   
-        start_ippeveprinter(dev);
+        start_ippeveprinter(newDev);
       }
     }
   }
@@ -693,6 +705,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
                         argv,&errlog,0))==NULL)
   {
     debug_printf("ERROR: Unable to execute!\n");
+    cupsFileClose(errlog);
+    free(process);
     return (-1);
   }
   pthread_t logThread;
@@ -702,8 +716,11 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
       if(WIFEXITED(status))
       {
           // do{          
-          if(get_ppd_uri(ppd_uri,process)) //All we need is a single line!
+          if(get_ppd_uri(ppd_uri,process)){ //All we need is a single line!
+            free(process);
+            pthread_join(logThread,NULL);
             return (-1);
+          }
           // fprintf(stdout,"PPD-URI: %s\n",ppd_uri);
           // }
           // while(_cupsFilePeekAhead(process->pipe,'\n'));
@@ -720,6 +737,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
                         argv,&errlog,0))==NULL)
   {
     debug_printf("ERROR: Unable to execute cups-driverd!\n");
+    free(process);
+    cupsFileClose(errlog);
     return (-1);
   }
   logFromFile2(&logThread,errlog);
@@ -738,6 +757,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   if((tempPPD = cupsFileOpen(ppd_name,"w"))==NULL)
   {
     debug_printf("ERROR: Cannot create temporary PPD!\n");
+    free(process);
     return (-1);
   }
 
@@ -763,8 +783,10 @@ int get_ppd_uri(char* ppd_uri, process_t* backend)
   if (cupsFileGets(backend->pipe, line, sizeof(line)))
   {
     sscanf(line,"%s",ppd_uri);
+    cupsFileClose(backend->pipe);
     return 0;
   }
+  cupsFileClose(backend->pipe);
   return 1;
 }
   
@@ -777,6 +799,7 @@ int print_ppd(process_t* backend,cups_file_t *temp)
     //fprintf(stdout,"%s\n",line);
     return 1;
   }
+  cupsFileClose(backend->pipe);
   return 0;
 }
 
