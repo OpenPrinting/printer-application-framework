@@ -17,6 +17,7 @@
 
 #define DEFAULT_NUM_CHECKS 1000
 #define DEFAULT_TIMEOUT 100 // 100 milliseconds
+#define MAX_LOG_SIZE 5243000    // Around 5MB
 
 #include <string.h>
 #include <stdio.h>
@@ -31,6 +32,8 @@
 #include <sys/file.h>
 #include <pthread.h>
 #include <config.h>
+#include <limits.h>
+#include <sys/stat.h>
 
 static int log_fd;
 static int log_level =1;
@@ -45,7 +48,7 @@ static int _getLock(cups_file_t *file, int block);
 static int _releaseLock(cups_file_t *file);
 static int initialize_log();
 static int _debug_log(char *logline,int len);
-
+static int rotateLog();
 /*
  * Public Functions
  */

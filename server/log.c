@@ -47,12 +47,14 @@ static int _releaseLock(cups_file_t *file)
  */
 static int initialize_log()
 {
-    if(log_initialized) return 0;
     char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
     char *logname = strdup((getenv("LOG_NAME")?getenv("LOG_NAME"):"logs.txt"));
     snprintf(logfile,sizeof(logfile),"%s/%s",tmpdir,logname);
     free(tmpdir);
     free(logname);
+    int rot = doRotate(logfile);
+    if(rot>0) log_initialized=0;
+    if(log_initialized) return 0;
     int temp_level;
     if(getenv("DEBUG_LEVEL"))
     {
@@ -204,4 +206,80 @@ void * _logThread(void *t)
 void logFromFile2(pthread_t *process_logger, cups_file_t* file)
 {
     pthread_create(process_logger,NULL,_logThread,(void*)file);
+}
+
+long int getSize(const char *filename)
+{
+    struct stat st;
+    if(stat(filename,&st)==0)
+        return st.st_size;
+    else
+        return -1;
+}
+
+int doRotate(char *filename)
+{
+    long int fileSize = getSize(filename);
+    if(fileSize<0)
+        return -1;
+    int maxLogSize = getenv("LOG_SIZE")?atoi(getenv("LOG_SIZE")):MAX_LOG_SIZE;
+    if(fileSize>maxLogSize)
+    {
+        rotateLog();
+        return 1;
+    }
+    return 0;
+}
+
+void compressLog(char *input,char *output)
+{
+    rename(input,output);
+}
+
+static int rotateLog()
+{
+    char *tmpdir = strdup((getenv("SNAP_COMMON")?getenv("SNAP_COMMON"):"/var/tmp/"));
+    char *logname = strdup((getenv("LOG_NAME")?getenv("LOG_NAME"):"logs.txt"));
+    char oldestlog[PATH_MAX];
+    snprintf(oldestlog,sizeof(oldestlog),"%s/%s.%d.gz",tmpdir,logname,10);
+    oldestlog[sizeof(oldestlog)-1]='\0';
+    if(!access(oldestlog,R_OK|W_OK))
+        remove(oldestlog);
+
+    for(int i=9;i>=1;i--)
+    {
+        char filename[PATH_MAX];
+        snprintf(filename,sizeof(filename),"%s/%s.%d.gz",tmpdir,logname,i);
+        char nextfilename[PATH_MAX];
+        snprintf(nextfilename,sizeof(nextfilename),"%s/%s.%d.gz",tmpdir,logname,i+1);
+        filename[sizeof(filename)-1]='\0';
+        nextfilename[sizeof(nextfilename)-1]='\0';
+        if(!access(filename,R_OK|W_OK))
+        {
+            rename(filename,nextfilename);
+        }
+    }
+    char fileToCompress[PATH_MAX];
+    char compressedFile[PATH_MAX];
+    char currentLog[PATH_MAX];
+    snprintf(currentLog,sizeof(currentLog),"%s/%s",tmpdir,logname);
+    snprintf(fileToCompress,sizeof(fileToCompress),"%s/%s.%d",tmpdir,logname,0);
+    snprintf(compressedFile,sizeof(compressedFile),"%s/%s.%d.gz",tmpdir,logname,1);
+    currentLog[sizeof(currentLog)-1]='\0';
+    fileToCompress[sizeof(fileToCompress)-1]='\0';
+    compressedFile[sizeof(compressedFile)-1]='\0';
+    if(!access(fileToCompress,R_OK|W_OK))
+    {
+        compressLog(fileToCompress,compressedFile);
+        remove(fileToCompress);
+    }
+    free(tmpdir);
+    free(logname);
+    if(!access(currentLog,R_OK|W_OK))
+    {
+        rename(currentLog,fileToCompress);
+    }
+    else 
+        return 1;
+    return 0;
 }
