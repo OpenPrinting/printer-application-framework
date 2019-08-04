@@ -48,6 +48,12 @@ void cleanup()
     cupsArrayRemove(temp_devices,dev);
     free(dev);
   }
+  pthread_cancel(hardwareThread);
+  #ifdef HAVE_AVAHI
+  pthread_cancel(avahiThread);
+  #endif
+  pthread_mutex_destroy(&signal_lock);
+
 }
 static void kill_main(int sig,siginfo_t *siginfo,void* context){
   printf("DEBUG: KILLING Printer Application!\n");
@@ -109,25 +115,24 @@ int main(int argc,char* argv[])
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 
-  for(int i=0;i<=2*NUM_SIGNALS;i++)
-    pending_signals[i]=0;
+  pending_signals[0]=0;
+  for(int i=1;i<=2*NUM_SIGNALS;i++)
+    pending_signals[i]=1;
   
   if(pthread_mutex_init(&signal_lock,NULL)!=0)
   {
     printf("ERROR: Mutex init Failed\n");
     return -1;
   }
-
-  kill_listeners();
-  pthread_t hardwareThread;
+  
   pthread_create(&hardwareThread,NULL,start_hardware_monitor,NULL);
   #if HAVE_AVAHI
 
-  pthread_t avahiThread;
   pthread_create(&avahiThread,NULL,start_avahi_monitor,NULL);
 
   #endif
 
+  kill_listeners();
 
   while(1){            /*Infinite loop*/
     sleep(10);

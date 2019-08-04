@@ -75,6 +75,11 @@ static device_t devices[MAX_DEVICES];
 static cups_array_t *con_devices;
 static cups_array_t *temp_devices;
 static int compare_devices(device_t *d0,device_t *d1);
+pthread_t hardwareThread;
+
+#ifdef HAVE_AVAHI
+pthread_t avahiThread;
+#endif
 
 static int get_devices(int insert,int signal);
 static int parse_line(process_t*);
