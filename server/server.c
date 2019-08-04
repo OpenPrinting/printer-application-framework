@@ -33,24 +33,21 @@ static void escape_string(char* out,char* in,int len)
   out[i]=0;
 }
 
-/*
- * TODO: Can we use siginfo->st_mtime to prevent overcrowding?
- */
-static void manage_device(int sig,siginfo_t *siginfo,void* context)
-{
-  union sigval sigtype = siginfo->si_value;
-  int signal_data = sigtype.sival_int;
-  debug_printf("Recieved Signal: %d\n",signal_data);
-  if(signal_data&&signal_data%2==0)
-    get_devices(0,signal_data); //Remove devices
-  else
-    get_devices(1,signal_data);   //Insert devices
-}
 
 void cleanup()
 {
-  cupsArrayDelete(con_devices);
-  cupsArrayDelete(temp_devices);
+  device_t *dev = cupsArrayFirst(con_devices);
+  for(;dev;dev=cupsArrayNext(con_devices))
+  {
+    cupsArrayRemove(con_devices,dev);
+    free(dev);
+  }
+  dev = cupsArrayFirst(temp_devices);
+  for(;dev;dev=cupsArrayNext(temp_devices))
+  {
+    cupsArrayRemove(temp_devices,dev);
+    free(dev);
+  }
 }
 static void kill_main(int sig,siginfo_t *siginfo,void* context){
   printf("DEBUG: KILLING Printer Application!\n");
