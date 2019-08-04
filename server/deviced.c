@@ -258,7 +258,7 @@ start_backend(const char *name,		/* I - Backend to run */
   backend_fds[num_backends].fd     = cupsFileNumber(backend->pipe);
   backend_fds[num_backends].events = POLLIN;
 
-  backend->name   = strdup(name);
+  backend->name   = (name);
   backend->status = 0;
   backend->count  = 0;
 

@@ -73,41 +73,10 @@ static int kill_listeners()
   }
   return 0;
 }
-static int signal_listeners()
-{
-  // struct sigaction device_act;
-  // memset(&device_act,'\0',sizeof(device_act));
-  // device_act.sa_sigaction = &manage_device;
-  // device_act.sa_flags = SA_SIGINFO;
-  // if(sigaction(SIGUSR1,&device_act,NULL)<0){
-  //   debug_printf("ERROR: Unable to start usb detector!\n");
-  //   return 1;
-  // }
-  signal(SIGUSR1,SIG_IGN);
-  // struct sigaction kill_act;
-  // memset(&kill_act,'\0',sizeof(kill_act));
-  // kill_act.sa_sigaction = &kill_main;
-  // kill_act.sa_flags = SA_SIGINFO;
-  // if(sigaction(SIGHUP,&kill_act,NULL)<0){
-  //   debug_printf("ERROR: Unable to set cleanup process!\n");
-  //   return 1;
-  // }
-  // if(sigaction(SIGINT,&kill_act,NULL)<0){
-  //   debug_printf("ERROR: Unable to set cleanup process!\n");
-  //   return 1;
-  // }
-  return 0;
-}
+
 
 void* start_hardware_monitor(void *n)
 {
-  // int status = 0;
-  // if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-  //   perror(0);    /*Unable to set prctl*/
-  //   exit(1);
-  // }
-  // if(getppid() != ppid)
-  //   exit(0);      /*Parent as exited already!*/
   pid_t ppid = getpid();
   monitor_devices(ppid);  /*Listen for usb devices!*/
 }
@@ -115,13 +84,6 @@ void* start_hardware_monitor(void *n)
 #ifdef HAVE_AVAHI
 void* start_avahi_monitor(void *n)
 {
-  // int status = 0;
-  // if((status=prctl(PR_SET_PDEATHSIG,SIGTERM))<0){
-  //   perror(0);    /*Unable to set prctl*/
-  //   exit(1);
-  // }
-  // if(getppid() != ppid)
-  //   exit(0);      /*Parent as exited already!*/
   pid_t ppid = getpid();
   monitor_avahi_devices(ppid);  /*Listen for usb devices!*/
 }
@@ -270,6 +232,7 @@ get_devices(int insert,int signal)
           cj++;
           t++;
         }
+        free(bk);
       }
       *cj =0;
       cj =0;
@@ -879,21 +842,21 @@ int start_ippeveprinter(device_t *dev)
     //dup2(1,2);
     char printerlogs[1024];
     snprintf(printerlogs,sizeof(printerlogs),"%s/printer.logs",tmpdir);
-    int logfd = open(printerlogs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    close(logfd);
-    logfd = open(printerlogs,O_WRONLY|O_APPEND);
+    // int logfd = open(printerlogs,O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    // close(logfd);
+    // logfd = open(printerlogs,O_WRONLY|O_APPEND);
     debug_printf("DEBUG2: EXEC:%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",argv[0],argv[1],argv[2],argv[3],
                      argv[4],argv[5],argv[6],argv[7],argv[8],argv[9],argv[10] ,argv[11],argv[12],argv[13],
                      argv[14],argv[15]);
-    if(logfd>0)
-    {
-      dup2(logfd,2);
-      dup2(logfd,1);
-      close(logfd);
-    }
+    // if(logfd>0)
+    // {
+    //   dup2(logfd,2);
+    //   dup2(logfd,1);
+    //   close(logfd);
+    // }
     
     execvp(argv[0],argv);
-
+    free(argv[14]);
     exit(0);
   }
   if(dev)
