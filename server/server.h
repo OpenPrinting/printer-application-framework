@@ -48,6 +48,7 @@ typedef struct
     device_id[128];
     char ppd[1024];
     int eve_pid;
+    pthread_t errlog;
 } device_t;
 
 #define NUM_SIGNALS 4

@@ -99,7 +99,7 @@ int debug_printf(char *format, ...)
     va_start(arg,format);
     vsnprintf(logline,sizeof(logline),format,arg);
     va_end(arg);
-    int message_level=0;
+    int message_level=4;
     if(!strncmp(logline,"ERROR:",6))
         message_level = 1;
     else if(!strncmp(logline,"DEBUG:",6))
@@ -180,6 +180,8 @@ int logFromFile(cups_file_t *file)
     cupsFileClose(file);
     return 0;
 }
+
+
 
 void * _logThread(void *t)
 {
@@ -281,5 +283,14 @@ static int rotateLog()
     }
     else 
         return 1;
+    return 0;
+}
+
+int logFromFd(pthread_t *logger, int fd)
+{
+    cups_file_t* errlog = cupsFileOpenFd(fd,"r");
+    if(errlog==NULL)
+        return -1;
+    logFromFile2(logger,errlog);
     return 0;
 }

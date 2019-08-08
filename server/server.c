@@ -603,6 +603,7 @@ void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes)
       remove_ppd(dev->ppd);
       debug_printf("DEBUG: Removing Printer: %s\n",dev->device_id);
       kill_ippeveprinter(dev->eve_pid);
+      pthread_join(dev->errlog,NULL);
       cupsArrayRemove(con,dev);
       device_t *tt = dev;   // Do we need this?
       free(tt);
@@ -782,8 +783,30 @@ int start_ippeveprinter(device_t *dev)
 {
   pid_t pid=0,ppid=0;
   ppid = getpid();
+  int pfd[2];
+  
+  if(pipe(pfd))
+  {
+    return -1;
+  }
+
+  if(fcntl(pfd[0],F_SETFD,fcntl(pfd[0],F_GETFD) | FD_CLOEXEC))
+  {
+    close(pfd[0]);
+    close(pfd[1]);
+    return -1;
+  }
+  if(fcntl(pfd[1],F_SETFD,fcntl(pfd[1],F_GETFD) | FD_CLOEXEC))
+  {
+    close(pfd[0]);
+    close(pfd[1]);
+    return -1;
+  }
+  
   if((pid=fork())<0)
   {
+    close(pfd[0]);
+    close(pfd[1]);
     return -1;
   }
   else if(pid==0){
@@ -800,11 +823,8 @@ int start_ippeveprinter(device_t *dev)
       ,command[1024],pport[8],location[3096];
     char *envp[2];
     char LD_PATH[512];
-    // strncpy(LD_PATH,"LD_LIBRARY_PATH=/usr/lib",sizeof(LD_PATH));
-    // setenv("LD_LIBRARY_PATH","/usr/lib",1);
+
     setenv("PRINTER",dev->device_make_and_model,1);
-    // envp[0]=(char*)LD_PATH;
-    // envp[1]=NULL;
     
     snprintf(name,sizeof(name),"%s/bin/ippeveprinter",snap);
     if(dev==NULL)
@@ -856,11 +876,19 @@ int start_ippeveprinter(device_t *dev)
     //   dup2(logfd,1);
     //   close(logfd);
     // }
+    dup2(pfd[1],2);
+    dup2(pfd[1],1);
+    close(pfd[1]);
+
     
     execvp(argv[0],argv);
     free(argv[14]);
     exit(0);
   }
+
+  close(pfd[1]);
+  logFromFd(&(dev->errlog),pfd[0]);
+
   if(dev)
     dev->eve_pid = pid;
   return pid;
