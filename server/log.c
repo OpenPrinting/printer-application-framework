@@ -63,7 +63,7 @@ static int initialize_log()
     else{
         temp_level = DEBUG_LEVEL;
     }
-    if(temp_level>3||temp_level<0){
+    if(temp_level>4||temp_level<0){
             temp_level = 1; //Simply ignore
         }
         log_level = temp_level;
