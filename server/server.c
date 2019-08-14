@@ -56,7 +56,6 @@ void cleanup()
 
 }
 static void kill_main(int sig,siginfo_t *siginfo,void* context){
-  printf("DEBUG: KILLING Printer Application!\n");
   cleanup();
   exit(0);
 }

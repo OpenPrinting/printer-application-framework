@@ -103,6 +103,10 @@ static int getFilterPaths(cups_array_t *filter_chain, cups_array_t **filter_full
   for(currFilter=cupsArrayFirst(filter_chain);currFilter;currFilter=cupsArrayNext(filter_chain))
   {
     in = currFilter->filter;
+    if(strncmp(in,"-",1)==0)    // Empty filter
+    {
+      continue;
+    }
     if(getFilterPath(in,&out)==-1)
     {
       return -1;

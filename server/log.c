@@ -99,7 +99,7 @@ int debug_printf(char *format, ...)
     va_start(arg,format);
     vsnprintf(logline,sizeof(logline),format,arg);
     va_end(arg);
-    int message_level=4;
+    int message_level=0;
     if(!strncmp(logline,"ERROR:",6))
         message_level = 1;
     else if(!strncmp(logline,"DEBUG:",6))
