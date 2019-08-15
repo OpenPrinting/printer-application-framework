@@ -317,6 +317,7 @@ static int getDeviceScheme(char **device_uri_out, char *scheme,int schemelen)
 {
   char *device_uri=strdup(getenv("DEVICE_URI"));
   // char *device_uri=strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");
+  debug_printf("DEVICE_URI: %s\n",device_uri);
   int i;
 	char userpass[256],		/* username:password (unused) */
 		host[256],		/* Hostname or IP address */
@@ -412,7 +413,8 @@ static int print_document(char *scheme,char *uri, char *filename)
 
 static int delete_temp_file(char *filename)
 {
-  return unlink(filename);
+  return 0;
+  //return unlink(filename);
 }
 
 void testApplyFilterChain()
