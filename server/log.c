@@ -235,7 +235,9 @@ int doRotate(char *filename)
 
 void compressLog(char *input,char *output)
 {
-    rename(input,output);
+    remove(output);
+    int res = zlib_compress(input,output);
+    remove(input);
 }
 
 static int rotateLog()

@@ -17,25 +17,26 @@ sbin_PROGRAMS =
 # endif
 
 LIB_UDEV = -ludev
-CUPS_TEMP = -lpthread
+CUPS_TEMP = -ludev -lpthread -lz
 
+ALL_C_FILES = 
 # CUPS_LIBS=$(CUPS_STATIC)
 
 AM_CFLAGS = -I.. $(CUPS_CFLAGS)
 AM_LDFLAGS = $(CUPS_LDFLAGS)
 
-deviced_SOURCES = deviced.c util.c log.c
+deviced_SOURCES = util.c log.c compression.c deviced.h deviced.c
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 deviced_LDFLAGS = 
 
-ippprint_SOURCES = ippprint.c mime_type.c util.c ippprint.h log.c
+ippprint_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c ippprint.h
 ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 ippprint_LDFLAGS = 
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
 
-server_SOURCES = server.c util.c server.h detection.c log.c
+server_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c server.h
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 

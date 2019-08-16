@@ -34,6 +34,7 @@
 #include <config.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include "compression.h"
 
 static int log_fd;
 static int log_level =1;
