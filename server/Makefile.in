@@ -118,7 +118,7 @@ deviced_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 deviced_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(deviced_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_ippprint_OBJECTS = util.$(OBJEXT) log.$(OBJEXT) mime_type.$(OBJEXT) \
-	server.$(OBJEXT) detection.$(OBJEXT) compression.$(OBJEXT)
+	ippprint.$(OBJEXT) detection.$(OBJEXT) compression.$(OBJEXT)
 ippprint_OBJECTS = $(am_ippprint_OBJECTS)
 ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
@@ -148,8 +148,9 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/compression.Po \
 	./$(DEPDIR)/detection.Po ./$(DEPDIR)/deviced.Po \
-	./$(DEPDIR)/log.Po ./$(DEPDIR)/mime_type.Po \
-	./$(DEPDIR)/server.Po ./$(DEPDIR)/util.Po
+	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/log.Po \
+	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
+	./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -318,7 +319,7 @@ AM_LDFLAGS = $(CUPS_LDFLAGS)
 deviced_SOURCES = util.c log.c compression.c deviced.h deviced.c
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 deviced_LDFLAGS = 
-ippprint_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c ippprint.h
+ippprint_SOURCES = util.c log.c mime_type.c ippprint.c detection.c compression.c ippprint.h
 ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 ippprint_LDFLAGS = 
 
@@ -470,6 +471,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compression.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/detection.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@ # am--include-marker
@@ -628,6 +630,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/compression.Po
 	-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
+	-rm -f ./$(DEPDIR)/ippprint.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
@@ -680,6 +683,7 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/compression.Po
 	-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
+	-rm -f ./$(DEPDIR)/ippprint.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po

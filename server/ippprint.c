@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
   char *output_type=NULL;
   char *content_type=NULL;
   char finalFile[1024];
-
+  // fprintf(stderr,"WTF???\n");
   getDeviceScheme(&device_uri,device_scheme,sizeof(device_scheme));
   setenv("DEVICE_URI",device_uri,1);
   debug_printf("DEBUG: Device_scheme: %s %s\n",device_scheme,device_uri);

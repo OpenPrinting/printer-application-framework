@@ -29,7 +29,7 @@ deviced_SOURCES = util.c log.c compression.c deviced.h deviced.c
 deviced_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 deviced_LDFLAGS = 
 
-ippprint_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c ippprint.h
+ippprint_SOURCES = util.c log.c mime_type.c ippprint.c detection.c compression.c ippprint.h
 ippprint_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP)
 ippprint_LDFLAGS = 
 
