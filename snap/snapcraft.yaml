@@ -1,10 +1,9 @@
 name: printer-application # you probably want to 'snapcraft register <name>'
 base: core18 # the base snap is the execution environment for this snap
-version: '0.0.1' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Snap for Printer driver packages. # 79 char long summary
+version: 'x.x.x' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Snap for XXXX Printer driver packages. # 79 char long summary
 description: |
-  This snapcraft.yaml file can be used as a base to create snaps of different printer\
-  driver packages.
+  This snap aims to provide modular snaps for XXXX printer driver package.
 
 grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
@@ -14,7 +13,9 @@ apps:
     command: bin/server
     daemon: simple
     environment:
-     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+     GS_LIB: "/snap/$SNAP_NAME/current/usr/share/ghostscript/9.26/Resource/Init" # This is required for gstoraster for filter.
+     #PYTHONPATH: "/snap/$SNAP_NAME/current/lib/python2.7/site-packages/" # If the package uses python, the pythonpath is required.
+     #SNAP_BACKENDS: "hp,hpfax" #Any specific backend of the printer-driver package.
     plugs: 
     -  network 
     -  network-bind
@@ -24,35 +25,56 @@ apps:
     -  hardware-observe
   run-deviced:
     command: bin/deviced
+    environment:
+      #PYTHONPATH: "/snap/$SNAP_NAME/current/lib/python2.7/site-packages/"  
+      #SNAP_BACKENDS: "hp,hpfax"
+    plugs: 
+    -  network 
+    -  network-bind
+    -  avahi-control
+    -  raw-usb
+    -  home
+    -  hardware-observe
   run-ippprint:
     command: bin/ippprint
     environment:
-     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+     GS_LIB: "/snap/$SNAP_NAME/current/usr/share/ghostscript/9.26/Resource/Init"
+    plugs:
+    -  network
+    -  network-bind
+    -  avahi-control
+    -  raw-usb
+    -  home
+    -  hardware-observe
 
   run-ippeveprinter:
     command: bin/ippeveprinter
     environment:
-     GS_LIB: "/snap/printer-application/current/usr/share/ghostscript/9.26/Resource/Init"
+     GS_LIB: "/snap/$SNAP_NAME/current/usr/share/ghostscript/9.26/Resource/Init"
     plugs: [network, network-bind, avahi-control, raw-usb]
 
 parts:
   ippsample:
     plugin: autotools
     source: https://github.com/dheeraj135/ippsample.git
+    #source: ./ippsample  # For debugging
+    source-branch: master
     configflags:
       - --datarootdir=/usr/share/
     build-packages:
     - libcups2-dev
     - zlib1g
-    - liblzma5  
-    organize: 
-      lib/libcups.a : lib/cups/
+    - liblzma5
+    stage:
+     - -lib/libcups.a
+     - -usr/share/ipptool/
 
   server:
-    # See 'snapcraft plugins'
     plugin: autotools
     source: https://github.com/dheeraj135/Printer-Applications-Framework.git
+    #source: ./Printer-Applications-Framework/ # For debugging
     source-type: git
+    source-branch: master
     build-packages:
       - libcups2
       - libcups2-dev
@@ -81,19 +103,26 @@ parts:
   
   cups-filters:
     plugin: dump
-    source: ./temp
+    source: ./temp    # This is an empty folder. snapcraft requires ```source```. 
     stage-packages:
-    - cups-filters
-    - cups
+     - cups-filters
+     - cups
     prime:
-    - usr/lib/cups/filter/
-    - usr/share/cups/mime/
+     - usr/lib/cups/filter/
+     - usr/share/cups/mime/
+     - usr/lib/cups/backend/
+     - -usr/lib/cups/backend/driverless
+     - -usr/lib/cups/backend/cups-brf
+     - etc/cups/snmp.conf
+     - usr/share/cups/usb/
     stage:
-    - usr/lib/cups/filter/
-    - usr/share/cups/mime/
+     - usr/lib/cups/filter/
+     - usr/share/cups/mime/
+     - usr/lib/cups/backend/
+     - etc/cups/snmp.conf
+     - usr/share/cups/usb/
     organize:
-     /usr/lib/cups/filter/* : usr/lib/cups/filter/
-     /usr/share/cups/mime/* : usr/share/cups/mime/
+      usr/lib/cups/backend-available/* : usr/lib/cups/backend/
 
   libraries:
     plugin: dump
@@ -106,3 +135,18 @@ parts:
     - libqpdf21
     - libcupsfilters1
     - ghostscript
+
+  # Add a part for the printer driver package. 
+  #xxx:
+  # plugin: 
+  # source:
+  # build-packages:
+  #   -
+  #   -
+  # stage-packages:
+  #   -
+  #   -
+  # override-build: |
+  #   patch <
+  #   patch <
+  #   snapcraftctl build
