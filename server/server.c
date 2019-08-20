@@ -761,7 +761,6 @@ int print_ppd(process_t* backend,cups_file_t *temp)
   if (cupsFileGets(backend->pipe,line,sizeof(line)))
   {
     cupsFilePrintf(temp,"%s\n",line);
-    //fprintf(stdout,"%s\n",line);
     return 1;
   }
   cupsFileClose(backend->pipe);
@@ -770,12 +769,7 @@ int print_ppd(process_t* backend,cups_file_t *temp)
 
 int remove_ppd(char* ppd)
 {
-  // if(_cupsFileCheck(ppd,_CUPS_FILE_CHECK_PROGRAM,!geteuid(),
-  //                   _cupsFileCheckFilter,NULL))
-  //   return (-1);
-  // else{
-  //  return unlink(ppd);
- // }
+    return unlink(ppd);
 }
 
 int start_ippeveprinter(device_t *dev)

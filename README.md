@@ -1,27 +1,34 @@
-# Printer-Applications-Framework
+# Printer Applications Framework
 
-This framework aims to provide a systematic method to create snaps of printer driver packages to use with cups.
+## What is a Printer Application?
 
-## Installation
+Printer Application is a daemon which detects the supported printers and advertizes those printers on the localhost as an IPP Everywhere printer. Printer Applications are basically an extension of printer driver packages.
 
-I recommend installing this framework in a custom directory rather than in root directories.
+## Why do we need Printer Applications?
 
-1. Download the source code and ``cd`` to that direcotry.
-2. mkdir build
-3. ```export pre="`pwd`/build"```
-4. ./configure --prefix=$pre
-5. make
-6. make install
+The current printing system relies on printer driver packages to add support for non-driverless printers. Canonical is now moving towards sandboxed or snapped package distribution system. In a sandboxed cups package, we cannot modify directory contents once it is snapped. Our system is no more modular. We cannot choose which printer driver package to install. Printer Applications address this problem of modularity and gives us same freedom as in the case of printer drivers.
 
-Now to use this framework with hplip:
-Make sure to set the ```pre``` environment variable.
-1. Cd to hplip directory.
-2. ```./configure --with-drvdir=$pre/share/cups/drv/hp/ --with-mimedir=$pre/share/cups/mime/ --with-hpppddir=$pre/share/cups/ppd/hp/ --with-cupsfilterdir=$pre/lib/cups/filter/ --with-cupsbackenddir=$pre/lib/cups/backend/ --prefix=$pre/```
-3. make
-4. make install
+## How a Printer Application Work?
 
-## How to use
+Working of a Printer Application can be divided into 3 parts:
 
-1. cd $pre/bin
-2. sudo ./server 
+1. **Device Detection**
+2. **PPD Searching**
+3. **IPP Eveprinter Manager**
+4. **IPP Eveprinter Command**
+
+### Device Detection
+
+File: `server/detection.c, server/server.c and server/server.h`
+
+We have to detect two types of devices - local printers(connected using usb,tty and parallel ports) and network printers(non driverless network printers). For local printers we are using udev to detect any hardware change on usb, tty and parallel ports. 
+Function ```monitor_devices``` detects local printers. Whenever we detect any change on usb we increment corresponding value in ```pending_signals``` array. ```enum child_signal``` describes an event and its corresponding index in the pending_signals array. 
+Function ```monitor_avahi_devices``` detects network printers and corresponding value is incremented in the ```pending_signals``` array.
+
+```monitor_devices``` and ```monitor_avahi_devices``` are run as seperate threads. The ```pending_signals``` array is processed in the main thread. The ```server::main``` function every 10 seconds check if any value of ```pending_signals``` is non-zero.
+If any value is non-zero then ```get_devices``` function is called with the corresponding index.
+
+```get_devices``` function generates include/exclude scheme based on the index number and call the ```deviced``` utility. This utility is based on the ```cups-deviced``` utility but is simpler. The ```deviced``` utility gives us all the available printers(filtered using the include/exclude). This list is stored in ```temp_devices``` array and it is then compared with the ```con_devices``` array. The ```con_devices``` array maintains all the printers which have corresponding ```ippeveprinter``` active on the localhost. If we have to add a printer, PPD is searched. If we have to remove a printer, IPP eveprinter manager is called.
+
+### PPD Searching
 
