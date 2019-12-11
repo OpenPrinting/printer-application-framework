@@ -56,7 +56,8 @@ int main(int argc,
     device_limit,
     timeout;
   char *server_bin,
-    dirname[1024]; 
+        *snap,
+    dirname[1024];
   char includes[4096];    //Include-Exclude String
   int inc_length=0,
       exc_length=0;
@@ -90,7 +91,13 @@ int main(int argc,
   }
   signal_listeners();
   if((server_bin=getenv("CUPS_SERVERBIN"))==NULL){
-    server_bin = DEFAULT_SERVERBIN;
+    if((snap=getenv("SNAP")))
+    {
+      server_bin = malloc(sizeof(char)*4096);
+      snprintf(server_bin,4096,"%s/usr/lib/cups/",snap);
+    }
+    else
+      server_bin = DEFAULT_SERVERBIN;
   }
   
   snprintf(dirname,sizeof(dirname),"%s/backend",server_bin);
@@ -212,8 +219,9 @@ static int				/* O - 0 on success, -1 on error */
 start_backend(const char *name,		/* I - Backend to run */
               int        root)		/* I - Run as root? */
 {
-  const char		*server_bin;	/* CUPS_SERVERBIN environment variable */
-  char			program[1024];	/* Full path to backend */
+  char		*server_bin;	/* CUPS_SERVERBIN environment variable */
+  char *snap;         /* SNAP environment variable */
+  char			program[4096];	/* Full path to backend */
   backend_t	*backend;	/* Current backend */
   char			*argv[2];	/* Command-line arguments */
 
@@ -224,8 +232,15 @@ start_backend(const char *name,		/* I - Backend to run */
     return (-1);
   }
 
-  if ((server_bin = getenv("CUPS_SERVERBIN")) == NULL)
-    server_bin = DEFAULT_SERVERBIN;
+  if((server_bin=getenv("CUPS_SERVERBIN"))==NULL){
+    if((snap=getenv("SNAP")))
+    {
+      server_bin = malloc(sizeof(char)*4096);
+      snprintf(server_bin,4096,"%s/usr/lib/cups/",snap);
+    }
+    else
+      server_bin = DEFAULT_SERVERBIN;
+  }
 
   snprintf(program, sizeof(program), "%s/backend/%s", server_bin, name);
   
@@ -258,7 +273,7 @@ start_backend(const char *name,		/* I - Backend to run */
   backend_fds[num_backends].fd     = cupsFileNumber(backend->pipe);
   backend_fds[num_backends].events = POLLIN;
 
-  backend->name   = (name);
+  backend->name   = strdup(name);
   backend->status = 0;
   backend->count  = 0;
 
@@ -275,7 +290,7 @@ static void sigchld_handler(int sig,siginfo_t *siginfo, void*context)
   int			status;		/* Exit status of child */
   int			pid;		/* Process ID of child */
   backend_t	*backend;	/* Current backend */
-  const char		*name;		/* Name of process */
+  char	name[4096];		/* Name of process */
 
 
  /*
@@ -295,14 +310,14 @@ static void sigchld_handler(int sig,siginfo_t *siginfo, void*context)
 
     if (i > 0)
     {
-      name            = backend->name;
+      // name            = backend->name;
+      strncpy(name,backend->name,sizeof(name));
       backend->pid    = 0;
       backend->status = status;
-
       active_backends --;
     }
     else
-      name = "Unknown";
+      strncpy(name,"Unknown",7);
 
     if (status)
     {
