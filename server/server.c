@@ -913,7 +913,7 @@ int start_ippeveprinter(device_t *dev)
     char printer_name[60];
     char scheme[10];
     getBackend(dev->device_uri,scheme,sizeof(scheme));
-    snprintf(printer_name,60,"%s-%s",dev->device_make_and_model,scheme);
+    snprintf(printer_name,60,"%s",dev->device_make_and_model);
     printer_name[sizeof(printer_name)-1]=0;
     escape_string(make_and_model,printer_name,sizeof(printer_name));
     argv[0] = (char*)name;
@@ -929,10 +929,10 @@ int start_ippeveprinter(device_t *dev)
     argv[10] = (char*)location;
     argv[11] = "-K";
     argv[12] = (char*)tmpdir;
-    argv[13] = "-n";
-    argv[14] = strdup("localhost");
-    argv[15]= (char*)make_and_model;
-    argv[16] = NULL;
+    // argv[13] = "-n";
+    // argv[14] = strdup("localhost");
+    argv[13]= (char*)make_and_model;
+    argv[14] = NULL;
 
     //dup2(1,2);
     char printerlogs[1024];
