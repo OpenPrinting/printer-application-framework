@@ -73,7 +73,6 @@ int main(int argc,
      mode only mentioned backends are ignored.",argv[0]);
     return 0;
   }
-  
   device_limit = atoi(argv[1]);
   timeout = atoi(argv[2]);
   strncpy(includes,argv[3],sizeof(includes));
@@ -243,7 +242,6 @@ start_backend(const char *name,		/* I - Backend to run */
   }
 
   snprintf(program, sizeof(program), "%s/backend/%s", server_bin, name);
-  
   // if (_cupsFileCheck(program, _CUPS_FILE_CHECK_PROGRAM, !geteuid(),
   //                    _cupsFileCheckFilter, NULL))
   //   return (-1);

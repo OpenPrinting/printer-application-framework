@@ -95,7 +95,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT)
+bin_PROGRAMS = server$(EXEEXT) deviced$(EXEEXT) ippprint$(EXEEXT) \
+	listppd$(EXEEXT)
 sbin_PROGRAMS =
 subdir = server
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -124,8 +125,17 @@ ippprint_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 ippprint_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ippprint_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_listppd_OBJECTS = util.$(OBJEXT) log.$(OBJEXT) mime_type.$(OBJEXT) \
+	server.$(OBJEXT) detection.$(OBJEXT) compression.$(OBJEXT) \
+	listppd.$(OBJEXT)
+listppd_OBJECTS = $(am_listppd_OBJECTS)
+listppd_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+listppd_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(listppd_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_server_OBJECTS = util.$(OBJEXT) log.$(OBJEXT) mime_type.$(OBJEXT) \
-	server.$(OBJEXT) detection.$(OBJEXT) compression.$(OBJEXT)
+	server_main.$(OBJEXT) server.$(OBJEXT) detection.$(OBJEXT) \
+	compression.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
@@ -148,8 +158,9 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/compression.Po \
 	./$(DEPDIR)/detection.Po ./$(DEPDIR)/deviced.Po \
-	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/log.Po \
-	./$(DEPDIR)/mime_type.Po ./$(DEPDIR)/server.Po \
+	./$(DEPDIR)/ippprint.Po ./$(DEPDIR)/listppd.Po \
+	./$(DEPDIR)/log.Po ./$(DEPDIR)/mime_type.Po \
+	./$(DEPDIR)/server.Po ./$(DEPDIR)/server_main.Po \
 	./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -164,9 +175,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(server_SOURCES)
-DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
+SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) $(listppd_SOURCES) \
 	$(server_SOURCES)
+DIST_SOURCES = $(deviced_SOURCES) $(ippprint_SOURCES) \
+	$(listppd_SOURCES) $(server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -325,9 +337,12 @@ ippprint_LDFLAGS =
 
 # mime_type_SOURCES = mime_type.c util.c util.h ippprint.h
 # mime_type_LDADD = $(LIB_CUPS)
-server_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c server.h
+server_SOURCES = util.c log.c mime_type.c server_main.c server.c detection.c compression.c
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
+listppd_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c server.h listppd.c
+listppd_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV)
+listppd_LDFLAGS = 
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
 
@@ -458,6 +473,10 @@ ippprint$(EXEEXT): $(ippprint_OBJECTS) $(ippprint_DEPENDENCIES) $(EXTRA_ippprint
 	@rm -f ippprint$(EXEEXT)
 	$(AM_V_CCLD)$(ippprint_LINK) $(ippprint_OBJECTS) $(ippprint_LDADD) $(LIBS)
 
+listppd$(EXEEXT): $(listppd_OBJECTS) $(listppd_DEPENDENCIES) $(EXTRA_listppd_DEPENDENCIES) 
+	@rm -f listppd$(EXEEXT)
+	$(AM_V_CCLD)$(listppd_LINK) $(listppd_OBJECTS) $(listppd_LDADD) $(LIBS)
+
 server$(EXEEXT): $(server_OBJECTS) $(server_DEPENDENCIES) $(EXTRA_server_DEPENDENCIES) 
 	@rm -f server$(EXEEXT)
 	$(AM_V_CCLD)$(server_LINK) $(server_OBJECTS) $(server_LDADD) $(LIBS)
@@ -472,9 +491,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/detection.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deviced.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ippprint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/listppd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mime_type.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server_main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -631,9 +652,11 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/listppd.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
+	-rm -f ./$(DEPDIR)/server_main.Po
 	-rm -f ./$(DEPDIR)/util.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -684,9 +707,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/detection.Po
 	-rm -f ./$(DEPDIR)/deviced.Po
 	-rm -f ./$(DEPDIR)/ippprint.Po
+	-rm -f ./$(DEPDIR)/listppd.Po
 	-rm -f ./$(DEPDIR)/log.Po
 	-rm -f ./$(DEPDIR)/mime_type.Po
 	-rm -f ./$(DEPDIR)/server.Po
+	-rm -f ./$(DEPDIR)/server_main.Po
 	-rm -f ./$(DEPDIR)/util.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

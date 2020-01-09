@@ -65,6 +65,9 @@ enum child_signal{
     PARALLEL_REMOVE // 8
 };
 
+char *snap;
+char *tmpdir; //SNAP_COMMON
+
 int pending_signals[2*NUM_SIGNALS+1];
 pthread_mutex_t signal_lock;
 typedef struct{
@@ -72,18 +75,17 @@ typedef struct{
     int val;
 }signal_data_t;
 
-static device_t devices[MAX_DEVICES];
-static cups_array_t *con_devices;
-static cups_array_t *temp_devices;
-static int compare_devices(device_t *d0,device_t *d1);
+device_t devices[MAX_DEVICES];
+cups_array_t *con_devices;
+cups_array_t *temp_devices;
+void* start_hardware_monitor(void *n);
 pthread_t hardwareThread;
 
 #ifdef HAVE_AVAHI
 pthread_t avahiThread;
 #endif
 
-static int get_devices(int insert,int signal);
-static int parse_line(process_t*);
+int parse_line(process_t*);
 static int		process_device(const char *device_class,
 				   const char *device_make_and_model,
 				   const char *device_info,
@@ -96,9 +98,14 @@ static int get_ppd(char* ppd,int ppd_len,char *make_and_model,int make_len,
 int get_ppd_uri(char* ppd_uri,process_t* process);
 int print_ppd(process_t* backend,cups_file_t* tempPPD);
 
+int compare_devices(device_t *d0,device_t *d1);
 int monitor_devices(pid_t ppid);
+int get_devices(int insert,int signal);
+device_t* deviceCopy(device_t *in);
+
 #ifdef HAVE_AVAHI
 int monitor_avahi_devices(pid_t ppid);
+void* start_avahi_monitor(void *n);
 #endif
 void add_devices(cups_array_t *con, cups_array_t *temp);
 void remove_devices(cups_array_t *con,cups_array_t *temp,char *includes);
@@ -106,5 +113,6 @@ int remove_ppd(char* ppd);
 int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
+int kill_listeners();
 
 #endif
