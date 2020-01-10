@@ -1,5 +1,9 @@
 #include "server.h"
+#include "list.h"
 
+int compare_ppd(ppd_t* p0,ppd_t* p1){
+  return strcmp(p0->uri,p1->uri);
+}
 void initialize()
 {
   if(getenv("SNAP"))
@@ -9,9 +13,36 @@ void initialize()
   else snap =strdup("");
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
+  ppd_list = cupsArrayNew((cups_array_func_t)compare_ppd,NULL);
+}
+int parsePpdLine(char* line)
+{
+  ppd_t* newppd;
+  if((newppd=calloc(1,sizeof(ppd_t)))==NULL)
+  {
+    fprintf(stderr,"ERROR: Unable to allocate memory\n");
+    return -1;
+  }
+  int i=0,j=0;
+  for(i=0;i<sizeof(newppd->uri)-1&&line[i];i++)
+  {
+    if(line[i]==' ') break;
+    newppd->uri[i] = line[i];
+  }
+  newppd->uri[i]=0;
+  while(line[i]!='('&&line[i])
+    i++;
+  i++;
+  for(j=0;j<sizeof(newppd->name)-1&&line[i];j++,i++)
+  {
+    if(line[i]==')') break;
+    newppd->name[j] = line[i];
+  }
+  newppd->name[j] = 0;
+  int res = cupsArrayAdd(ppd_list,newppd);
 }
 
-int device_list()
+int deviceList()
 {
     const char  *serverbin; // ServerBin
     char        program[2048];     // Full Path to program
@@ -86,7 +117,7 @@ int device_list()
     return 0;
 }
 
-int ppd_list()
+int ppdList()
 {
   const char *serverbin;
   char program[2048];
@@ -146,7 +177,8 @@ int ppd_list()
       if(WIFEXITED(status))
       {
           while (cupsFileGets(process->pipe, line, sizeof(line))){
-              printf("%s\n",line);
+              parsePpdLine(line);
+              // printf("%s\n",line);
           }
       }
       pthread_join(logThread,NULL);
@@ -154,9 +186,9 @@ int ppd_list()
   return 0;
 }
 
-int print_devices()
+int printDevices()
 {
-    if(device_list()){
+    if(deviceList()){
         return 1;
     }
     device_t *dev = cupsArrayFirst(con_devices);
@@ -167,10 +199,15 @@ int print_devices()
     return 0;
 }
 
-int print_ppd_list()
+int printPpdList()
 {
-    if(ppd_list()){
+    if(ppdList()){
         return 1;
+    }
+    ppd_t *p = cupsArrayFirst(ppd_list);
+    for(;p;p=cupsArrayNext(ppd_list))
+    {
+      printf("\"%s\" (%s)\n",p->name,p->uri);
     }
     return 0;
 }
@@ -209,10 +246,10 @@ int main(int argc, char *argv[])
       }
     }
     if(ppd){
-      print_ppd_list();
+      printPpdList();
     }
     if(device){
-      print_devices();
+      printDevices();
     }
     return 0;
 }
