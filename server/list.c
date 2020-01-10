@@ -10,6 +10,7 @@ void initialize()
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
 }
+
 int device_list()
 {
     const char  *serverbin; // ServerBin
@@ -161,7 +162,7 @@ int print_devices()
     device_t *dev = cupsArrayFirst(con_devices);
     for(;dev;dev=cupsArrayNext(con_devices))
     {
-        printf("%s %s %s\n",dev->device_uri,dev->device_make_and_model,dev->device_id);
+        printf("\"%s\" \"%s\" \"%s\"\n",dev->device_uri,dev->device_make_and_model,dev->device_id);
     }
     return 0;
 }
@@ -173,19 +174,45 @@ int print_ppd_list()
     }
     return 0;
 }
-
+void usage(char *arg)
+{
+  printf("Usage: %s -(p/d)\n"
+   "-p: Print PPDs\n"
+   "-d: Print Available devices\n",arg);
+}
 int main(int argc, char *argv[])
 {
     initialize();
-    int d=0,p=0;
-    if(argc==2){
-        if(argv[1][0]=='p') p++;
-        if(argv[1][0]=='d') d++;
+    int device=0,ppd=0;
+    if(argc!=2)
+    {
+      usage(argv[0]);
+      return -1;
     }
-    else d=p=1;
-    if(d)
-        print_devices();
-    if(p)
-        print_ppd_list();
+    for(int i=1;i<argc;i++)
+    {
+      if(strlen(argv[i])==1){
+        usage(argv[0]);
+        return -1;
+      }
+      if(argv[i][0]!='-'){
+        usage(argv[0]);
+        return -1;
+      }
+      switch(argv[i][1]){
+        case 'p': ppd=1;
+                  break;
+        case 'd': device=1;break;
+        default: printf("Invalid Argument\n");
+                  usage(argv[0]);
+                  return -1;
+      }
+    }
+    if(ppd){
+      print_ppd_list();
+    }
+    if(device){
+      print_devices();
+    }
     return 0;
 }
