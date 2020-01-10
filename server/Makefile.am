@@ -7,7 +7,7 @@
 # information. 															#
 #########################################################################
 
-bin_PROGRAMS = server deviced ippprint listppd #mime_type
+bin_PROGRAMS = server deviced ippprint list #mime_type
 sbin_PROGRAMS = 
 
 # if HAVE_AVAHI
@@ -40,9 +40,9 @@ server_SOURCES = util.c log.c mime_type.c server_main.c server.c detection.c com
 server_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV) 
 server_LDFLAGS = 
 
-listppd_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c server.h listppd.c
-listppd_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV)
-listppd_LDFLAGS = 
+list_SOURCES = util.c log.c mime_type.c server.c detection.c compression.c server.h list.c
+list_LDADD = $(CUPS_LIBS) $(LIB_AVAHI) $(CUPS_TEMP) $(LIB_UDEV)
+list_LDFLAGS = 
 
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
