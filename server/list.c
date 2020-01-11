@@ -11,6 +11,11 @@ void initialize()
     snap = strdup(getenv("SNAP"));
   }
   else snap =strdup("");
+
+  if(getenv("SNAP_COMMON"))
+    tmpdir = strdup(getenv("SNAP_COMMON"));
+  else tmpdir = strdup("/var/tmp");
+
   con_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   temp_devices = cupsArrayNew((cups_array_func_t)compare_devices,NULL);
   ppd_list = cupsArrayNew((cups_array_func_t)compare_ppd,NULL);
@@ -172,15 +177,11 @@ int ppdList()
   }
   pthread_t logThread;
   logFromFile2(&logThread,errlog);
+  while (cupsFileGets(process->pipe, line, sizeof(line))){
+    parsePpdLine(line);
+  }
   if((process_pid = waitpid(process->pid,&status,0))>0)
   {
-      if(WIFEXITED(status))
-      {
-          while (cupsFileGets(process->pipe, line, sizeof(line))){
-              parsePpdLine(line);
-              // printf("%s\n",line);
-          }
-      }
       pthread_join(logThread,NULL);
   }
   return 0;
@@ -211,6 +212,102 @@ int printPpdList()
     }
     return 0;
 }
+
+int getPPDfile(char* ppd_uri, char** ppdfile)
+{
+  process_t* process;
+  char name[16],operation[8];
+  char program[PATH_MAX];
+  char datadir[1024],serverdir[1024],cachedir[1024];
+  cups_file_t *errlog;
+  char *argv[6];
+  char *filename;
+  int namelen = PATH_MAX;
+  int status;
+  pthread_t logThread;
+
+  if((filename=calloc(namelen,sizeof(char)))==NULL){
+    fprintf(stderr,"ERROR: Unable to allocate memory.\n");
+    return -1;
+  }
+  
+  *ppdfile = filename;
+
+  char ppd_folder[namelen];
+  snprintf(ppd_folder,namelen,"%s/ppd/",tmpdir);
+  mkdir(ppd_folder,0777);
+
+  snprintf(filename,namelen,"%s/ppd.XXXXXX",ppd_folder);
+  int ppdFD = mkstemp(filename);
+  if(ppdFD<=0)
+    return -1;
+  close(ppdFD);
+  cups_file_t* temp_ppd;
+  if((temp_ppd= cupsFileOpen(filename,"w"))==NULL)
+  {
+    fprintf(stderr,"ERROR: Unable to open temporary ppdfile.");
+    return -1;
+  }
+
+  if((process=calloc(1,sizeof(process_t)))==NULL)
+  {
+    fprintf(stderr,"ERROR: Ran Out of Memory!\n");
+    return (-1);
+  }
+  strcpy(name,"cups-driverd");
+  strcpy(operation,"cat");
+
+  snprintf(datadir,sizeof(datadir),"%s/%s",snap,DATADIR);
+  snprintf(serverdir,sizeof(serverdir),"%s/%s",snap,SERVERBIN);
+  snprintf(cachedir,sizeof(cachedir),"%s",tmpdir);
+
+  setenv("CUPS_DATADIR",datadir,1);
+  setenv("CUPS_SERVERBIN",serverdir,1);
+  setenv("CUPS_CACHEDIR",cachedir,1);
+
+  snprintf(program,sizeof(program),"%s/bin/%s",snap,name);
+  
+  argv[0] = (char*) name;
+  argv[1] = (char*) operation;
+  argv[2] = (char*) ppd_uri;
+  argv[3] = NULL;
+  
+  if((process->pipe = cupsdPipeCommand2(&(process->pid),program,
+                        argv,&errlog,0))==NULL)
+  {
+    debug_printf("ERROR: Unable to execute cups-driverd!\n");
+    free(process);
+    cupsFileClose(errlog);
+    return (-1);
+  }
+  logFromFile2(&logThread,errlog);
+  int counter = print_ppd(process,temp_ppd);
+  if((waitpid(process->pid,&status,0))>0)
+  {
+      if(WIFEXITED(status))
+      {
+        int st =0;
+        // counter = ;
+        // while((st=print_ppd(process,tempPPD))>0) counter++;
+      }
+      pthread_join(logThread,NULL);
+  }
+  else{
+    free(process);
+    cupsFileClose(temp_ppd);
+    return -1;
+  }
+
+  cupsFileClose(temp_ppd);
+  free(process);
+  return 0;
+}
+
+int attach(char* device_uri, char* ppd_uri)
+{
+
+}
+
 void usage(char *arg)
 {
   printf("Usage: %s -(p/d)\n"

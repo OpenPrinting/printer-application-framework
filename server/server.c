@@ -666,7 +666,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
       if(WIFEXITED(status))
       {
         int st =0,counter=0;
-        while((st=print_ppd(process,tempPPD))>0) counter++;
+        counter = print_ppd(process,tempPPD);
+        // while((st=print_ppd(process,tempPPD))>0) counter++;
       }
       pthread_join(logThread,NULL);
   }
@@ -692,14 +693,15 @@ int get_ppd_uri(char* ppd_uri, process_t* backend)
   
 int print_ppd(process_t* backend,cups_file_t *temp)
 {
+  int counter=0;
   char line[2048];
-  if (cupsFileGets(backend->pipe,line,sizeof(line)))
+  while(cupsFileGets(backend->pipe,line,sizeof(line)))
   {
     cupsFilePrintf(temp,"%s\n",line);
-    return 1;
+    counter++;
   }
   cupsFileClose(backend->pipe);
-  return 0;
+  return counter;
 }
 
 int remove_ppd(char* ppd)
