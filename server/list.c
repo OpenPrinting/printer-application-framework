@@ -303,50 +303,109 @@ int getPPDfile(char* ppd_uri, char** ppdfile)
   return 0;
 }
 
-int attach(char* device_uri, char* ppd_uri)
+void attach(char* device_uri, char* ppd_uri,char* name, int port)
 {
+  char *ppdfile;
+  getPPDfile(ppd_uri,&ppdfile);
+  char *argv[14];
+  char program[PATH_MAX];
+  char command[PATH_MAX];
+  char port_string[8];
+  snprintf(program,sizeof(program),"%s/bin/ippeveprinter",snap);
+  snprintf(command,sizeof(command),"%s/bin/ippprint",snap);
+  snprintf(port_string,sizeof(port_string),"%d",port);
+  argv[0] = (char*) program;
+  argv[1] = "-D";
+  argv[2] = (char*) device_uri;
+  argv[3] = "-P";
+  argv[4] = (char*) ppdfile;
+  argv[5] = "-c";
+  argv[6] = (char*) command;
+  argv[7] = "-p";
+  argv[8] = (char*) port_string;
+  argv[9] = (char*) name;
+  argv[10] = NULL;
 
+  setenv("PRINTER",name,1);
+
+  execvp(argv[0],argv);
 }
 
 void usage(char *arg)
 {
   printf("Usage: %s -(p/d)\n"
+   "Usage: %s -D device_uri -P ppd_uri -n port name\n"
    "-p: Print PPDs\n"
-   "-d: Print Available devices\n",arg);
+   "-d: Print Available devices\n",arg,arg);
 }
 int main(int argc, char *argv[])
 {
     initialize();
     int device=0,ppd=0;
-    if(argc!=2)
-    {
-      usage(argv[0]);
-      return -1;
+    if(argc==2){
+      for(int i=1;i<argc;i++)
+      {
+        if(strlen(argv[i])==1){
+          usage(argv[0]);
+          return -1;
+        }
+        if(argv[i][0]!='-'){
+          usage(argv[0]);
+          return -1;
+        }
+        switch(argv[i][1]){
+          case 'p': ppd=1;
+                    break;
+          case 'd': device=1;break;
+          default: printf("Invalid Argument\n");
+                    usage(argv[0]);
+                    return -1;
+        }
+      }
+      if(ppd){
+        printPpdList();
+      }
+      else if(device){
+        printDevices();
+      }
+      else usage(argv[0]);
     }
-    for(int i=1;i<argc;i++)
-    {
-      if(strlen(argv[i])==1){
+    else{
+      char* device_uri=NULL;
+      char* ppd_uri=NULL;
+      int port=-1;
+      char *name=NULL;
+      for(int i=1;i<argc;i++)
+      {
+        if(argv[i][0]=='-'){
+          switch(argv[i][1]){
+            case 'D': device_uri = strdup(argv[i+1]);
+                      i++; break;
+            case 'P': ppd_uri = strdup(argv[i+1]);
+                      i++; break;
+            case 'n': port = atoi(argv[i+1]);
+                      i++; break;
+            default: fprintf(stderr,"Unrecognized option\n");
+                      usage(argv[0]); exit(-1);
+          }
+        }
+        else{
+          if(name) {
+            printf("NML %s\n",name);
+            usage(argv[0]);
+            exit(-1);
+          }
+          else name = strdup(argv[i]);
+        }
+      }
+      printf("%s %s %s %d\n",device_uri,ppd_uri,name,port);
+      if(device_uri && ppd_uri && port &&name){
+        attach(device_uri,ppd_uri,name,port);
+      }
+      else{
         usage(argv[0]);
         return -1;
       }
-      if(argv[i][0]!='-'){
-        usage(argv[0]);
-        return -1;
-      }
-      switch(argv[i][1]){
-        case 'p': ppd=1;
-                  break;
-        case 'd': device=1;break;
-        default: printf("Invalid Argument\n");
-                  usage(argv[0]);
-                  return -1;
-      }
-    }
-    if(ppd){
-      printPpdList();
-    }
-    if(device){
-      printDevices();
     }
     return 0;
 }

@@ -265,7 +265,7 @@ start_backend(const char *name,		/* I - Backend to run */
   * Fill in the rest of the backend information...
   */
 
-  fprintf(stderr, "DEBUG: [deviced] Started backend %s (PID %d)\n",
+  fprintf(stderr, "DEBUG2: [deviced] Started backend %s (PID %d)\n",
           program, backend->pid);
 
   backend_fds[num_backends].fd     = cupsFileNumber(backend->pipe);
@@ -330,6 +330,6 @@ static void sigchld_handler(int sig,siginfo_t *siginfo, void*context)
     }
     else
       fprintf(stderr,
-              "DEBUG: [deviced] PID %d (%s) exited with no errors.\n",
+              "DEBUG2: [deviced] PID %d (%s) exited with no errors.\n",
 	      pid, name);
 }

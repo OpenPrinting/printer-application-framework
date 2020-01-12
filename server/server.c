@@ -784,12 +784,12 @@ int start_ippeveprinter(device_t *dev)
     argv[8] = (char*) pport;
     argv[9] = "-l";
     argv[10] = (char*)location;
-    argv[11] = "-K";
-    argv[12] = (char*)tmpdir;
+    // argv[11] = "-K";
+    // argv[12] = (char*)tmpdir;
     // argv[13] = "-n";
     // argv[14] = strdup("localhost");
-    argv[13]= (char*)make_and_model;
-    argv[14] = NULL;
+    argv[11]= (char*)make_and_model;
+    argv[12] = NULL;
 
     //dup2(1,2);
     char printerlogs[1024];
