@@ -4272,7 +4272,8 @@ fi
 
 
 if test x"$IPPEVEPRINTER" != x"yes";then
-    as_fn_error $? "Please install ippeveprinter from cups package and try again." "$LINENO" 5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Please install ippeveprinter from cups or ippsample package." >&5
+$as_echo "$as_me: WARNING: Please install ippeveprinter from cups or ippsample package." >&2;}
 fi
 # Extract the first word of "cups-driverd", so it can be a program name with args.
 set dummy cups-driverd; ac_word=$2
@@ -4313,7 +4314,8 @@ fi
 
 
 if test x"$CUPS_DRIVERD" != x"yes";then
-    as_fn_error $? "Please install cups-driverd from cups package and try again." "$LINENO" 5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Please install cups-driverd from cups package." >&5
+$as_echo "$as_me: WARNING: Please install cups-driverd from cups package." >&2;}
 fi
 # Checks for libraries.
 

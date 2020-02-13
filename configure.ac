@@ -131,11 +131,11 @@ AC_PROG_CC
 AC_PROG_LN_S
 AC_CHECK_PROG(IPPEVEPRINTER,ippeveprinter,yes,no)
 if test x"$IPPEVEPRINTER" != x"yes";then
-    AC_MSG_ERROR([Please install ippeveprinter from cups package and try again.])
+    AC_MSG_WARN([Please install ippeveprinter from cups or ippsample package.])
 fi
 AC_CHECK_PROG(CUPS_DRIVERD,cups-driverd,yes,no)
 if test x"$CUPS_DRIVERD" != x"yes";then
-    AC_MSG_ERROR([Please install cups-driverd from cups package and try again.])
+    AC_MSG_WARN([Please install cups-driverd from cups package.])
 fi
 # Checks for libraries.
 AC_CHECK_LIB([cups],[cupsAddDest])
