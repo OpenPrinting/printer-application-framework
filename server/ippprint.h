@@ -39,25 +39,25 @@
 #define MAX_TYPES 1000
 #define INFINITY 10000
 #define MAX_PIPES 10
-typedef struct{
+typedef struct {
   char *typename;
   int index;
-}type_t;
+} type_t;
 
-typedef struct{
+typedef struct {
   type_t *src,
-    *dest;
+         *dest;
   char *filter;
   int cost;
-}filter_t;
+} filter_t;
 
-typedef struct{
+typedef struct {
   int num_types;
   cups_array_t **filter_graph;
-}database_t;
+} database_t;
 
-
-int get_ppd_filter_chain(char* user_src,char* user_dest,char *ppdname,cups_array_t **arr);
+int get_ppd_filter_chain(char* user_src, char* user_dest, char *ppdname,
+			 cups_array_t **arr);
 filter_t* filterCopy(filter_t *t);
 
 #endif

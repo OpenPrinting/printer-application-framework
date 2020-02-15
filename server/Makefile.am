@@ -46,7 +46,7 @@ list_LDFLAGS =
 
 DIRECTORIES = $(tmpdir)/ppd \
 	$(datadir)/drv $(datadir)/mime/ $(datadir)/model
-	
+
 DIR2 =	$(cachedir) $(serverbin)/backend $(serverbin)/driver $(serverbin)/filter $(bindir)
 
 # install: $(install) installdirss

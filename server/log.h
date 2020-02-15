@@ -37,8 +37,8 @@
 #include "compression.h"
 
 static int log_fd;
-static int log_level =1;
-static int log_initialized=0;
+static int log_level = 1;
+static int log_initialized = 0;
 
 static char logfile[PATH_MAX];
 
@@ -48,13 +48,15 @@ static char logfile[PATH_MAX];
 static int _getLock(cups_file_t *file, int block);
 static int _releaseLock(cups_file_t *file);
 static int initialize_log();
-static int _debug_log(char *logline,int len);
+static int _debug_log(char *logline, int len);
+int doRotate(char *filename);
 static int rotateLog();
+
 /*
  * Public Functions
  */
 int debug_printf(char* format, ...);
 int logFromFile(cups_file_t *file);
-void logFromFile2(pthread_t *logThread,cups_file_t *file);
+void logFromFile2(pthread_t *logThread, cups_file_t *file);
 
 #endif

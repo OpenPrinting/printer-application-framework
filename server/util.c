@@ -134,18 +134,20 @@ cupsdCompareNames(const char *s,	/* I - First string */
 }
 
 
+#if 0
 /*
  * 'cupsdCreateStringsArray()' - Create a CUPS array of strings.
  */
 
-// cups_array_t *				/* O - CUPS array */
-// cupsdCreateStringsArray(const char *s)	/* I - Comma-delimited strings */
-// {
-//   if (!s || !*s)
-//     return (NULL);
-//   else
-//     return (_cupsArrayNewStrings(s, ','));
-// }
+cups_array_t *				/* O - CUPS array */
+cupsdCreateStringsArray(const char *s)	/* I - Comma-delimited strings */
+{
+  if (!s || !*s)
+    return (NULL);
+  else
+    return (_cupsArrayNewStrings(s, ','));
+}
+#endif
 
 
 /*
@@ -294,8 +296,8 @@ cupsdPipeCommand(int        *pid,	/* O - Process ID or 0 on error */
     * Child comes here...
     */
 
-    // if (!getuid() && user)
-    //   setuid(user);			/* Run as restricted user */
+    /*if (!getuid() && user)
+      setuid(user);*/			/* Run as restricted user */
 
     if ((fd = open("/dev/null", O_RDONLY)) > 0)
     {
@@ -620,8 +622,8 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
     * Child comes here...
     */
 
-    // if (!getuid() && user)
-    //   setuid(user);			/* Run as restricted user */
+    /*if (!getuid() && user)
+      setuid(user);*/			/* Run as restricted user */
 
     if ((fd = open("/dev/null", O_RDONLY)) > 0)
     {
@@ -683,19 +685,21 @@ strlcpy(char       *dst,		/* O - Destination string */
   return (srclen);
 }
 
+#if 0
 /*
  * '_cups_strcpy()' - Copy a string allowing for overlapping strings.
  */
 
-// void
-// _cups_strcpy(char       *dst,		/* I - Destination string */
-//              const char *src)		/* I - Source string */
-// {
-//   while (*src)
-//     *dst++ = *src++;
+void
+_cups_strcpy(char       *dst,		/* I - Destination string */
+             const char *src)		/* I - Source string */
+{
+  while (*src)
+    *dst++ = *src++;
 
-//   *dst = '\0';
-// }
+  *dst = '\0';
+}
+#endif
 
 char *strrev(char *str)
 {
