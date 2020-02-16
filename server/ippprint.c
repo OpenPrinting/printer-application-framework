@@ -130,17 +130,26 @@ static int getFilterPaths(cups_array_t *filter_chain,
   return 0;
 }
 
+#if 0
 /*
+ * This is a dummy function as of now. If we need to set options for
+ * the printer application filters, we can set environment variable
+ * in the server utility and ippprint can use those environment
+ * variable to construct the options array for the filters.
+ *
  * createOptionsArray() - Create Options array from env variables.
  * 
  * Returns:
  * 0  - Success
  * !0 - Error
  */
+
 static int createOptionsArray(char *op) { /*O-*/
   sprintf(op, "h");
   return 0;
 }
+
+#endif
 
 /*
  * executeCommand() - Execute a filter
