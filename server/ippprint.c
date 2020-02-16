@@ -444,8 +444,16 @@ static int print_document(char *scheme, char *uri, char *filename) {
   return 0;
 }
 
-static int delete_temp_file(char *filename) {
-  /*return unlink(filename);*/
+static int delete_temp_file(char *filename)
+{
+  int debug_level=1;
+  if(getenv("DEBUG_LEVEL"))
+  {
+    debug_level = atoi(getenv("DEBUG_LEVEL"));
+  }
+  if(debug_level < 2)
+    return unlink(filename);
+
   return 0;
 }
 
