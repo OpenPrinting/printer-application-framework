@@ -283,10 +283,12 @@ static filter_t* getFilter(int src_index, int dest_index) {
   return NULL;
 }
 
-static int dijkstra(int src_index, int dest_index, cups_array_t *arr) {
-  debug_printf("DEBUG: Starting Dijkstra: %d -> %d\n", src_index, dest_index);
-  if (src_index == dest_index) {
-    arr = NULL;
+static int getMinCostConversion(int src_index,int dest_index,cups_array_t *arr)
+{
+  debug_printf("DEBUG: Starting Dijkstra: %d -> %d\n",src_index,dest_index);
+  if(src_index==dest_index)
+  {
+    arr=NULL;
     return 0;
   }
   int i = 0, j = 0;         /* Iterators */
@@ -357,11 +359,11 @@ static int get_filter_chain(char* user_src, char* user_dest,
     return -1;
   }
 
-  *arr = cupsArrayNew(NULL, NULL);
-  temp = cupsArrayNew(NULL, NULL);
-
-  int ret = dijkstra(src_index, dest_index, temp);
-  if (ret < 0) {
+  *arr = cupsArrayNew(NULL,NULL);
+  temp = cupsArrayNew(NULL,NULL);
+  
+  int ret = getMinCostConversion(src_index,dest_index,temp);
+  if(ret<0) {
     debug_printf("ERROR: Unable to find a filter chain!\n");
     return -1;
   }

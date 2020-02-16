@@ -13,7 +13,7 @@
 #include "log.h"
 
 /*
- *  getLock(char*) - Get lock of a file
+ *  _getLock(cups_file_t* file, int block) - Get lock of a file
  *  Returns - 
  *  0 - Success
  *  -1  - Error.
@@ -23,7 +23,7 @@ static int _getLock(cups_file_t *file, int block) {
 }
 
 /*
- *  _releaseLock(filename, fd) - Release lock on file-filename
+ *  _releaseLock(cups_file_t* ) - Release lock on file-filename
  *  Returns-
  *  0 - Success
  *  -1 - Error

@@ -116,5 +116,6 @@ int start_ippeveprinter(device_t *dev);
 int getport();
 static int kill_ippeveprinter(pid_t pid);
 int kill_listeners();
+void cleanup();
 
 #endif

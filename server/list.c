@@ -302,7 +302,23 @@ int getPPDfile(char* ppd_uri, char** ppdfile) {
   return 0;
 }
 
-void attach(char* device_uri, char* ppd_uri,char* name, int port) {
+int verifyDeviceExist(char *device_uri)
+{
+  deviceList();
+  device_t* dev=cupsArrayFirst(con_devices);
+  for(;dev;dev=cupsArrayNext(con_devices))
+  {
+    if(!strncmp(dev->device_uri,device_uri,strlen(dev->device_uri)))
+      return 1;
+  }
+  return 0;
+}
+
+int attach(char* device_uri, char* ppd_uri,char* name, int port) {
+  if(!verifyDeviceExist(device_uri))
+  {
+    return -1;
+  }
   char *ppdfile;
   getPPDfile(ppd_uri, &ppdfile);
 

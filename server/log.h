@@ -58,6 +58,7 @@ static int rotateLog();
 char* logdirname();
 int debug_printf(char* format, ...);
 int logFromFile(cups_file_t *file);
-void logFromFile2(pthread_t *logThread, cups_file_t *file);
-
+void logFromFile2(pthread_t *logThread,cups_file_t *file);
+int logFromFd(pthread_t *logger, int fd);
+int doRotate(char *filename);
 #endif
