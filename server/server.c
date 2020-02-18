@@ -752,9 +752,10 @@ int start_ippeveprinter(device_t *dev) {
     argv[11] = (char*)make_and_model;
     argv[12] = NULL;
 
+    char *logdir = logdirname();
     /*dup2(1, 2);*/
     char printerlogs[1024];
-    snprintf(printerlogs, sizeof(printerlogs), "%s/printer.logs", tmpdir);
+    snprintf(printerlogs, sizeof(printerlogs), "%s/printer.logs", logdir);
     /*int logfd = open(printerlogs, O_CREAT,
 		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     close(logfd);

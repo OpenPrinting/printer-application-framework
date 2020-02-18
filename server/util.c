@@ -630,8 +630,6 @@ cupsdPipeCommand2(int        *pid,	/* O - Process ID or 0 on error */
       dup2(fd, 0);			/* </dev/null */
       close(fd);
     }
-    char logs[1024];
-    char *tmpdir;
 
     dup2(erfd[1],2);      /* 2> err */
     close(erfd[1]);

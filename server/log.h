@@ -55,6 +55,7 @@ static int rotateLog();
 /*
  * Public Functions
  */
+char* logdirname();
 int debug_printf(char* format, ...);
 int logFromFile(cups_file_t *file);
 void logFromFile2(pthread_t *logThread, cups_file_t *file);

@@ -3163,6 +3163,11 @@ cat >>confdefs.h <<_ACEOF
 #define SERVERBIN "$CUPS_SERVERBIN"
 _ACEOF
 
+
+cat >>confdefs.h <<_ACEOF
+#define SERVERROOT "$CUPS_SERVERBIN"
+_ACEOF
+
 echo "$CUPS_STATIC"
 
 

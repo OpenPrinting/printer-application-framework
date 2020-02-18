@@ -3,7 +3,8 @@
 
 void initialize() {
   char filename[PATH_MAX];
-  snprintf(filename, PATH_MAX - 1, "%s/config/framework.config", tmpdir);
+  snprintf(filename, PATH_MAX - 1, "%s/%s/framework.config",
+	   snap, SERVERROOT);
   cups_file_t* config = cupsFileOpen(filename, "r");
   if (config == NULL) {
     fprintf(stderr, "Unable to open configuration file!\n");
@@ -81,10 +82,17 @@ int main(int argc, char* argv[]) {
   else
     snap = strdup("");
 
-  if (getenv("SNAP_COMMON"))
-    tmpdir = strdup(getenv("SNAP_COMMON"));
-  else
-    tmpdir = strdup("/var/tmp");
+  char *p = getenv("SNAP_COMMON");
+  if (p) {
+    tmpdir = calloc(strlen(p) + 5, sizeof(char));
+    snprintf(tmpdir, sizeof(tmpdir), "%s/tmp", p);
+  } else {
+    p = getenv("TMPDIR");
+    if (p)
+      tmpdir = strdup(p);
+    else
+      tmpdir = strdup("/tmp");
+  }
 
   initialize();
   

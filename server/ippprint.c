@@ -29,10 +29,17 @@ static int getUserId(const char *username) {
 }
 
 void ini() {
-  if (getenv("SNAP_COMMON"))
-    tmpdir = strdup(getenv("SNAP_COMMON"));
-  else
-    tmpdir = strdup("/var/tmp");
+  char *p = getenv("SNAP_COMMON");
+  if (p) {
+    tmpdir = calloc(strlen(p) + 5, sizeof(char));
+    snprintf(tmpdir, sizeof(tmpdir), "%s/tmp", p);
+  } else {
+    p = getenv("TMPDIR");
+    if (p)
+      tmpdir = strdup(p);
+    else
+      tmpdir = strdup("/tmp");
+  }
 }
 
 /*
