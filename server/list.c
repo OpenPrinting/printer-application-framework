@@ -9,7 +9,7 @@ void initialize() {
   if (getenv("SNAP")) {
     snap = strdup(getenv("SNAP"));
   } else
-     snap = strdup("");
+    snap = strdup("");
 
   if (getenv("SNAP_COMMON"))
     tmpdir = strdup(getenv("SNAP_COMMON"));
@@ -155,7 +155,7 @@ int ppdList() {
   setenv("CUPS_SERVERBIN", serverdir, 1);
   setenv("CUPS_CACHEDIR", cachedir, 1);
 
-  snprintf(program, sizeof(program), "%s/bin/%s", snap, name);
+  snprintf(program, sizeof(program), "%s/daemon/%s", serverdir, name);
 
   argv[0] = (char*) name;
   argv[1] = (char*) operation;
@@ -246,15 +246,15 @@ int getPPDfile(char* ppd_uri, char** ppdfile) {
   strcpy(name, "cups-driverd");
   strcpy(operation, "cat");
 
-  snprintf(datadir, sizeof(datadir), "%s/%s", snap,DATADIR);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap,SERVERBIN);
+  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
   snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
   setenv("CUPS_DATADIR", datadir, 1);
   setenv("CUPS_SERVERBIN", serverdir, 1);
   setenv("CUPS_CACHEDIR", cachedir, 1);
 
-  snprintf(program, sizeof(program), "%s/bin/%s", snap, name);
+  snprintf(program, sizeof(program), "%s/daemon/%s", serverdir, name);
   
   argv[0] = (char*) name;
   argv[1] = (char*) operation;
@@ -298,8 +298,8 @@ void attach(char* device_uri, char* ppd_uri,char* name, int port) {
   char command[PATH_MAX];
   char port_string[8];
 
-  snprintf(program, sizeof(program), "%s/bin/ippeveprinter", snap);
-  snprintf(command, sizeof(command), "%s/bin/ippprint", snap);
+  snprintf(program, sizeof(program), "%s/%s/ippeveprinter", snap, SBINDIR);
+  snprintf(command, sizeof(command), "%s/%s/ippprint", snap, BINDIR);
   snprintf(port_string, sizeof(port_string), "%d", port);
   argv[0] = (char*) program;
   argv[1] = "-D";

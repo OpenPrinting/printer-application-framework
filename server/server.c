@@ -558,7 +558,7 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   setenv("CUPS_CACHEDIR", cachedir, 1);
   /*if((serverbin = getenv("SERVERBIN")) == NULL)
     serverbin = CUPS_SERVERBIN;*/
-  snprintf(program, sizeof(program), "%s/bin/%s", snap, name);
+  snprintf(program, sizeof(program), "%s/daemon/%s", serverdir, name);
 
   argv[0] = (char*) name;
   argv[1] = (char*) operation;
@@ -711,7 +711,7 @@ int start_ippeveprinter(device_t *dev) {
 
     setenv("PRINTER", dev->device_make_and_model, 1);
 
-    snprintf(name, sizeof(name), "%s/bin/ippeveprinter", snap);
+    snprintf(name, sizeof(name), "%s/%s/ippeveprinter", snap, SBINDIR);
     if(dev == NULL)
       exit(1);
     if(dev->device_uri)
@@ -720,7 +720,7 @@ int start_ippeveprinter(device_t *dev) {
       snprintf(ppd, sizeof(ppd), "%s", dev->ppd);
     snprintf(pport, sizeof(pport), "%d", getport());
 
-    snprintf(command, sizeof(command), "%s/bin/ippprint", snap);
+    snprintf(command, sizeof(command), "%s/%s/ippprint", snap, BINDIR);
     snprintf(location, sizeof(location),
 	     "Printer Application, Original Device Info: %s",
 	     dev->device_info);

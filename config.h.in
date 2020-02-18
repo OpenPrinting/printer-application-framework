@@ -156,6 +156,9 @@
 /* prefix */
 #undef PREFIX
 
+/* sbindir */
+#undef SBINDIR
+
 /* serverbin */
 #undef SERVERBIN
 

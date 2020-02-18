@@ -48,13 +48,14 @@ if test "x$tmpdir" = "x";then
 fi
 
 bindir="$exec_prefix/bin"
-# sbindir="$exec_prefix"
+sbindir="$exec_prefix/sbin"
 # AC_DEFINE([EXEC_PREFIX],[],[EXEC prefix])
 # AC_DEFINE([PREFIX],[],[prefix])
 # AC_DEFINE([DATADIR],[],[datadir])
 # AC_DEFINE([CACHEDIR],[],[cachedir])
 # AC_DEFINE([SERVERBIN],[],[serverbin])
 # AC_DEFINE([BINDIR],[],[bindir])
+# AC_DEFINE([SBINDIR],[],[sbindir])
 # AC_DEFINE([TMPDIR],[],[tmpdir])
 
 AC_DEFINE_UNQUOTED([EXEC_PREFIX],["$exec_prefix"],[exec prefix])
@@ -63,7 +64,8 @@ AC_DEFINE_UNQUOTED([PREFIX],["$prefix"],[prefix])
 AC_DEFINE_UNQUOTED([CACHEDIR],["$cachedir"],[cachedir])
 # AC_DEFINE_UNQUOTED([SERVERBIN],["$serverbin"],[serverbin])
 AC_DEFINE_UNQUOTED([BINDIR],["$bindir"],[bindir])
-AC_DEFINE_UNQUOTED([TMPDIR],["/home/dj/tmpp"],[temp dir])
+AC_DEFINE_UNQUOTED([SBINDIR],["$sbindir"],[sbindir])
+AC_DEFINE_UNQUOTED([TMPDIR],["$tmpdir"],[temp dir])
 
 # echo "$serverbin"
 AC_SUBST([serverbin])

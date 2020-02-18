@@ -2961,13 +2961,14 @@ if test "x$tmpdir" = "x";then
 fi
 
 bindir="$exec_prefix/bin"
-# sbindir="$exec_prefix"
+sbindir="$exec_prefix/sbin"
 # AC_DEFINE([EXEC_PREFIX],[],[EXEC prefix])
 # AC_DEFINE([PREFIX],[],[prefix])
 # AC_DEFINE([DATADIR],[],[datadir])
 # AC_DEFINE([CACHEDIR],[],[cachedir])
 # AC_DEFINE([SERVERBIN],[],[serverbin])
 # AC_DEFINE([BINDIR],[],[bindir])
+# AC_DEFINE([SBINDIR],[],[sbindir])
 # AC_DEFINE([TMPDIR],[],[tmpdir])
 
 
@@ -2994,7 +2995,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define TMPDIR "/home/dj/tmpp"
+#define SBINDIR "$sbindir"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define TMPDIR "$tmpdir"
 _ACEOF
 
 
