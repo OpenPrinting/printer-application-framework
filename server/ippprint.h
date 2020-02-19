@@ -1,7 +1,7 @@
 /*
  *  Printer Application Framework.
- * 
- *  ippprint script is executed by the ippeveprinter. This script is 
+ *
+ *  ippprint program is executed by the ippeveprinter. This program is
  *  responsible for applying the filter chain and sending the job to
  *  the backend.
  *

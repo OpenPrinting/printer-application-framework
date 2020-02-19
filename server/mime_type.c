@@ -1,7 +1,7 @@
 /*
  *  Printer Application Framework.
  * 
- *  This is the helper code of the ippprint script. This code is responsible
+ *  This is the helper code of the ippprint program. This code is responsible
  *  for determining the filter chain.
  *
  *  Copyright 2019 by Dheeraj.
