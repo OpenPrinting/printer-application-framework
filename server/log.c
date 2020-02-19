@@ -86,9 +86,8 @@ static int initialize_log() {
   log_initialized = 1;
   if (logfd < 0) {
     if (errno != EEXIST) {
-      fprintf(stderr, "ERROR: Unable to Initialize Debugging!\n");
-      fprintf(stderr, "ERROR: Unable to open log file\n");
-      fprintf(stderr, "ERROR: Logging to stderr\n");
+      fprintf(stderr, "WARNING: Unable to open log file\n");
+      fprintf(stderr, "WARNING: Logging to stderr\n");
       logfile[0] = '\0';
       log_initialized = 2;
     }
