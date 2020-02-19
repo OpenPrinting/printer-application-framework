@@ -310,16 +310,19 @@ error:
  * !0 - Error
  */
 static int getDeviceScheme(char **device_uri_out, char *scheme, int schemelen) {
-  char *device_uri = strdup(getenv("DEVICE_URI"));
-  /*char *device_uri =
-    strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");*/
-  debug_printf("DEVICE_URI: %s\n", device_uri);
-
+  char *device_uri = NULL;
   int i;
   char userpass[256],		/* username:password (unused) */
        host[256],		/* Hostname or IP address */
        resource[256];		/* Resource path */
   int	port;			/* Port number */
+
+  char *p = getenv("DEVICE_URI");
+  if (p)
+    device_uri = strdup(p);
+  /*device_uri =
+    strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");*/
+  debug_printf("DEVICE_URI: %s\n", device_uri);
 
   if (device_uri == NULL) {
     *device_uri_out = NULL;
@@ -427,25 +430,32 @@ int main(int argc, char *argv[]) {
   char *content_type = NULL;
   char finalFile[1024];
   /*fprintf(stderr, "WTF???\n");*/
-  getDeviceScheme(&device_uri, device_scheme, sizeof(device_scheme));
+  if (getDeviceScheme(&device_uri, device_scheme, sizeof(device_scheme)) != 0) {
+    debug_printf("ERROR: No device URI supplied via DEVICE_URI environment variable\n");
+    return -1;
+  }
   setenv("DEVICE_URI", device_uri, 1);
   debug_printf("DEBUG: Device_scheme: %s %s\n", device_scheme, device_uri);
   
   char **s = environ;
   int isPPD = 1, isOut = 1;
   for (; *s; ) {
-    debug_printf("%s\n", *s);
+    debug_printf("DEBUG2: %s\n", *s);
     s = (s + 1);
   }
   
-  if (argc != 2)
+  if (argc != 2) {
+    debug_printf("ERROR: No input file name supplied! Usage: ippprint FILE\n");
     return -1;
+  }
 
   /*exit(0);*/
   char *inputFile = strdup(argv[1]); /* Input File */
 
-  if (getenv("CONTENT_TYPE") == NULL)
-    exit(0);
+  if (getenv("CONTENT_TYPE") == NULL) {
+    debug_printf("ERROR: Environment variable CONTENT_TYPE not set!\n");
+    return 0;
+  }
   if (getenv("PPD") == NULL)
     isPPD = 0;
   if (getenv("OUTPUT_TYPE") == NULL)
