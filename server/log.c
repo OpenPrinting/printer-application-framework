@@ -60,6 +60,7 @@ char* logdirname() {
  *  0   - Success
  */
 static int initialize_log() {
+  if (log_initialized == 2) return 0;
   char *logdir = logdirname();
   char *logname = strdup((getenv("LOG_NAME") ?
 			  getenv("LOG_NAME") : "logs.txt"));
@@ -82,15 +83,18 @@ static int initialize_log() {
     fprintf(stderr,"Initializing Debugging!\n");
   int logfd = open(logfile, O_CREAT | O_WRONLY | O_EXCL,
 		   S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  log_initialized = 1;
   if (logfd < 0) {
     if (errno != EEXIST) {
       fprintf(stderr, "ERROR: Unable to Initialize Debugging!\n");
-      fprintf(stderr, "ERROR: Unable to open log file");
-      return -1;
+      fprintf(stderr, "ERROR: Unable to open log file\n");
+      fprintf(stderr, "ERROR: Logging to stderr\n");
+      logfile[0] = '\0';
+      log_initialized = 2;
     }
-  } else
+  } else {
     close(logfd);
-  log_initialized = 1;
+  }
   return 0;
 }
 
@@ -117,8 +121,12 @@ int debug_printf(char *format, ...) {
     message_level = 2;
   else if(!strncmp(logline, "DEBUG2:", 7))
     message_level = 3;
-  if (message_level <= log_level)
-    res = _debug_log(logline, sizeof(logline));
+  if (message_level <= log_level) {
+    if (logfile[0] != '\0')
+      res = _debug_log(logline, sizeof(logline));
+    else
+      fprintf(stderr, "%s", logline);
+  }
   return res;
 }
 
