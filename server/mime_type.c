@@ -211,16 +211,19 @@ static void readDir(char* dirname, int read_convo) {
 }
 
 static void load_convs(int read_convo) {
-  char mime_dir[1124];
-  char cups_datadir[1024];
-  
-  if (getenv("SNAP"))
-    snprintf(cups_datadir, sizeof(cups_datadir), "%s/usr/share/cups",
-	     getenv("SNAP"));
-  else
-    strncpy(cups_datadir, "/usr/share/cups/", sizeof(cups_datadir));
-  snprintf(mime_dir, sizeof(mime_dir), "%s/mime/", cups_datadir);
-  debug_printf("DEBUG: READING DIR %s\n", mime_dir);
+  char mime_dir[1024];
+  char *datadir, *snap;
+
+  datadir = getenv("CUPS_DATADIR");
+  if (datadir == NULL) {
+    if ((snap = getenv("SNAP")) == NULL)
+      snap = "";
+    datadir = "/usr/share/cups";
+  } else
+    snap = "";
+
+  snprintf(mime_dir, sizeof(mime_dir), "%s%s/mime/", snap, datadir);
+  debug_printf("DEBUG: Reading directory %s\n", mime_dir);
   readDir(mime_dir, read_convo);
 }
 

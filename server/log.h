@@ -40,7 +40,7 @@ static int log_fd;
 static int log_level = 1;
 static int log_initialized = 0;
 
-static char logfile[PATH_MAX];
+static char logfile[PATH_MAX] = "";
 
 /*
  *  Private Functions

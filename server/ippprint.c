@@ -45,7 +45,7 @@ void ini() {
 /*
  * getFilterPath() - Get path to required filter.
  * 
- * It checks for filters int SERVERBIN/filter folder and its sub directories
+ * It checks for filters in SERVERBIN/filter folder and its sub directories
  * up to a depth 1. This allows us to create a symbolic link in
  * SERVERBIN/filter to CUPS filter directories.
  * 
@@ -61,8 +61,16 @@ static int getFilterPath(char *in, char **out) {
   char path[2048];
   cups_dir_t* dir;
   cups_dentry_t* dent;
+  char *serverbin, *snap;
 
-  snprintf(path, sizeof(path), "%s/filter/%s", getenv("CUPS_SERVERBIN"), in);
+  serverbin = getenv("CUPS_SERVERBIN");
+  if (serverbin == NULL) {
+    if ((snap = getenv("SNAP")) == NULL)
+      snap = "";
+    serverbin = "/usr/lib/cups";
+  } else
+    snap = "";
+  snprintf(path, sizeof(path), "%s%s/filter/%s", snap, serverbin, in);
       /* Check if we can directly access filter */
 
   if ((access(path, F_OK | X_OK) != -1) && fileCheck(path)) {
@@ -70,13 +78,13 @@ static int getFilterPath(char *in, char **out) {
     return 0;
   }
 
-  snprintf(path, sizeof(path), "%s/filter", getenv("CUPS_SERVERBIN"));
+  snprintf(path, sizeof(path), "%s%s/filter", snap, serverbin);
   dir = cupsDirOpen(path);
 
   while ((dent = cupsDirRead(dir))) { /*Check only upto one level*/
     char *filename = dent->filename;
     if (S_ISDIR(dent->fileinfo.st_mode)) {
-      snprintf(path, sizeof(path), "%s/filter/%s/%s", getenv("CUPS_SERVERBIN"),
+      snprintf(path, sizeof(path), "%s%s/filter/%s/%s", snap, serverbin,
 	       filename, in);
       if ((access(path, F_OK | X_OK) != -1) && fileCheck(path)) {
         *out = strdup(path);
@@ -108,9 +116,9 @@ static int getFilterPaths(cups_array_t *filter_chain,
   filter_t *currFilter;
 
   for (currFilter = cupsArrayFirst(filter_chain); currFilter;
-       currFilter=cupsArrayNext(filter_chain)) {
+       currFilter = cupsArrayNext(filter_chain)) {
     in = currFilter->filter;
-    if (strncmp(in, "-", 1) == 0)    /* Empty filter */
+    if (strcmp(in, "-") == 0)    /* Empty filter */
       continue;
     if (getFilterPath(in, &out) == -1)
       return -1;
@@ -147,7 +155,7 @@ static pid_t executeCommand(int inPipe, int outPipe, filter_t *filter, int i) {
   pid_t pid;
   char *filename = filter->filter;
 
-  debug_printf("DEBUG2: Executing Command: %s\n", filename);
+  debug_printf("DEBUG: Executing Command: %s\n", filename);
   if ((pid = fork()) < 0)
     return -1;
   else if (pid == 0) {
@@ -322,7 +330,7 @@ static int getDeviceScheme(char **device_uri_out, char *scheme, int schemelen) {
     device_uri = strdup(p);
   /*device_uri =
     strdup("\"hp:/usb/OfficeJet_Pro_6960?serial=TH6CL621KN\"");*/
-  debug_printf("DEVICE_URI: %s\n", device_uri);
+  debug_printf("DEBUG: DEVICE_URI env variable: %s\n", device_uri);
 
   if (device_uri == NULL) {
     *device_uri_out = NULL;
@@ -330,12 +338,15 @@ static int getDeviceScheme(char **device_uri_out, char *scheme, int schemelen) {
     return -1;
   }
 
-  device_uri[strlen(device_uri) - 1] = 0;     /* Remove last \" */
+  if (device_uri[strlen(device_uri) - 1] == '\"')
+    device_uri[strlen(device_uri) - 1] = '\0';     /* Remove last \" */
 
-  for (i = 0; i < strlen(device_uri); i++)    /* Remove first \" */
-    device_uri[i]=device_uri[i+1];
+  if (device_uri[0] == '\"')
+    for (i = 0; i < strlen(device_uri); i++)       /* Remove first \" */
+      device_uri[i]=device_uri[i+1];
 
   *device_uri_out = device_uri;
+  debug_printf("DEBUG: Device URI to be used: %s\n", *device_uri_out);
 
   if (httpSeparateURI(HTTP_URI_CODING_ALL, device_uri, scheme, schemelen, 
 		      userpass, sizeof(userpass), host, sizeof(host), &port,
@@ -352,9 +363,18 @@ static int print_document(char *scheme, char *uri, char *filename) {
   char backend[2048];
   pid_t pid;
   int status;
+  char *serverbin, *snap;
 
-  snprintf(backend, sizeof(backend), "%s/backend/%s",
-	   getenv("CUPS_SERVERBIN"), scheme);
+  serverbin = getenv("CUPS_SERVERBIN");
+  if (serverbin == NULL) {
+    if ((snap = getenv("SNAP")) == NULL)
+      snap = "";
+    serverbin = "/usr/lib/cups";
+  } else
+    snap = "";
+
+  snprintf(backend, sizeof(backend), "%s%s/backend/%s",
+	   snap, serverbin, scheme);
   debug_printf("DEBUG: Backend: %s %s\n", backend, uri);
 
   /*
@@ -373,23 +393,43 @@ static int print_document(char *scheme, char *uri, char *filename) {
   } else if (pid == 0) {
     char userid[64];
     int uid;
-    uid = getUserId(getenv("IPP_JOB_ORIGINATING_USER_NAME"));
+    char *job_user, *job_id, *job_name, *job_copies;
+    job_user = getenv("IPP_JOB_ORIGINATING_USER_NAME");
+    job_id = getenv("IPP_JOB_ID");
+    job_name = getenv("IPP_JOB_NAME");
+    job_copies = getenv("IPP_COPIES_DEFAULT");
+    if (job_user)
+      uid = getUserId(job_user);
+    else {
+      debug_printf("DEBUG: IPP_JOB_ORIGINATING_USER_NAME not supplied, using 1000\n");
+      uid = 1000;
+    }
     snprintf(userid, sizeof(userid), "%d", (uid < 0 ? 1000 : uid));
-
+    if (job_id == NULL) {
+      debug_printf("DEBUG: IPP_JOB_ID not supplied, using 1\n");
+      job_id = strdup("1");
+    }
+    if (job_name == NULL) {
+      debug_printf("DEBUG: IPP_JOB_NAME not supplied, using \"Untitled\"\n");
+      job_name = strdup("Untitled");
+    }
+    if (job_copies == NULL) {
+      debug_printf("DEBUG: IPP_COPIES_DEFAULT not supplied, using 1\n");  
+      job_copies = strdup("1");
+    }
     debug_printf("DEBUG: Executing backend: %s %s %s %s %s %s\n",
-		 uri, getenv("IPP_JOB_ID"), userid,
-		 getenv("IPP_JOB_NAME"), getenv("IPP_COPIES_DEFAULT"),
+		 uri, job_id, userid, job_name, job_copies,
 		 filename);
     char *argv[10];
     argv[0] = strdup(uri);
-    argv[1] = strdup(getenv("IPP_JOB_ID"));         /* Job ID */
+    argv[1] = strdup(job_id);                       /* Job ID */
     argv[2] = strdup(userid);                       /* User ID */
-    argv[3] = strdup(getenv("IPP_JOB_NAME"));       /* Title */
-    argv[4] = strdup(getenv("IPP_COPIES_DEFAULT")); /* Copies */
+    argv[3] = strdup(job_name);                     /* Title */
+    argv[4] = strdup(job_copies);                   /* Copies */
     argv[5] = strdup("\"\"");                       /* Options */
     argv[6] = strdup(filename);
     argv[7] = NULL;
-    
+
     execvp(backend, argv);
   }
 
@@ -424,6 +464,11 @@ void testApplyFilterChain() {
 int main(int argc, char *argv[]) {
   ini();
   setenv("LOG_NAME", "ippprint.txt", 1);
+  char **s = environ;
+  for (; *s; ) {
+    debug_printf("DEBUG: %s\n", *s);
+    s = (s + 1);
+  }
   char device_scheme[32], *device_uri;
   char *ppdname = NULL;
   char *output_type = NULL;
@@ -437,13 +482,8 @@ int main(int argc, char *argv[]) {
   setenv("DEVICE_URI", device_uri, 1);
   debug_printf("DEBUG: Device_scheme: %s %s\n", device_scheme, device_uri);
   
-  char **s = environ;
   int isPPD = 1, isOut = 1;
-  for (; *s; ) {
-    debug_printf("DEBUG2: %s\n", *s);
-    s = (s + 1);
-  }
-  
+
   if (argc != 2) {
     debug_printf("ERROR: No input file name supplied! Usage: ippprint FILE\n");
     return -1;
@@ -488,7 +528,7 @@ int main(int argc, char *argv[]) {
 				 &filter_chain);
 
   if (res < 0) {
-    debug_printf("ERROR: Unable to find required filters");
+    debug_printf("ERROR: Unable to create filter chain!\n");
     exit(-1);
   }
   debug_printf("DEBUG: Filter Chain for the job:\n");
@@ -502,7 +542,7 @@ int main(int argc, char *argv[]) {
   }
   for (paths = cupsArrayFirst(filterfullname); paths;
        paths = cupsArrayNext(filterfullname))
-    debug_printf("Filter fn: %s\n", paths->filter);
+    debug_printf("DEBUG: Filter full path: %s\n", paths->filter);
   res = applyFilterChain(filterfullname, inputFile, finalFile,
 			 sizeof(finalFile));
   /*debug_printf("Final File Name: %s\n", finalFile);*/
