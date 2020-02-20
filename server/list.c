@@ -310,6 +310,7 @@ void attach(char* device_uri, char* ppd_uri,char* name, int port) {
   char program[PATH_MAX];
   char command[PATH_MAX];
   char port_string[8];
+  char datadir[1024], serverdir[1024], cachedir[1024];
   char *p;
 
   snprintf(program, sizeof(program), "%s/%s/ippeveprinter", snap, SBINDIR);
@@ -320,17 +321,24 @@ void attach(char* device_uri, char* ppd_uri,char* name, int port) {
     snprintf(command, sizeof(command), "%s/%s/ippprint", snap, BINDIR);
   snprintf(port_string, sizeof(port_string), "%d", port);
   argv[0] = (char*) program;
-  argv[1] = "-D";
-  argv[2] = (char*) device_uri;
-  argv[3] = "-P";
-  argv[4] = (char*) ppdfile;
-  argv[5] = "-c";
-  argv[6] = (char*) command;
-  argv[7] = "-p";
-  argv[8] = (char*) port_string;
-  argv[9] = (char*) name;
-  argv[10] = NULL;
+  argv[1] = "-P";
+  argv[2] = (char*) ppdfile;
+  argv[3] = "-c";
+  argv[4] = (char*) command;
+  argv[5] = "-p";
+  argv[6] = (char*) port_string;
+  argv[7] = (char*) name;
+  argv[8] = NULL;
 
+  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+  snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
+
+  setenv("CUPS_DATADIR", datadir, 1);
+  setenv("CUPS_SERVERBIN", serverdir, 1);
+  setenv("CUPS_CACHEDIR", cachedir, 1);
+
+  setenv("DEVICE_URI", device_uri, 1);
   setenv("PRINTER", name, 1);
 
   execvp(argv[0], argv);
