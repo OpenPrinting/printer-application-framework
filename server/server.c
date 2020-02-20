@@ -706,9 +706,18 @@ int start_ippeveprinter(device_t *dev) {
     char *argv[17];
     char name[2048], device_uri[2048], ppd[1024], make_and_model[512],
          command[1024], pport[8], location[3096];
+    char datadir[1024], serverdir[1024], cachedir[1024];
     char *envp[2];
     char LD_PATH[512];
 
+    snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
+    snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+    snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
+
+    setenv("CUPS_DATADIR", datadir, 1);
+    setenv("CUPS_SERVERBIN", serverdir, 1);
+    setenv("CUPS_CACHEDIR", cachedir, 1);
+    setenv("DEVICE_URI", device_uri, 1);
     setenv("PRINTER", dev->device_make_and_model, 1);
 
     snprintf(name, sizeof(name), "%s/%s/ippeveprinter", snap, SBINDIR);
@@ -733,24 +742,22 @@ int start_ippeveprinter(device_t *dev) {
     printer_name[sizeof(printer_name) - 1] = 0;
     escape_string(make_and_model, printer_name, sizeof(printer_name));
     argv[0] = (char*)name;
-    argv[1] = "-D";
-    argv[2] = (char*)device_uri;
-    argv[3] = "-P";
-    argv[4] = (char*)ppd;
-    argv[5] = "-c";
-    argv[6] = (char*)command;
-    argv[7] = "-p";
-    argv[8] = (char*) pport;
-    argv[9] = "-l";
-    argv[10] = (char*)location;
+    argv[1] = "-P";
+    argv[2] = (char*)ppd;
+    argv[3] = "-c";
+    argv[4] = (char*)command;
+    argv[5] = "-p";
+    argv[6] = (char*)pport;
+    argv[7] = "-l";
+    argv[8] = (char*)location;
 #if 0
-    argv[11] = "-K";
-    argv[12] = (char*)tmpdir;
-    argv[13] = "-n";
-    argv[14] = strdup("localhost");
+    argv[9] = "-K";
+    argv[10] = (char*)tmpdir;
+    argv[11] = "-n";
+    argv[12] = strdup("localhost");
 #endif
-    argv[11] = (char*)make_and_model;
-    argv[12] = NULL;
+    argv[9] = (char*)make_and_model;
+    argv[10] = NULL;
 
     char *logdir = logdirname();
     /*dup2(1, 2);*/
