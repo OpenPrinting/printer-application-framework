@@ -116,7 +116,6 @@ int main(int argc, char* argv[]) {
   /*kill_listeners();*/
 
   while (1) {            /*Infinite loop*/
-    fprintf(stderr, "XXX1\n");
     sleep(10);
     for (int i = 1; i <= 2 * NUM_SIGNALS; i++) {
       int exec = 0;
