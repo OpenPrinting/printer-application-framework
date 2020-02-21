@@ -84,11 +84,13 @@ int monitor_devices(pid_t ppid){
 	    if (!strncasecmp(action, "add", 3) ||
 		!strncasecmp(action, "remove", 6))
 	      send_signal(action, ppid, i+1);
-	    /*const char *devpath = udev_device_get_devpath(dev);*/
-	    /*const char *devtype = udev_device_get_devtype(dev);*/
-	    /*fprintf(stderr,
+#if 0
+	    const char *devpath = udev_device_get_devpath(dev);
+	    const char *devtype = udev_device_get_devtype(dev);
+	    fprintf(stderr,
 		    "Signal Type:%s\tAction:%s\tDevpath:%s\tDevtype:%s\n",
-		    arr[i], action, devpath, devtype);*/
+		    arr[i], action, devpath, devtype);
+#endif
 	  }
 	  udev_device_unref(dev);
 	}
