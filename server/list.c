@@ -89,8 +89,8 @@ int deviceList() {
   if (p)
     snprintf(program, sizeof(program), "%s/%s", p, name);
   else
-    snprintf(program, sizeof(program), "%s/%s/%s", snap, BINDIR, name);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+    snprintf(program, sizeof(program), "%s%s/%s", snap, BINDIR, name);
+  snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
   snprintf(serverroot, sizeof(serverroot), "%s/etc/cups", snap);
   snprintf(datadir, sizeof(datadir), "%s/usr/share/cups", snap);
 
@@ -160,8 +160,8 @@ int ppdList() {
 	   "ppd-make-and-model=\'%s\' ppd-device-id=\'%s\'",
 	   make_and_model, device_id);*/
 
-  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+  snprintf(datadir, sizeof(datadir), "%s%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
   snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
   setenv("CUPS_DATADIR", datadir, 1);
@@ -259,8 +259,8 @@ int getPPDfile(char* ppd_uri, char** ppdfile) {
   strcpy(name, "cups-driverd");
   strcpy(operation, "cat");
 
-  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+  snprintf(datadir, sizeof(datadir), "%s%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
   snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
   setenv("CUPS_DATADIR", datadir, 1);
@@ -313,12 +313,12 @@ void attach(char* device_uri, char* ppd_uri,char* name, int port) {
   char datadir[1024], serverdir[1024], cachedir[1024];
   char *p;
 
-  snprintf(program, sizeof(program), "%s/%s/ippeveprinter", snap, SBINDIR);
+  snprintf(program, sizeof(program), "%s%s/ippeveprinter", snap, SBINDIR);
   p = getenv("BINDIR");
   if (p)
     snprintf(command, sizeof(command), "%s/ippprint", p);
   else
-    snprintf(command, sizeof(command), "%s/%s/ippprint", snap, BINDIR);
+    snprintf(command, sizeof(command), "%s%s/ippprint", snap, BINDIR);
   snprintf(port_string, sizeof(port_string), "%d", port);
   argv[0] = (char*) program;
   argv[1] = "-P";
@@ -330,8 +330,8 @@ void attach(char* device_uri, char* ppd_uri,char* name, int port) {
   argv[7] = (char*) name;
   argv[8] = NULL;
 
-  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+  snprintf(datadir, sizeof(datadir), "%s%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
   snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
   setenv("CUPS_DATADIR", datadir, 1);

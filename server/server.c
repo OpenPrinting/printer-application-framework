@@ -114,6 +114,7 @@ int get_devices(int insert, int signal) {
   char        tempstr[4095];
   char        arr[4][32] = {"dnssd", "usb", "serial", "parallel"};
   cups_file_t *errlog;
+  char *p;
 
   /*cupsArrayClear(temp_devices);*/
   device_t *temp = cupsArrayFirst(temp_devices);
@@ -170,9 +171,13 @@ int get_devices(int insert, int signal) {
   strcpy(user_id, DEVICED_USE);
   strcpy(options, DEVICED_OPT);
 
-  snprintf(program, sizeof(program), "%s/%s/%s", snap, BINDIR, name);
+  p = getenv("BINDIR");
+  if (p)
+    snprintf(program, sizeof(program), "%s/%s", p, name);
+  else
+    snprintf(program, sizeof(program), "%s%s/%s", snap, BINDIR, name);
   /*snprintf(program, sizeof(program), "deviced");*/
-  snprintf(serverdir, sizeof(serverdir),"%s/%s", snap, SERVERBIN);
+  snprintf(serverdir, sizeof(serverdir),"%s%s", snap, SERVERBIN);
   snprintf(serverroot, sizeof(serverroot), "%s/etc/cups", snap);
   snprintf(datadir, sizeof(datadir), "%s/usr/share/cups", snap);
 
@@ -549,8 +554,8 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
 	   make_and_model, device_id);
   /*snprintf(options, sizeof(options), "ppd-make-and-model=\'HP\'");*/
 
-  snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
-  snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+  snprintf(datadir, sizeof(datadir), "%s%s", snap, DATADIR);
+  snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
   snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
   setenv("CUPS_DATADIR", datadir, 1);
@@ -709,9 +714,10 @@ int start_ippeveprinter(device_t *dev) {
     char datadir[1024], serverdir[1024], cachedir[1024];
     char *envp[2];
     char LD_PATH[512];
+    char *p;
 
-    snprintf(datadir, sizeof(datadir), "%s/%s", snap, DATADIR);
-    snprintf(serverdir, sizeof(serverdir), "%s/%s", snap, SERVERBIN);
+    snprintf(datadir, sizeof(datadir), "%s%s", snap, DATADIR);
+    snprintf(serverdir, sizeof(serverdir), "%s%s", snap, SERVERBIN);
     snprintf(cachedir, sizeof(cachedir), "%s", tmpdir);
 
     setenv("CUPS_DATADIR", datadir, 1);
@@ -720,7 +726,7 @@ int start_ippeveprinter(device_t *dev) {
     setenv("DEVICE_URI", device_uri, 1);
     setenv("PRINTER", dev->device_make_and_model, 1);
 
-    snprintf(name, sizeof(name), "%s/%s/ippeveprinter", snap, SBINDIR);
+    snprintf(name, sizeof(name), "%s%s/ippeveprinter", snap, SBINDIR);
     if(dev == NULL)
       exit(1);
     if(dev->device_uri)
@@ -729,7 +735,11 @@ int start_ippeveprinter(device_t *dev) {
       snprintf(ppd, sizeof(ppd), "%s", dev->ppd);
     snprintf(pport, sizeof(pport), "%d", getport());
 
-    snprintf(command, sizeof(command), "%s/%s/ippprint", snap, BINDIR);
+    p = getenv("BINDIR");
+    if (p)
+      snprintf(command, sizeof(command), "%s/ippprint", p);
+    else
+      snprintf(command, sizeof(command), "%s%s/ippprint", snap, BINDIR);
     snprintf(location, sizeof(location),
 	     "Printer Application, Original Device Info: %s",
 	     dev->device_info);
