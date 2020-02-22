@@ -45,7 +45,7 @@ typedef struct {
        device_uri[1024],
        device_location[128],
        device_make_and_model[512],
-       device_id[128];
+       device_id[2048];
   char ppd[1024];
   int eve_pid;
   pthread_t errlog;
