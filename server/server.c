@@ -448,18 +448,24 @@ void add_devices(cups_array_t *con, cups_array_t *temp) {
     if (dev == NULL)
       break;
     if (!cupsArrayFind(con, dev)) {
-      /*fprintf(stderr, "DEBUG: Getting PPD!\n");*/
+      debug_printf("DEBUG: Getting PPD! |%s|%s|%s|\n",
+		   dev->device_make_and_model, dev->device_uri, dev->device_id);
       int ret = get_ppd(ppd, sizeof(ppd), dev->device_make_and_model,
 			sizeof(dev->device_make_and_model),
 			dev->device_id, sizeof(dev->device_id),
 			dev->device_uri);
       if (ret >= 0) {
         strlcpy(dev->ppd, ppd, sizeof(dev->ppd));
-        /*fprintf(stdout, "PPD LOC: %s\n", dev->ppd);*/
+        debug_printf("DEBUG: PPD LOC: %s\n", dev->ppd);
         device_t* newDev = deviceCopy(dev);
         cupsArrayAdd(con, newDev);
-        fprintf(stdout,"DEBUG: Adding Printer: %s\n", newDev->device_uri);
+        debug_printf("DEBUG: Adding Printer: %s\n", newDev->device_uri);
         start_ippeveprinter(newDev);
+      } else {
+	dev->ppd[0] = '\0';
+        debug_printf("DEBUG: PPD not found, not adding this printer!\n");
+	device_t* newDev = deviceCopy(dev);
+	cupsArrayAdd(con, newDev);
       }
     }
   }
@@ -508,10 +514,14 @@ void remove_devices(cups_array_t *con, cups_array_t *temp, char *includes) {
         continue;
     }
     if (cupsArrayFind(temp, dev) == NULL) {
-      remove_ppd(dev->ppd);
-      debug_printf("DEBUG: Removing Printer: %s\n", dev->device_id);
-      kill_ippeveprinter(dev->eve_pid);
-      pthread_join(dev->errlog, NULL);
+      if (dev->ppd[0] != '\0') {
+	remove_ppd(dev->ppd);
+	debug_printf("DEBUG: Removing Printer: %s\n", dev->device_id);
+	kill_ippeveprinter(dev->eve_pid);
+	pthread_join(dev->errlog, NULL);
+      } else
+	debug_printf("DEBUG: Unsupported printer disappeared: %s\n",
+		     dev->device_id);
       cupsArrayRemove(con, dev);
       device_t *tt = dev;   // Do we need this?
       free(tt);
