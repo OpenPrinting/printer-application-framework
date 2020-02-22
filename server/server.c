@@ -602,12 +602,12 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
     }
     pthread_join(logThread,NULL);
   }
-  
+
   strcpy(operation, "cat");
   argv[2] = (char*) ppd_uri;
   argv[3] = NULL;
   argv[4] = NULL;
-  
+
   if ((process->pipe = cupsdPipeCommand2(&(process->pid), program,
 					 argv, &errlog, 0)) == NULL) {
     debug_printf("ERROR: Unable to execute cups-driverd!\n");
@@ -622,8 +622,9 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
   escape_string(escp_model, ppdn, sizeof(ppdn));
   char ppd_folder[2048];
   snprintf(ppd_folder, sizeof(ppd_folder), "%s/ppd", tmpdir);
-  if (mkdir(ppd_folder, 0777) == -1)
-    debug_printf("ERROR: %s\n", strerror(errno));
+  if (mkdir(ppd_folder, 0777) == -1 && errno != EEXIST)
+    debug_printf("ERROR: Cannot create directory %s: %s\n",
+		 ppd_folder, strerror(errno));
   snprintf(ppd_name, sizeof(ppd_name), "%s/ppd/%s.ppd", tmpdir, escp_model);
   cups_file_t* tempPPD;
   if ((tempPPD = cupsFileOpen(ppd_name, "w")) == NULL) {
@@ -631,13 +632,16 @@ get_ppd(char* ppd, int ppd_len,            /* O- */
     free(process);
     return (-1);
   }
+  int counter = print_ppd(process,tempPPD);
 
   if ((process_pid = waitpid(process->pid, &status, 0)) > 0) {
+#if 0
     if (WIFEXITED(status)) {
       int st =0,counter=0;
       counter = print_ppd(process,tempPPD);
       /*while((st = print_ppd(process, tempPPD)) > 0) counter++;*/
     }
+#endif
     pthread_join(logThread, NULL);
   }
 
