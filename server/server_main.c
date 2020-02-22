@@ -116,7 +116,6 @@ int main(int argc, char* argv[]) {
   /*kill_listeners();*/
 
   while (1) {            /*Infinite loop*/
-    sleep(10);
     for (int i = 1; i <= 2 * NUM_SIGNALS; i++) {
       int exec = 0;
       pthread_mutex_lock(&signal_lock);
@@ -129,6 +128,7 @@ int main(int argc, char* argv[]) {
         get_devices(i % 2, i);
     }
     get_devices(2, 0);
+    sleep(10);
   }
   cleanup();
   
