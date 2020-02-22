@@ -693,7 +693,7 @@ int start_ippeveprinter(device_t *dev) {
   pid_t pid = 0, ppid = 0;
   ppid = getpid();
   int pfd[2];
-  
+
   if (pipe(pfd))
     return -1;
 
@@ -708,7 +708,7 @@ int start_ippeveprinter(device_t *dev) {
     close(pfd[1]);
     return -1;
   }
-  
+
   if ((pid = fork()) < 0) {
     close(pfd[0]);
     close(pfd[1]);
@@ -791,10 +791,10 @@ int start_ippeveprinter(device_t *dev) {
 		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     close(logfd);
     logfd = open(printerlogs, O_WRONLY | O_APPEND);*/
-    debug_printf("DEBUG2: EXEC:%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
+    debug_printf("DEBUG: EXEC: %s %s %s %s %s %s %s %s %s %s %s\n",
 		 argv[0], argv[1], argv[2], argv[3], argv[4], argv[5],
-		 argv[6], argv[7], argv[8], argv[9], argv[10], argv[11],
-		 argv[12], argv[13], argv[14], argv[15]);
+		 argv[6], argv[7], argv[8], argv[9], argv[10]
+		 /*, argv[11], argv[12], argv[13], argv[14], argv[15]*/);
     /*if (logfd > 0) {
       dup2(logfd, 2);
       dup2(logfd, 1);
