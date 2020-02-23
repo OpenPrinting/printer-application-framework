@@ -13,6 +13,8 @@
 
 #define PAF_SERVER_H
 
+#define _GNU_SOURCE
+
 #include "log.h"
 #include <config.h>
 #include <cups/file.h>
@@ -23,6 +25,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/prctl.h>
+#include <string.h>
 
 #define MAX_DEVICES 1000
 #define DEVICED_REQ "1"
