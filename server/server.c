@@ -112,7 +112,7 @@ int get_devices(int insert, int signal) {
   char        includes[4096];
   char        isInclude = '+';
   char        tempstr[4095];
-  char        arr[4][32] = {"dnssd", "usb", "serial", "parallel"};
+  char        arr[NUM_SIGNALS][32] = {"dnssd", "usb", "serial", "parallel"};
   cups_file_t *errlog;
   char *p;
 
@@ -133,7 +133,7 @@ int get_devices(int insert, int signal) {
     isInclude = '-';
     includes[0] = isInclude;
     char *cj = &includes[1];
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < NUM_SIGNALS; i++) {
       for (int j = 0; j < strlen(arr[i]); j++, cj++)
 	*cj=arr[i][j];
       *cj = ',';
