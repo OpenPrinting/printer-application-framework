@@ -725,7 +725,7 @@ int start_ippeveprinter(device_t *dev) {
     char *argv[17];
     char name[2048], device_uri[2048], ppd[1024], make_and_model[512],
          command[1024], pport[8], location[3096], service_name[1024],
-      package[64], identifier[128], backend[32], serial[64];
+      package[64], identifier[256], backend[32], serial[64];
     char datadir[1024], serverdir[1024], cachedir[1024];
     char *envp[2];
     char LD_PATH[512];
@@ -762,73 +762,65 @@ int start_ippeveprinter(device_t *dev) {
        that we have multiple printers of the same model */
     p = getenv("PACKAGENAME");
     if (p)
-      snprintf(package, sizeof(package), "%s: ", p); 
+      snprintf(package, sizeof(package), "%s, ", p);
     else
       package[0] = '\0';
 
     service_name[0] = '\0';
-    if (0 && !strncasecmp(dev->device_uri, "dnssd://", 8))
-      snprintf(service_name, sizeof(service_name), "%s%s", package,
-	       dev->device_info);
-    else {
-      s = strchr(dev->device_uri, ':');
-      strlcpy(backend, dev->device_uri, s - dev->device_uri + 1);
-      for (i = 0; i < strlen(backend); i ++)
-	backend[i] = toupper(backend[i]);
-      if ((q = strchr(dev->device_info, '[')) && (r = strchr(q, ']'))
-	  && (len = r - q - 1) > 0)
-	strlcpy(serial, q + 1, len + 1);
-      if (serial[0] == '\0')
-	for (i = 0; ; i ++) {
-	  p = field[i];
-	  if (p == NULL) break;
-	  if ((q = strcasestr(dev->device_uri, p)) != NULL &&
-	      (q == dev->device_uri || *(q - 1) == '?' ||  *(q - 1) == '&') &&
-	      (*(q + strlen(p)) == '=')) {
-	    q += strlen(p) + 1;
-	    len = 0;
-	    if ((r = strchr(q, '&')) || (len = strlen(q))) {
-	      if (r) len = r - q;
-	      if (len > sizeof(serial) - 1)
-		strlcpy(serial, q, sizeof(serial));
-	      else
-		strlcpy(serial, q, len + 1);
-	      break;
-	    }
+    s = strchr(dev->device_uri, ':');
+    strlcpy(backend, dev->device_uri, s - dev->device_uri + 1);
+    for (i = 0; i < strlen(backend); i ++)
+      backend[i] = toupper(backend[i]);
+    if ((q = strchr(dev->device_info, '[')) && (r = strchr(q, ']'))
+	&& (len = r - q - 1) > 0)
+      strlcpy(serial, q + 1, len + 1);
+    if (serial[0] == '\0')
+      for (i = 0; ; i ++) {
+	p = field[i];
+	if (p == NULL) break;
+	if ((q = strcasestr(dev->device_uri, p)) != NULL &&
+	    (q == dev->device_uri || *(q - 1) == '?' ||  *(q - 1) == '&') &&
+	    (*(q + strlen(p)) == '=')) {
+	  q += strlen(p) + 1;
+	  len = 0;
+	  if ((r = strchr(q, '&')) || (len = strlen(q))) {
+	    if (r) len = r - q;
+	    if (len > sizeof(serial) - 1)
+	      strlcpy(serial, q, sizeof(serial));
+	    else
+	      strlcpy(serial, q, len + 1);
+	    break;
 	  }
 	}
-      if (serial[0] == '\0')
-	for (i = 0; ; i ++) {
-	  p = field[i];
-	  if (p == NULL) break;
-	  if ((q = strcasestr(dev->device_id, p)) != NULL &&
-	      (q == dev->device_id || *(q - 1) == ';') &&
-	      (*(q + strlen(p)) == ':')) {
-	    q += strlen(p) + 1;
-	    len = 0;
-	    if ((r = strchr(q, ';')) || (len = strlen(q))) {
-	      if (r) len = r - q;
-	      if (len > sizeof(serial) - 1)
-		strlcpy(serial, q, sizeof(serial));
-	      else
-		strlcpy(serial, q, len + 1);
-	      break;
-	    }
+      }
+    if (serial[0] == '\0')
+      for (i = 0; ; i ++) {
+	p = field[i];
+	if (p == NULL) break;
+	if ((q = strcasestr(dev->device_id, p)) != NULL &&
+	    (q == dev->device_id || *(q - 1) == ';') &&
+	    (*(q + strlen(p)) == ':')) {
+	  q += strlen(p) + 1;
+	  len = 0;
+	  if ((r = strchr(q, ';')) || (len = strlen(q))) {
+	    if (r) len = r - q;
+	    if (len > sizeof(serial) - 1)
+	      strlcpy(serial, q, sizeof(serial));
+	    else
+	      strlcpy(serial, q, len + 1);
+	    break;
 	  }
 	}
-      snprintf(identifier, sizeof(identifier), " [%s%s%s]", backend,
-	       serial[0] ? ":" : "", serial);
-      snprintf(service_name, sizeof(service_name), "%s%s", package,
-	       dev->device_make_and_model);
-      if (63 - strlen(service_name) < strlen(identifier))
-	r = service_name + 63 - strlen(identifier);
-      else
-	r = service_name + strlen(service_name);
-      strlcpy(r, identifier, strlen(identifier) + 1);
-      service_name[63] = '\0';
-    }
-    fprintf(stderr, "XXX10 |%s|\n", service_name);
-
+      }
+    snprintf(identifier, sizeof(identifier), " (%s%s%s%s)", package, backend,
+	     serial[0] ? ", " : "", serial);
+    strlcpy(service_name, dev->device_make_and_model, sizeof(service_name));
+    if (63 - strlen(service_name) < strlen(identifier))
+      r = service_name + 63 - strlen(identifier);
+    else
+      r = service_name + strlen(service_name);
+    strlcpy(r, identifier, strlen(identifier) + 1);
+    service_name[63] = '\0';
 
     snprintf(location, sizeof(location),
 	     "Printer Application, Original Device Info: %s",
