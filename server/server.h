@@ -27,7 +27,6 @@
 #include <sys/prctl.h>
 #include <string.h>
 
-#define MAX_DEVICES 1000
 #define DEVICED_REQ "1"
 #define DEVICED_LIM "100"
 #define DEVICED_TIM "5"
@@ -78,7 +77,6 @@ typedef struct {
   int val;
 } signal_data_t;
 
-device_t devices[MAX_DEVICES];
 cups_array_t *con_devices;
 cups_array_t *temp_devices;
 void* start_hardware_monitor(void *n);
