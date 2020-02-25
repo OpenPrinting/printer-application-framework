@@ -725,8 +725,8 @@ int start_ippeveprinter(device_t *dev) {
     char *argv[17];
     char name[2048], device_uri[2048], ppd[1024], make_and_model[512],
          command[1024], pport[8], location[3096], service_name[1024],
-      package[64], identifier[256], backend[32], serial[64];
-    char datadir[1024], serverdir[1024], cachedir[1024];
+      package[64], identifier[256], backend[32], serial[64], pdls[2048];
+    char datadir[1024], serverdir[1024], cachedir[1024], cmdline[2048];
     char *envp[2];
     char LD_PATH[512];
     char *p, *q, *r, *s;
@@ -758,6 +758,12 @@ int start_ippeveprinter(device_t *dev) {
     else
       snprintf(command, sizeof(command), "%s%s/ippprint", snap, BINDIR);
 
+    p = getenv("PDLS");
+    if (p)
+      strlcpy(pdls, p, sizeof(pdls));
+    else
+      pdls[0] = '\0';
+
     /* Make the service name of our IPP printer emulation unique for the case
        that we have multiple printers of the same model */
     p = getenv("PACKAGENAME");
@@ -771,6 +777,7 @@ int start_ippeveprinter(device_t *dev) {
     strlcpy(backend, dev->device_uri, s - dev->device_uri + 1);
     for (i = 0; i < strlen(backend); i ++)
       backend[i] = toupper(backend[i]);
+    serial[0] = '\0';
     if ((q = strchr(dev->device_info, '[')) && (r = strchr(q, ']'))
 	&& (len = r - q - 1) > 0)
       strlcpy(serial, q + 1, len + 1);
@@ -833,23 +840,28 @@ int start_ippeveprinter(device_t *dev) {
 	     dev->device_make_and_model);
     printer_name[sizeof(printer_name) - 1] = 0;
     escape_string(make_and_model, printer_name, sizeof(printer_name));
-    argv[0] = (char*)name;
-    argv[1] = "-P";
-    argv[2] = (char*)ppd;
-    argv[3] = "-c";
-    argv[4] = (char*)command;
-    argv[5] = "-p";
-    argv[6] = (char*)pport;
-    argv[7] = "-l";
-    argv[8] = (char*)location;
+    i = 0;
+    argv[i++] = (char*)name;
+    argv[i++] = "-P";
+    argv[i++] = (char*)ppd;
+    argv[i++] = "-c";
+    argv[i++] = (char*)command;
+    if (pdls[0]) {
+      argv[i++] = "-f";
+      argv[i++] = (char*)pdls;
+    }
+    argv[i++] = "-p";
+    argv[i++] = (char*)pport;
+    argv[i++] = "-l";
+    argv[i++] = (char*)location;
 #if 0
-    argv[9] = "-K";
-    argv[10] = (char*)tmpdir;
-    argv[11] = "-n";
-    argv[12] = strdup("localhost");
+    argv[i++] = "-K";
+    argv[i++] = (char*)tmpdir;
+    argv[i++] = "-n";
+    argv[i++] = strdup("localhost");
 #endif
-    argv[9] = (char*)service_name;
-    argv[10] = NULL;
+    argv[i++] = (char*)service_name;
+    argv[i++] = NULL;
 
     char *logdir = logdirname();
     /*dup2(1, 2);*/
@@ -859,10 +871,33 @@ int start_ippeveprinter(device_t *dev) {
 		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     close(logfd);
     logfd = open(printerlogs, O_WRONLY | O_APPEND);*/
-    debug_printf("DEBUG: EXEC: %s %s %s %s %s %s %s %s %s %s %s\n",
-		 argv[0], argv[1], argv[2], argv[3], argv[4], argv[5],
-		 argv[6], argv[7], argv[8], argv[9], argv[10]
-		 /*, argv[11], argv[12], argv[13], argv[14], argv[15]*/);
+    strlcpy(cmdline, "DEBUG: Launching IPP printer emulator: ", sizeof(cmdline));
+    p = cmdline + strlen(cmdline);
+    q = cmdline + sizeof(cmdline) - 1;
+    for (i = 0; ; i++) {
+      if (argv[i] == NULL || p >= q) break;
+      if (strchr(argv[i], ' ') || strchr(argv[i], '\t')) {
+	*p = '\'';
+	p++;
+      }
+      if (strlen(argv[i]) > q - p) {
+	strlcpy(p, argv[i], q-p);
+	break;
+      } else {
+	strlcpy(p, argv[i], strlen(argv[i]) + 1);
+	p += strlen(argv[i]);
+      }
+      if (p >= q) break;
+      if (strchr(argv[i], ' ') || strchr(argv[i], '\t')) {
+	*p = '\'';
+	p++;
+      }
+      if (p >= q) break;
+      *p = ' ';
+      p++;
+    }
+    *p = '\0';
+    debug_printf("%s\n", cmdline);
     /*if (logfd > 0) {
       dup2(logfd, 2);
       dup2(logfd, 1);
@@ -873,7 +908,6 @@ int start_ippeveprinter(device_t *dev) {
     close(pfd[1]);
 
     execvp(argv[0], argv);
-    free(argv[14]);
     exit(0);
   }
 
