@@ -33,7 +33,7 @@ void initialize() {
     int index=0;
     int numTokens=0;
     for (int i = 0; i <= len; i++) {
-      if (isalpha(line[i]) && index < 1024)
+      if (isalnum(line[i]) && index < 1024)
         temp[index++] = line[i];
       else {
         if (index) {
@@ -59,10 +59,10 @@ void initialize() {
     /*fprintf(stderr, "Lines: %d %s %s\n", i, lines[i][0], lines[i][1]);*/
     if (!strcmp(lines[i][0], "DebuggingLevel")) {
       char level[2] = "1";
-      if (!strncasecmp(lines[i][1], "DEBUG", 5))
-        level[0] = '2';
-      else if(!strncasecmp(lines[i][1],"DEBUG2",6))
+      if (!strncasecmp(lines[i][1], "DEBUG2", 6))
         level[0] = '3';
+      else if(!strncasecmp(lines[i][1],"DEBUG",5))
+        level[0] = '2';
       setenv("DEBUG_LEVEL", level, 1);
     }
   }
