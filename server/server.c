@@ -912,7 +912,7 @@ int start_ippeveprinter(device_t *dev) {
   }
 
   close(pfd[1]);
-  /*logFromFd(&(dev->errlog), pfd[0]);*/
+  logFromFd(&(dev->errlog), pfd[0]);
 
   if (dev)
     dev->eve_pid = pid;
