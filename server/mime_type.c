@@ -285,7 +285,7 @@ static filter_t* getFilter(int src_index, int dest_index) {
 
 static int getMinCostConversion(int src_index,int dest_index,cups_array_t *arr)
 {
-  debug_printf("DEBUG: Starting Dijkstra: %d -> %d\n",src_index,dest_index);
+  debug_printf("DEBUG: Finding conversion : %d -> %d\n",src_index,dest_index);
   if(src_index==dest_index)
   {
     arr=NULL;
