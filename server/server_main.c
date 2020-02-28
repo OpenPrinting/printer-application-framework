@@ -86,6 +86,7 @@ int main(int argc, char* argv[]) {
   if (p) {
     tmpdir = calloc(strlen(p) + 5, sizeof(char));
     snprintf(tmpdir, sizeof(tmpdir), "%s/tmp", p);
+    mkdir(tmpdir,0777);
   } else {
     p = getenv("TMPDIR");
     if (p)
