@@ -743,7 +743,7 @@ int start_ippeveprinter(device_t *dev) {
     setenv("DEVICE_URI", device_uri, 1);
     setenv("PRINTER", dev->device_make_and_model, 1);
 
-    snprintf(name, sizeof(name), "%s%s/ippeveprinter", snap, SBINDIR);
+    snprintf(name, sizeof(name), "%s%s/ippeveprinter", snap, BINDIR);
     if(dev == NULL)
       exit(1);
     if(dev->device_uri)
