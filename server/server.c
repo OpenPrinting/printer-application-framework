@@ -740,8 +740,6 @@ int start_ippeveprinter(device_t *dev) {
     setenv("CUPS_DATADIR", datadir, 1);
     setenv("CUPS_SERVERBIN", serverdir, 1);
     setenv("CUPS_CACHEDIR", cachedir, 1);
-    setenv("DEVICE_URI", device_uri, 1);
-    setenv("PRINTER", dev->device_make_and_model, 1);
 
     snprintf(name, sizeof(name), "%s%s/ippeveprinter", snap, BINDIR);
     if(dev == NULL)
@@ -832,6 +830,9 @@ int start_ippeveprinter(device_t *dev) {
     snprintf(location, sizeof(location),
 	     "Printer Application, Original Device Info: %s",
 	     dev->device_info);
+
+    setenv("DEVICE_URI", device_uri, 1);
+    setenv("PRINTER", dev->device_make_and_model, 1);
 
     char printer_name[512];
     char scheme[10];
