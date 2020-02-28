@@ -37,7 +37,7 @@ char* logdirname() {
   char *logdir;
   if (p) {
     logdir = calloc(strlen(p) + 5, sizeof(char));
-    snprintf(logdir, sizeof(logdir), "%s/log", p);
+    snprintf(logdir, strlen(p) + 5, "%s/log", p);
   } else {
     p = getenv("LOGDIR");
     if (p)
