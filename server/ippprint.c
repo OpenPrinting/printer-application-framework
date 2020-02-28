@@ -16,7 +16,7 @@
 extern char **environ;
 
 char *tmpdir; //SNAP_COMMON
-
+char *options;
 /*
  * getUserId() - Get uid for a given username.
  */
@@ -130,13 +130,33 @@ static int getFilterPaths(cups_array_t *filter_chain,
   return 0;
 }
 
-#if 0
+char* isIPP(char* opt)
+{
+  if(opt==NULL) return NULL;
+
+  char* fopt;
+
+  if(strlen(opt) <= 4)
+    return NULL;
+
+  if(strncmp(opt,"IPP_",4))
+    return NULL;
+
+  int len = strlen(opt)-3;
+  fopt = calloc(len,sizeof(char));
+  snprintf(fopt,len,"%s",opt+4);
+  char *ptr = fopt;
+  while(*ptr)
+  {
+    if(isalpha(*ptr))
+      *ptr = tolower(*ptr);
+    ptr++;
+  }
+  return fopt;
+}
+
 /*
- * This is a dummy function as of now. If we need to set options for
- * the printer application filters, we can set environment variable
- * in the server utility and ippprint can use those environment
- * variable to construct the options array for the filters.
- *
+ * ** Work in progress **
  * createOptionsArray() - Create Options array from env variables.
  * 
  * Returns:
@@ -144,12 +164,35 @@ static int getFilterPaths(cups_array_t *filter_chain,
  * !0 - Error
  */
 
-static int createOptionsArray(char *op) { /*O-*/
-  sprintf(op, "h");
+static int createOptionsArray() {
+
+  char **s = environ;
+  int totalLen = 1;
+  while(*s)
+  {
+    char* opt;
+    if(( opt = isIPP(*s)) != NULL){
+      int addLen = strlen(opt);
+      totalLen+=addLen+1;
+    }
+    s++;
+  }
+  options = (char*) calloc(totalLen,sizeof(char));
+  int currsize=0;
+  s = environ;
+  while(*s)
+  {
+    char* opt;
+    if(( opt = isIPP(*s)) != NULL){
+      snprintf(options+currsize,totalLen-currsize,"%s ",opt);
+      currsize += strlen(opt)+1;
+    }
+    s++;
+  }
+  /* snprintf(options+currsize,totalLen-currsize,"\0"); */
   return 0;
 }
 
-#endif
 
 /*
  * executeCommand() - Execute a filter
