@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
   char *p = getenv("SNAP_COMMON");
   if (p) {
     tmpdir = calloc(strlen(p) + 5, sizeof(char));
-    snprintf(tmpdir, sizeof(tmpdir), "%s/tmp", p);
+    snprintf(tmpdir, strlen(p)+5 , "%s/tmp", p);
     mkdir(tmpdir,0777);
   } else {
     p = getenv("TMPDIR");

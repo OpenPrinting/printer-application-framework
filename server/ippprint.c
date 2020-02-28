@@ -32,7 +32,7 @@ void ini() {
   char *p = getenv("SNAP_COMMON");
   if (p) {
     tmpdir = calloc(strlen(p) + 5, sizeof(char));
-    snprintf(tmpdir, sizeof(tmpdir), "%s/tmp", p);
+    snprintf(tmpdir, strlen(p)+5, "%s/tmp", p);
   } else {
     p = getenv("TMPDIR");
     if (p)
