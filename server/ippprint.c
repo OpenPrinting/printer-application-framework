@@ -17,6 +17,8 @@ extern char **environ;
 
 char *tmpdir; //SNAP_COMMON
 char *options;
+
+int createOptionsArray();
 /*
  * getUserId() - Get uid for a given username.
  */
@@ -40,6 +42,7 @@ void ini() {
     else
       tmpdir = strdup("/tmp");
   }
+  createOptionsArray();
 }
 
 /*
@@ -132,7 +135,7 @@ static int getFilterPaths(cups_array_t *filter_chain,
 
 char* isIPP(char* opt)
 {
-  if(opt==NULL) return NULL;
+  if(opt == NULL) return NULL;
 
   char* fopt;
 
@@ -142,14 +145,16 @@ char* isIPP(char* opt)
   if(strncmp(opt,"IPP_",4))
     return NULL;
 
-  int len = strlen(opt)-3;
+  int len = strlen(opt) - 3;
   fopt = calloc(len,sizeof(char));
   snprintf(fopt,len,"%s",opt+4);
   char *ptr = fopt;
   while(*ptr)
   {
-    if(isalpha(*ptr))
+    if( isalpha(*ptr) )
       *ptr = tolower(*ptr);
+    if( isspace(*ptr) )
+      *ptr = '_';   /* Some options may have space in them, e.g: job_name */
     ptr++;
   }
   return fopt;
@@ -164,21 +169,21 @@ char* isIPP(char* opt)
  * !0 - Error
  */
 
-static int createOptionsArray() {
-
+int createOptionsArray() {
   char **s = environ;
   int totalLen = 1;
+
   while(*s)
   {
     char* opt;
-    if(( opt = isIPP(*s)) != NULL){
+    if(( opt = isIPP(*s)) != NULL) {
       int addLen = strlen(opt);
-      totalLen+=addLen+1;
+      totalLen += addLen+1;
     }
     s++;
   }
   options = (char*) calloc(totalLen,sizeof(char));
-  int currsize=0;
+  int currsize = 0;
   s = environ;
   while(*s)
   {
@@ -189,7 +194,20 @@ static int createOptionsArray() {
     }
     s++;
   }
-  /* snprintf(options+currsize,totalLen-currsize,"\0"); */
+  debug_printf("DEBUG: Options array: %s\n",options);
+
+#if 0
+  cups_option_t* opti=NULL;
+  int nopt = cupsParseOptions(options,0,&opti);
+  debug_printf("DEBUG: NUM OPT: %d\n",nopt);
+  cups_option_t* st = opti;
+
+  for(int i=0 ; i < nopt ; i++)
+  {
+    debug_printf("DEBUG: OPT: %s %s\n",(st+i)->name,(st+i)->value);
+  }
+#endif
+
   return 0;
 }
 
@@ -227,7 +245,7 @@ static pid_t executeCommand(int inPipe, int outPipe, filter_t *filter, int i) {
     argv[2] = strdup(userid);                       /* User ID */
     argv[3] = strdup(getenv("IPP_JOB_NAME"));       /* Title */
     argv[4] = strdup(getenv("IPP_COPIES_DEFAULT")); /* Copies */
-    argv[5] = strdup("\"\"");                       /* Options */
+    argv[5] = strdup(options);                       /* Options */
     argv[6] = NULL;
     char newpath[1024];
     setenv("OUTFORMAT", filter->dest->typename, 1);
@@ -478,7 +496,7 @@ static int print_document(char *scheme, char *uri, char *filename) {
     argv[2] = strdup(userid);                       /* User ID */
     argv[3] = strdup(job_name);                     /* Title */
     argv[4] = strdup(job_copies);                   /* Copies */
-    argv[5] = strdup("\"\"");                       /* Options */
+    argv[5] = strdup(options);                       /* Options */
     argv[6] = strdup(filename);
     argv[7] = NULL;
 
@@ -509,6 +527,7 @@ static int delete_temp_file(char *filename)
   return 0;
 }
 
+#if 0
 void testApplyFilterChain() {
   cups_array_t* t = cupsArrayNew(NULL,NULL);
   cupsArrayAdd(t, "1");
@@ -520,10 +539,11 @@ void testApplyFilterChain() {
   /*char *outFile;*/
   applyFilterChain(t, inputFile, NULL, 0);
 }
+#endif
 
 int main(int argc, char *argv[]) {
-  ini();
   setenv("LOG_NAME", "ippprint.txt", 1);
+  ini();
   char **s = environ;
   for (; *s; ) {
     debug_printf("DEBUG: %s\n", *s);
@@ -549,7 +569,6 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  /*exit(0);*/
   char *inputFile = strdup(argv[1]); /* Input File */
 
   if (getenv("CONTENT_TYPE") == NULL) {
