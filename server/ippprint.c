@@ -173,28 +173,30 @@ int createOptionsArray() {
   char **s = environ;
   int totalLen = 1;
 
-  while(*s)
+  while (*s)
   {
     char* opt;
-    if(( opt = isIPP(*s)) != NULL) {
+    if ((opt = isIPP(*s)) != NULL) {
       int addLen = strlen(opt);
-      totalLen += addLen+1;
+      totalLen += addLen + 1;
+      free(opt);
     }
     s++;
   }
-  options = (char*) calloc(totalLen,sizeof(char));
+  options = (char*) calloc(totalLen, sizeof(char));
   int currsize = 0;
   s = environ;
-  while(*s)
+  while (*s)
   {
     char* opt;
-    if(( opt = isIPP(*s)) != NULL){
-      snprintf(options+currsize,totalLen-currsize,"%s ",opt);
-      currsize += strlen(opt)+1;
+    if ((opt = isIPP(*s)) != NULL) {
+      snprintf(options + currsize, totalLen - currsize, "%s ", opt);
+      currsize += strlen(opt) + 1;
+      free(opt);
     }
     s++;
   }
-  debug_printf("DEBUG: Options array: %s\n",options);
+  debug_printf("DEBUG: Options array: %s\n", options);
 
 #if 0
   cups_option_t* opti=NULL;
